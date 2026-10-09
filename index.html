@@ -75,7 +75,31 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .agent{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px}
 .agent .n{font-weight:700;font-size:13.5px}
 .agent .s{font-size:11px;color:var(--dim);margin-top:2px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.rcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.rcard .rn{font-weight:800;font-size:16px;line-height:1.25;color:#fff;word-break:break-word}
+.rcard .rt{font-size:15px;line-height:1.35;color:#e6e0ff;margin-top:4px;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;cursor:pointer;padding:4px 0;min-height:22px}
+.rcard .rt.empty{color:#b9a8ff;font-style:italic}
+.rcard .rt .pen{font-size:13px;opacity:.85;margin-left:6px}
+.rcard .tag{display:inline-block;font-size:12px;font-weight:700;color:#d8ccff;background:rgba(124,92,255,.22);border:1px solid rgba(124,92,255,.5);border-radius:999px;padding:3px 10px;margin-top:6px}
+.rcard .tag.grokbot{color:#c9f7da;background:rgba(40,200,120,.18);border-color:rgba(40,200,120,.5)}
+.rcard .why{font-size:12.5px;color:#cfc8e8;margin-top:8px;line-height:1.4;word-break:break-word}
+.rcard .editrow{display:flex;gap:8px;margin-top:6px}
+.rcard .editrow input{flex:1;min-width:0;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0e0b1c;color:#fff}
+.rcard .editrow button{font-size:14px;font-weight:700;border:0;border-radius:10px;padding:10px 14px;background:#7c5cff;color:#fff}
+.rcard .editrow button.cancel{background:#2a2540;color:#d8ccff}
 .v-ok{color:var(--green);font-weight:700;font-size:11px;text-align:right}.v-no{color:var(--amber);font-weight:700;font-size:11px;text-align:right}
+/* OFFICE / HQ VIEW */
+.office-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:12px}
+@media(min-width:768px){.office-grid{grid-template-columns:1fr 1fr}}
+.office-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+.office-card h3{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.agent-row{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
+.agent-row-header{display:flex;justify-content:space-between;align-items:center}
+.agent-row-title{font-weight:700;font-size:14px;color:var(--text)}
+.agent-row-details{font-size:11.5px;color:var(--dim);display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.caps-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.cap-tag{background:rgba(157,124,255,.1);border:1px solid var(--border);color:var(--purple);border-radius:12px;padding:2px 8px;font-size:10px}
 footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);backdrop-filter:blur(8px)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;box-shadow:0 0 8px var(--green)}
 .dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
@@ -116,6 +140,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
   <div class="hbtns">
     <button class="hbtn on" id="vHome">Home</button>
     <button class="hbtn" id="vBoard">Board</button>
+    <button class="hbtn" id="vOffice">Office / HQ</button>
     <button class="hbtn" id="vAgents">Agents</button>
     <button class="hbtn warn" id="vLogout">Log out</button>
   </div>
@@ -136,6 +161,24 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
     <div class="sec"><h2 id="listTitle">All Tasks</h2><div id="tasks"></div></div>
   </div>
   <div id="boardView" class="hidden"><div class="board" id="board"></div></div>
+
+  <div id="officeView" class="hidden">
+    <div class="office-grid">
+      <div class="office-card">
+        <h3>Task Waiting Control</h3>
+        <p style="font-size:12.5px;color:var(--dim);margin-bottom:12px;line-height:1.4">Select an open task to move it to WAITING.</p>
+        <select id="officeTaskSelect" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--text);font-size:16px;outline:none;margin-bottom:10px">
+          <option value="">Select a task…</option>
+        </select>
+        <input id="officeWaitReason" placeholder="Reason for waiting…" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--text);font-size:16px;outline:none;margin-bottom:12px">
+        <button class="abtn gold" style="width:100%;padding:11px 0;font-weight:700" data-act="officeWait">Move Task to Waiting</button>
+      </div>
+      <div class="office-card">
+        <h3><span>Live Agent Telemetry</span> <button class="abtn" style="padding:4px 8px;font-size:11px" data-act="refreshOffice">Refresh</button></h3>
+        <div id="officeAgentsList"><div style="color:var(--dim);font-size:12px">Loading agent status…</div></div>
+      </div>
+    </div>
+  </div>
   <div id="agentsView" class="hidden">
     <div class="sec" style="margin-top:12px"><h2>Agent Directory — Operational Truth</h2><div id="roster"></div></div>
     <div class="sec"><h2>Live Telemetry (AgentStatus)</h2><div id="liveAgents"></div></div>
@@ -166,22 +209,37 @@ function devLabel(){const ua=navigator.userAgent;if(/iPhone|Android.*Mobile/i.te
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtDate(iso){if(!iso)return '—';const d=new Date(iso);if(isNaN(d.getTime()))return '—';return d.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
 function fmtET(iso){try{return new Date(iso).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return iso;}}
+function fmtAgentName(str){if(!str) return '';var s=String(str);if(s==='CHATGPT (Manager)'||s==='CHATGPT') return 'OG VANTRA (ChatGPT)';s=s.replace(/CHATGPT\s*\(Manager\)/gi,'OG VANTRA (ChatGPT)');s=s.replace(/\bCHATGPT\b/g,'OG VANTRA (ChatGPT)');return s;}
 const PRIO_CLASS={urgent:'p-urgent',high:'p-high',normal:'p-normal',low:'p-low'};
 function prioClass(p){return PRIO_CLASS[p]||'p-normal';}
-function stateColor(s){return s==='COMPLETED'?'var(--green)':s==='BLOCKED'?'var(--red)':s==='REVIEW'?'var(--amber)':s==='ACTIVE'?'#6ee7a0':'var(--purple)';}
+function stateColor(s){return s==='COMPLETED'?'var(--green)':s==='BLOCKED'?'var(--red)':s==='REVIEW'?'var(--amber)':s==='ACTIVE'?'#6ee7a0':s==='WAITING'?'var(--gold)':'var(--purple)';}
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 function showLogin(){$('login').classList.remove('hidden');$('shell').classList.add('hidden');}
 function showShell(){$('login').classList.add('hidden');$('shell').classList.remove('hidden');}
 function nowTime(){return new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}
-function setDot(err){const d=$('dot');d.className=err?'dot err':'dot';$('sync').textContent=err?('sync error '+nowTime()):('synced '+nowTime());}
+let syncConsecutiveFailures=0;
+function setDot(err,customMsg){const d=$('dot');if(err){d.className='dot err';$('sync').textContent=customMsg||('sync error '+nowTime());}else{syncConsecutiveFailures=0;d.className='dot';$('sync').textContent='synced '+nowTime();}}
 
-async function api(op, extra){
-  const res = await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({op:op},extra||{}))});
-  let d=null;
-  try{ d=await res.json(); }catch(e){ throw new Error('Server error — no JSON response ('+res.status+')'); }
-  if(!d.ok && res.status===401){localStorage.removeItem('mc_token');token='';showLogin();throw new Error('auth');}
-  if(!d.ok) throw new Error(d.error||('op failed ('+res.status+')'));
-  return d;
+async function api(op, extra, retriesLeft){
+  if(typeof retriesLeft!=='number') retriesLeft=2;
+  try{
+    const res = await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({op:op},extra||{}))});
+    let d=null;
+    try{ d=await res.json(); }catch(e){
+      if(retriesLeft>0 && res.status>=500){ await new Promise(r=>setTimeout(r,1000)); return await api(op,extra,retriesLeft-1); }
+      throw new Error('Server error — no JSON response ('+res.status+')');
+    }
+    if(!d.ok && res.status===401){localStorage.removeItem('mc_token');token='';showLogin();throw new Error('auth');}
+    if(!d.ok){
+      if(retriesLeft>0 && res.status>=500){ await new Promise(r=>setTimeout(r,1000)); return await api(op,extra,retriesLeft-1); }
+      throw new Error(d.error||('op failed ('+res.status+')'));
+    }
+    return d;
+  }catch(err){
+    if(err.message==='auth') throw err;
+    if(retriesLeft>0 && (err.name==='TypeError'||String(err.message).indexOf('fetch')>=0)){ await new Promise(r=>setTimeout(r,1200)); return await api(op,extra,retriesLeft-1); }
+    throw err;
+  }
 }
 
 /* ---------- login (P1-2) ---------- */
@@ -229,8 +287,13 @@ async function refresh(){
     setDot(false);
     $('whoami').textContent='BOSS · '+devLabel();
     renderStats(); renderApprovals(); renderTasks(); renderBoard();
+    if(view==='office') renderOfficeView();
   }catch(e){
-    if(String(e.message)!=='auth'){ setDot(true); toast(e.message); }
+    if(String(e.message)!=='auth'){
+      syncConsecutiveFailures++;
+      if(syncConsecutiveFailures>=2){ setDot(true,'sync error '+nowTime()); toast('Sync failed — retrying on re-connect'); }
+      else{ setDot(true,'reconnecting…'); }
+    }
   }
 }
 function renderStats(){
@@ -251,7 +314,7 @@ function renderApprovals(){
     '<div class="acts">'+
     '<button class="abtn gold" data-act="decide" data-id="'+esc(a.id)+'" data-decision="approve">Approve</button>'+
     '<button class="abtn danger" data-act="decide" data-id="'+esc(a.id)+'" data-decision="deny">Deny</button>'+
-    (a.relatedTaskId ? '<button class="abtn" data-act="open" data-id="'+esc(a.relatedTaskId)+'">Task</button>' : '')+
+    (a.relatedTaskId ? '<button class="abtn" data-act="open" data-id="'+esc(a.relatedTaskId)+'">Task</button>' : '<button class="abtn" data-act="openIdea" data-id="'+esc(a.id)+'">Details</button>')+
     '</div></div>';
   }).join('');
 }
@@ -262,7 +325,7 @@ function taskCard(t){
     '<span class="pill '+prioClass(t.priority)+'">'+esc(String(t.priority||'normal').toUpperCase())+'</span>'+
     '<span class="pill" style="border:1px solid '+stateColor(t.state)+';color:'+stateColor(t.state)+'">'+esc(t.state)+'</span>'+
     (t.requiresApproval==='yes'?'<span class="pill p-app">APPROVAL</span>':'')+
-    (t.assignedAgent?'<span>· '+esc(t.assignedAgent)+'</span>':'')+
+    (t.assignedAgent?'<span>· '+esc(fmtAgentName(t.assignedAgent))+'</span>':'')+
     (t.project?'<span>· '+esc(t.project)+'</span>':'')+
     '</div></div>';
 }
@@ -281,21 +344,104 @@ function renderBoard(){
     return '<div class="col"><h3>'+c+'<i>'+ts.length+'</i></h3>'+(ts.map(taskCard).join('')||'<div style="color:var(--dim);font-size:12px">—</div>')+'</div>';
   }).join('');
 }
+
+/* ---------- roster: readable role title under the name, tap to edit (Boss) ---------- */
+function rosterCard(r){
+  const ok=String(r.operationalTruth||'').indexOf('VERIFIED WORKING')>=0;
+  const gb=/GROK Bot/i.test(r.platform||'');
+  const role=(r.roleTitle||'').trim();
+  const roleHtml=role?esc(role):'Tap to add a role title';
+  return '<div class="rcard" id="rc-'+esc(r.id||'')+'">'
+   +'<div class="top"><div class="rn">'+esc(fmtAgentName(r.name))+'</div><div class="'+(ok?'v-ok':'v-no')+'">'+esc(r.operationalTruth)+'</div></div>'
+   +'<div class="rt'+(role?'':' empty')+'" onclick="editRole(\''+esc(r.id||'')+'\')">'+roleHtml+'<span class="pen">\u270E</span></div>'
+   +(r.platform?'<span class="tag'+(gb?' grokbot':'')+'">'+esc(r.platform)+'</span>':'')
+   +'<div class="why">'+esc(r.truthSource||'')+'</div>'
+   +'</div>';
+}
+function editRole(id){
+  const r=(window._roster||[]).find(x=>x.id===id); if(!r) return;
+  const card=$('rc-'+id); if(!card) return;
+  const rt=card.querySelector('.rt');
+  rt.onclick=null;
+  rt.innerHTML='<div class="editrow"><input id="ri-'+id+'" maxlength="120" value="'+esc(r.roleTitle||'')+'" placeholder="Role title">'
+   +'<button onclick="saveRole(\''+id+'\')">Save</button><button class="cancel" onclick="renderAgents()">Cancel</button></div>';
+  const inp=$('ri-'+id); if(inp){inp.focus();}
+}
+async function saveRole(id){
+  const inp=$('ri-'+id); if(!inp) return;
+  const val=inp.value.trim();
+  try{
+    await api('setRole',{id:id,roleTitle:val});
+    toast('Role saved');
+    await renderAgents();
+  }catch(e){
+    if(e.message!=='auth') toast('Could not save: '+e.message);
+  }
+}
+/* ---------- OFFICE / HQ VIEW ---------- */
+async function moveTaskToWaiting(taskId, reason){
+  if(!taskId){ toast('Select a task first'); return; }
+  try{
+    await api('moveTask',{taskId:taskId,to:'WAITING',reason:reason||'Moved to WAITING from Office HQ'});
+    toast('Task moved to WAITING');
+    refresh();
+    if(view==='office') renderOfficeView();
+  }catch(e){ toast(e.message); }
+}
+async function renderOfficeView(){
+  const sel=$('officeTaskSelect');
+  if(board && board.tasks){
+    const open=board.tasks.filter(t=>t.state!=='COMPLETED'&&t.state!=='CANCELLED');
+    sel.innerHTML='<option value="">Select a task to move to WAITING…</option>'+open.map(t=>'<option value="'+esc(t.taskId)+'">['+esc(t.state)+'] '+esc(t.title)+'</option>').join('');
+  }
+  const container=$('officeAgentsList');
+  try{
+    const d=await api('agents');
+    const list=d.agents||[];
+    if(!list.length){ container.innerHTML='<div style="color:var(--dim);font-size:12.5px;padding:8px">No live agent telemetry reported yet.</div>'; return; }
+    container.innerHTML=list.map(a=>{
+      const rawCaps=a.capabilities;
+      const caps=Array.isArray(rawCaps)?rawCaps:(typeof rawCaps==='string'&&rawCaps?rawCaps.split(','):[]);
+      const capsHtml=caps.map(c=>'<span class="cap-tag">'+esc(String(c).trim())+'</span>').join('');
+      return '<div class="agent-row"><div class="agent-row-header">'
+        +'<div class="agent-row-title">'+esc(fmtAgentName(a.agentName))+'</div>'
+        +'<span class="pill" style="border-color:'+(a.status==='online'||a.status==='busy'?'var(--green)':'var(--amber)')+';color:'+(a.status==='online'||a.status==='busy'?'var(--green)':'var(--amber)')+'">'+esc(a.status||'unknown')+'</span></div>'
+        +'<div class="agent-row-details">'
+        +'<div>Heartbeat: <b>'+fmtDate(a.lastHeartbeat)+'</b></div>'
+        +'<div>Current Task: '+(a.currentTaskId?'<a href="#" data-act="open" data-id="'+esc(a.currentTaskId)+'" style="color:var(--purple);text-decoration:none"><b>'+esc(a.currentTaskId)+'</b></a>':'<i>None</i>')+'</div>'
+        +'<div>Version: <b>'+esc(a.version||'v1.0')+'</b></div>'
+        +(capsHtml?'<div class="caps-tags">'+capsHtml+'</div>':'')
+        +'</div></div>';
+    }).join('');
+  }catch(e){ container.innerHTML='<div class="errline">Failed to load live agent status: '+esc(e.message)+'</div>'; }
+}
+/* ---------- idea approval graceful sheet (MC-IDEAS) ---------- */
+function renderIdeaApprovalSheet(appObj){
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">✕</button>'
+    +'<h3>'+esc(appObj.description||appObj.type||'Idea Approval')+'</h3>'
+    +'<div class="meta"><span class="pill p-app">IDEA APPROVAL</span><span class="pill p-normal">NO LINKED TASK</span></div>'
+    +'<div class="desc" style="color:var(--gold-soft);background:rgba(212,175,55,.1);padding:12px;border-radius:10px;border:1px solid rgba(212,175,55,.2);line-height:1.45">💡 <b>No task yet — idea approval.</b><br>This idea proposal is pending decision before a formal task is generated on the board.</div>'
+    +'<div class="m" style="margin-top:12px;font-size:12px;color:var(--dim)">Requested by: <b>'+esc(fmtAgentName(appObj.requestedBy||'Agent'))+'</b> · '+fmtDate(appObj.requestedAt)+'</div>'
+    +(appObj.id?'<div class="acts" style="margin-top:16px"><button class="abtn gold" data-act="decide" data-id="'+esc(appObj.id)+'" data-decision="approve">Approve Idea</button><button class="abtn danger" data-act="decide" data-id="'+esc(appObj.id)+'" data-decision="deny">Deny Idea</button></div>':'')
+    +'<div class="acts" style="margin-top:12px"><button class="abtn" data-act="close">Close</button></div>';
+  $('drawer').classList.remove('hidden');
+}
+
 async function renderAgents(){
   try{
     const d=await api('agents');
-    $('roster').innerHTML=(d.roster||[]).map(r=>{
-      const ok=String(r.operationalTruth||'').indexOf('VERIFIED WORKING')>=0;
-      return '<div class="agent"><div><div class="n">'+esc(r.name)+'</div><div class="s">'+esc(r.truthSource)+'</div></div><div class="'+(ok?'v-ok':'v-no')+'">'+esc(r.operationalTruth)+'</div></div>';
-    }).join('')||'<div class="errline">No roster data.</div>';
-    $('liveAgents').innerHTML=(d.agents||[]).map(a=>'<div class="agent"><div><div class="n">'+esc(a.agentName)+'</div><div class="s">heartbeat '+esc(a.lastHeartbeat||'none')+'</div></div><div class="pill">'+esc(a.status)+'</div></div>').join('')||'<div style="color:var(--dim);font-size:12px">No live telemetry reported yet.</div>';
+    window._roster=d.roster||[];
+    $('roster').innerHTML=window._roster.map(rosterCard).join('')||'<div class="errline">No roster data.</div>';
+    $('liveAgents').innerHTML=(d.agents||[]).map(a=>'<div class="agent"><div><div class="n">'+esc(fmtAgentName(a.agentName))+'</div><div class="s">heartbeat '+esc(a.lastHeartbeat||'none')+'</div></div><div class="pill">'+esc(a.status)+'</div></div>').join('')||'<div style="color:var(--dim);font-size:12px">No live telemetry reported yet.</div>';
   }catch(e){
-    $('roster').innerHTML='<div class="errline">Can\u2019t load the agent directory: '+esc(e.message)+'</div>';
+    $('roster').innerHTML='<div class="errline">Can\u2019t load the agent directory: '+esc(e.message)+' <button class="abtn" style="margin-top:6px;font-size:11px" data-act="retryAgents">Retry</button></div>';
   }
 }
 
 /* ---------- task drawer ---------- */
-async function openTask(taskId){
+async function openTask(taskId, ideaApprovalObj){
+  if(!taskId && ideaApprovalObj){ renderIdeaApprovalSheet(ideaApprovalObj); return; }
   try{
     const d=await api('task',{taskId:taskId});
     selected=d.task;
@@ -303,8 +449,8 @@ async function openTask(taskId){
     const aps=d.approvals||[];
     let acts='';
     if(t.state==='BACKLOG') acts+='<button class="abtn primary" data-act="move" data-to="READY" data-reason="ready">→ Ready</button>';
-    if(t.state==='READY') acts+='<button class="abtn primary" data-act="move" data-to="ACTIVE" data-reason="started by Boss">Start</button>';
-    if(t.state==='ACTIVE') acts+='<button class="abtn" data-act="move" data-to="BLOCKED" data-reason="blocked by Boss">Block</button><button class="abtn" data-act="move" data-to="REVIEW" data-reason="ready for review">→ Review</button>';
+    if(t.state==='READY') acts+='<button class="abtn primary" data-act="move" data-to="ACTIVE" data-reason="started by Boss">Start</button><button class="abtn gold" data-act="move" data-to="WAITING" data-reason="waiting on input">Wait</button>';
+    if(t.state==='ACTIVE') acts+='<button class="abtn gold" data-act="move" data-to="WAITING" data-reason="waiting on input">Wait</button><button class="abtn" data-act="move" data-to="BLOCKED" data-reason="blocked by Boss">Block</button><button class="abtn" data-act="move" data-to="REVIEW" data-reason="ready for review">→ Review</button>';
     if(t.state==='BLOCKED'||t.state==='WAITING') acts+='<button class="abtn green" data-act="move" data-to="ACTIVE" data-reason="unblocked by Boss">Unblock</button>';
     if(t.state==='REVIEW') acts+='<button class="abtn gold" data-act="complete">Complete ✓</button>';
     if(t.state!=='COMPLETED'&&t.state!=='CANCELLED') acts+='<button class="abtn danger" data-act="move" data-to="CANCELLED" data-reason="cancelled by Boss">Cancel</button>';
@@ -386,6 +532,13 @@ document.addEventListener('click',e=>{
   else if(act==='close') closeDrawer();
   else if(act==='logout') doLogout();
   else if(act==='retry') boot(true);
+  else if(act==='retryAgents') renderAgents();
+  else if(act==='refreshOffice') renderOfficeView();
+  else if(act==='openIdea'){
+    const app=(board&&board.approvals)?board.approvals.find(a=>a.id===el.getAttribute('data-id')):null;
+    renderIdeaApprovalSheet(app||{id:el.getAttribute('data-id'),description:'Idea approval (unlinked)'});
+  }
+  else if(act==='officeWait'){ moveTaskToWaiting($('officeTaskSelect').value, $('officeWaitReason').value.trim()); }
 });
 $('loginBtn').addEventListener('click',login);
 $('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
@@ -396,14 +549,18 @@ function setView(v){
   view=v;
   $('home').classList.toggle('hidden',v!=='home');
   $('boardView').classList.toggle('hidden',v!=='board');
+  $('officeView').classList.toggle('hidden',v!=='office');
   $('agentsView').classList.toggle('hidden',v!=='agents');
   $('vHome').classList.toggle('on',v==='home');
   $('vBoard').classList.toggle('on',v==='board');
+  $('vOffice').classList.toggle('on',v==='office');
   $('vAgents').classList.toggle('on',v==='agents');
   if(v==='agents') renderAgents(); // P2-5: agents fetched only when the view is open
+  if(v==='office') renderOfficeView();
 }
 $('vHome').addEventListener('click',()=>setView('home'));
 $('vBoard').addEventListener('click',()=>setView('board'));
+$('vOffice').addEventListener('click',()=>setView('office'));
 $('vAgents').addEventListener('click',()=>setView('agents'));
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
@@ -412,6 +569,8 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   if(view==='board') renderBoard(); else renderTasks(); // P1-1: tabs filter the Board too
 }));
 setInterval(()=>{if(token) refresh();},45000);
+window.addEventListener('online',()=>{ if(token) refresh(); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && token) refresh(); });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden && token) refresh();});
 
 /* ---------- boot (P1-4: real errors, retry) ---------- */
