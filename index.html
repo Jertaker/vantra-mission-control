@@ -308,10 +308,16 @@ function renderApprovals(){
     const isIdea=String(a.type||'').indexOf('idea')>=0;
     return '<div class="apcard"><div class="t" style="font-size:14px">'+esc(a.description||a.type)+'</div>'+
     '<div class="m" style="margin-top:6px;font-size:11.5px;color:var(--dim)">requested by '+esc(a.requestedBy)+' · '+fmtDate(a.requestedAt)+(isIdea?' · <span class="pill p-app">IDEA</span>':'')+'</div>'+
-    '<div class="acts">'+
-    '<button class="abtn gold" data-act="decide" data-id="'+esc(a.id)+'" data-decision="approve">Approve</button>'+
-    '<button class="abtn danger" data-act="decide" data-id="'+esc(a.id)+'" data-decision="deny">Deny</button>'+
-    (a.relatedTaskId ? '<button class="abtn" data-act="open" data-id="'+esc(a.relatedTaskId)+'">Task</button>' : '<button class="abtn" data-act="openIdea" data-id="'+esc(a.id)+'">Details</button>')+
+    (()=>{
+      const dead=a.relatedTaskId&&board&&board.tasks?board.tasks.find(t=>t.taskId===a.relatedTaskId&&(t.state==='CANCELLED'||t.state==='COMPLETED')):null;
+      if(dead) return '<div class="acts"><span class="pill p-normal" style="border-color:var(--dim);color:var(--dim)">TASK '+esc(dead.state)+' — nothing to approve</span>'+
+        '<button class="abtn" data-act="expireApproval" data-id="'+esc(a.id)+'">Clear</button></div>';
+      return '<div class="acts">'+
+      '<button class="abtn gold" data-act="decide" data-id="'+esc(a.id)+'" data-decision="approve">Approve</button>'+
+      '<button class="abtn danger" data-act="decide" data-id="'+esc(a.id)+'" data-decision="deny">Deny</button>'+
+      (a.relatedTaskId ? '<button class="abtn" data-act="open" data-id="'+esc(a.relatedTaskId)+'">Task</button>' : '<button class="abtn" data-act="openIdea" data-id="'+esc(a.id)+'">Details</button>')+
+      '</div>';
+    })()+
     '</div></div>';
   }).join('');
 }
@@ -603,7 +609,7 @@ async function createTask(){
 }
 
 /* ---------- delegated wiring (P0-2: no inline onclick anywhere) ---------- */
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-act]');
   if(!el) return;
   const act=el.getAttribute('data-act');
@@ -622,6 +628,7 @@ document.addEventListener('click',e=>{
     renderIdeaApprovalSheet(app||{id:el.getAttribute('data-id'),description:'Idea approval (unlinked)'});
   }
   else if(act==='desk'){ openAgentCard(el.getAttribute('data-agent')); }
+  else if(act==='expireApproval'){ try{ await api('expireApproval',{approvalId:el.getAttribute('data-id')}); toast('Cleared'); refresh(); }catch(e){ toast(e.message); } }
   else if(act==='deskWait'){ moveTaskToWaiting(el.getAttribute('data-task'),'Moved to WAITING from agent desk card'); }
 });
 $('loginBtn').addEventListener('click',login);
