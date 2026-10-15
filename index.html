@@ -89,40 +89,38 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .rcard .editrow button{font-size:14px;font-weight:700;border:0;border-radius:10px;padding:10px 14px;background:#7c5cff;color:#fff}
 .rcard .editrow button.cancel{background:#2a2540;color:#d8ccff}
 .v-ok{color:var(--green);font-weight:700;font-size:11px;text-align:right}.v-no{color:var(--amber);font-weight:700;font-size:11px;text-align:right}
-/* ---------- OFFICE FLOOR (visual office view — Oct 14 neon redesign) ---------- */
+/* ---------- OFFICE FLOOR (illustrated artwork + live pins, Oct 14 v4) ---------- */
 .floor-head{display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px}
 .floor-head span{font-size:11px;color:#00ffff;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,255,255,.45)}
 .floor-legend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px;font-size:10px;color:#b9b3d0}
 .floor-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.floor-glow{filter:drop-shadow(0 0 12px rgba(138,43,226,.35))}
-.floor-wrap{background:#05050a;border:1px solid rgba(138,43,226,.45);padding:14px 11px 16px;margin:0 0 6px;position:relative;overflow:hidden;clip-path:polygon(24px 0,calc(100% - 24px) 0,100% 24px,100% calc(100% - 24px),calc(100% - 24px) 100%,24px 100%,0 calc(100% - 24px),0 24px)}
-.floor-wrap::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(75,0,130,.30) 1px,transparent 1px),linear-gradient(90deg,rgba(75,0,130,.30) 1px,transparent 1px);background-size:26px 26px}
-.floor-wrap::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 0%,rgba(0,255,255,.10),transparent 55%)}
-.floor-inner{position:relative}
-.mcore{margin:2px auto 14px;width:180px;text-align:center}
-.mcore-badge{width:58px;height:58px;border-radius:50%;background:#d4af37;color:#000;font-weight:800;font-size:21px;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 0 16px rgba(212,175,55,.7),0 0 42px rgba(138,43,226,.55);border:2px solid #f5d88c}
-.mcore-halo{width:96px;height:16px;margin:-6px auto 4px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(157,124,255,.8),rgba(0,255,255,.25) 60%,transparent 75%);filter:blur(3px)}
-.mcore-label{font-size:10px;letter-spacing:3px;color:#00ffff;text-transform:uppercase;text-shadow:0 0 8px rgba(0,255,255,.55)}
-.lz{border:1px solid rgba(138,43,226,.45);border-radius:14px;padding:10px 10px 12px;margin-bottom:12px;background:rgba(10,10,26,.35)}
-.lz h3{font-size:10px;color:#00ffff;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px 2px;text-shadow:0 0 8px rgba(0,255,255,.35)}
-.lz-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.desk{background:rgba(8,8,20,.78);border:1px solid rgba(138,43,226,.5);border-radius:12px;padding:10px;cursor:pointer;min-height:96px;position:relative;box-shadow:inset 0 0 16px rgba(75,0,130,.14)}
-.desk:active{transform:scale(.98)}
-.desk[data-st="working"]{border-color:rgba(74,222,128,.55);box-shadow:0 0 11px rgba(74,222,128,.22),inset 0 0 16px rgba(75,0,130,.14)}
-.desk[data-st="waiting"]{border-color:rgba(240,216,140,.5);box-shadow:0 0 11px rgba(240,216,140,.18),inset 0 0 16px rgba(75,0,130,.14)}
-.desk[data-st="down"]{border-color:rgba(248,113,113,.6);box-shadow:0 0 11px rgba(248,113,113,.28),inset 0 0 16px rgba(75,0,130,.14)}
-.desk[data-st="idle"]{border-color:rgba(138,43,226,.4)}
-.desk-top{display:flex;justify-content:space-between;align-items:flex-start}
-.d-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 10px rgba(157,124,255,.4)}
-.d-light{width:10px;height:10px;border-radius:50%;margin-top:3px;border:1px solid rgba(255,255,255,.15)}
-.d-light.working{background:#4ade80;box-shadow:0 0 9px #4ade80}
-.d-light.waiting{background:#f0d88c;box-shadow:0 0 9px #f0d88c}
-.d-light.idle{background:#8a86a8}
-.d-light.down{background:#f87171;box-shadow:0 0 9px #f87171}
-.d-name{font-weight:700;font-size:12.5px;margin-top:7px;line-height:1.25;color:#fff;word-break:break-word}
-.d-role{font-size:10.5px;color:#cfc8e8;line-height:1.3;margin-top:2px;word-break:break-word}
-.d-bubble{margin-top:7px;background:#0e0b1c;border:1px solid rgba(0,255,255,.22);border-radius:9px;padding:5px 7px;font-size:10.5px;color:#d8ccff;line-height:1.35;word-break:break-word;white-space:normal}
+.art{position:relative;width:100%;aspect-ratio:1/1;border-radius:18px;overflow:hidden;border:1px solid rgba(138,43,226,.55);box-shadow:0 0 22px rgba(138,43,226,.35);background:#05050a url('office_bg.jpg') center/cover no-repeat}
+.art::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(5,5,10,.55) 100%)}
+.pin{position:absolute;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;cursor:pointer;max-width:96px}
+.pin:active{transform:translate(-50%,-50%) scale(.96)}
+.pin-light{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.75);background:#8a86a8;box-shadow:0 0 6px rgba(0,0,0,.6)}
+.pin-light.working{background:#4ade80;box-shadow:0 0 14px 4px #4ade80;animation:pulse 1.6s ease-in-out infinite}
+.pin-light.waiting{background:#f0d88c;box-shadow:0 0 14px 4px #f0d88c}
+.pin-light.idle{background:#8a86a8}
+.pin-light.down{background:#f87171;box-shadow:0 0 14px 4px #f87171;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+.pin-tag{margin-top:3px;background:rgba(5,5,12,.82);border:1px solid rgba(0,255,255,.45);border-radius:7px;padding:2px 5px 3px;text-align:center;backdrop-filter:blur(2px)}
+.pin-name{font-size:8.5px;font-weight:700;color:#fff;line-height:1.15;letter-spacing:.2px;white-space:normal}
+.pin-role{font-size:7px;color:#9fe9ff;line-height:1.15;margin-top:1px}
+.pin-task{font-size:7px;color:#d8ccff;line-height:1.15;margin-top:1px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pin.core{z-index:6}
+.pin.core .pin-light{display:none}
+.core-badge{width:40px;height:40px;border-radius:50%;background:#d4af37;color:#000;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;border:2px solid #f5d88c;box-shadow:0 0 14px rgba(212,175,55,.85),0 0 34px rgba(138,43,226,.7)}
+.pin.core .pin-tag{border-color:rgba(212,175,55,.7)}
+.pin.core .pin-name{color:#f5d88c;letter-spacing:1.5px}
 .d-dell{display:inline-block;font-size:9.5px;border:1px solid #8a86a8;color:#b9b3d0;border-radius:999px;padding:2px 7px;margin-top:5px}
+.roster-list{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rl{display:flex;align-items:center;gap:7px;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.4);border-radius:10px;padding:7px 9px;font-size:11px;color:#fff;cursor:pointer}
+.rl i{width:9px;height:9px;border-radius:50%;flex:0 0 9px;background:#8a86a8}
+.rl i.working{background:#4ade80;box-shadow:0 0 8px #4ade80}
+.rl i.waiting{background:#f0d88c;box-shadow:0 0 8px #f0d88c}
+.rl i.down{background:#f87171;box-shadow:0 0 8px #f87171}
+.rl span{line-height:1.2;word-break:break-word}
 footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);backdrop-filter:blur(8px)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;box-shadow:0 0 8px var(--green)}
 .dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
@@ -461,33 +459,71 @@ function deskHtml(r, tasks, agents){
    +(isClaw&&status==='idle'?'<span class="d-dell">Dell closed</span>':'')
    +'</div>';
 }
+// Room anchor points on the artwork (percent of image). Center = JG core.
+const OFFICE_SLOTS={
+  core:{x:50,y:48},
+  lily:{x:25,y:20}, jen:{x:73,y:22}, lelic:{x:86,y:48},
+  sam:{x:73,y:68}, zelus:{x:50,y:80}, og:{x:27,y:62},
+  grok:{x:12,y:40}, elio:{x:88,y:80}
+};
+function slotFor(name){
+  const n=normAgent(name);
+  if(n.indexOf('LILY')>=0) return OFFICE_SLOTS.lily;
+  if(n.indexOf('JEN')>=0) return OFFICE_SLOTS.jen;
+  if(n.indexOf('LELIC')>=0) return OFFICE_SLOTS.lelic;
+  if(n.indexOf('SAM')>=0) return OFFICE_SLOTS.sam;
+  if(n.indexOf('ZELUS')>=0) return OFFICE_SLOTS.zelus;
+  if(n.indexOf('OG VANTRA')>=0) return OFFICE_SLOTS.og;
+  if(n.indexOf('VANTRA GROK')>=0) return OFFICE_SLOTS.grok;
+  if(n==='ELIO'||n.indexOf('ELIO')===0) return OFFICE_SLOTS.elio;
+  return null;
+}
+function pinHtml(r, tasks, agents){
+  const slot=slotFor(r.name); if(!slot) return '';
+  const st=(agents||[]).find(a=>normAgent(a.agentName)===normAgent(r.name));
+  const status=agentDeskStatus(r, st, tasks);
+  const mine=tasks.filter(t=>normAgent(t.assignedAgent)===normAgent(r.name));
+  const active=mine.find(t=>t.state==='ACTIVE');
+  const role=(r.roleTitle||'').trim();
+  return '<div class="pin" data-act="desk" data-agent="'+esc(r.name)+'" style="left:'+slot.x+'%;top:'+slot.y+'%">'
+   +'<span class="pin-light '+status+'"></span>'
+   +'<div class="pin-tag"><div class="pin-name">'+esc(fmtAgentName(r.name))+'</div>'
+   +(role?'<div class="pin-role">'+esc(role)+'</div>':'')
+   +(active?'<div class="pin-task">\ud83d\udca1 '+esc(active.title)+'</div>':'')
+   +'</div></div>';
+}
+function corePinHtml(){
+  return '<div class="pin core" style="left:'+OFFICE_SLOTS.core.x+'%;top:'+OFFICE_SLOTS.core.y+'%">'
+   +'<div class="core-badge">JG</div>'
+   +'<div class="pin-tag"><div class="pin-name">MISSION CORE</div></div></div>';
+}
 async function renderOfficeView(){
   const container=$('officeFloor');
   try{
     if(!board) board=await api('board');
     const d=await api('agents');
-    const roster=(d.roster||[]).filter(r=>!String(r.platform||'').match(/Regular Grok|ChatGPT/i)||true);
+    const roster=d.roster||[];
     const agents=d.agents||[];
-    window._office={roster, agents, tasks:board.tasks||[]};
-    const groups=[
-      {label:'GROK BOT WING', items:roster.filter(r=>String(r.platform||'').indexOf('GROK Bot')>=0)},
-      {label:'VANTRA CORE WING', items:roster.filter(r=>String(r.platform||'').indexOf('GROK Bot')<0&&String(r.platform||'').indexOf('Partner')<0)},
-      {label:'PARTNERS', items:roster.filter(r=>String(r.platform||'').indexOf('Partner')>=0)}
-    ];
-    container.innerHTML=
-      '<div class="floor-head"><span>OFFICE — LIVE VIEW</span><button class="abtn" style="padding:4px 8px;font-size:11px;border-color:#00ffff;color:#00ffff" data-act="refreshOffice">\u21bb</button></div>'
-      +'<div class="floor-glow"><div class="floor-wrap"><div class="floor-inner">'
-      +'<div class="mcore"><div class="mcore-badge">JG</div><div class="mcore-halo"></div><div class="mcore-label">Mission Core</div></div>'
+    const tasks=board.tasks||[];
+    window._office={roster, agents, tasks:tasks};
+    const placed=roster.filter(r=>slotFor(r.name));
+    const unplaced=roster.filter(r=>!slotFor(r.name));
+    let html='<div class="floor-head"><span>OFFICE \u2014 LIVE FLOOR</span><button class="abtn" style="padding:4px 8px;font-size:11px;border-color:#00ffff;color:#00ffff" data-act="refreshOffice">\u21bb</button></div>'
       +'<div class="floor-legend">'
       +'<span><i style="background:#4ade80"></i>Working</span>'
       +'<span><i style="background:#f0d88c"></i>Waiting</span>'
       +'<span><i style="background:#8a86a8"></i>Idle</span>'
       +'<span><i style="background:#f87171"></i>Down</span>'
       +'</div>'
-      +groups.map(g=>g.items.length
-        ?'<div class="lz"><h3>'+esc(g.label)+'</h3><div class="lz-grid">'+g.items.map(r=>deskHtml(r,board.tasks||[],agents)).join('')+'</div></div>'
-        :'').join('')
-      +'</div></div></div>';
+      +'<div class="art">'+corePinHtml()+placed.map(r=>pinHtml(r,tasks,agents)).join('')+'</div>';
+    if(unplaced.length){
+      html+='<div class="roster-list">'+unplaced.map(r=>{
+        const st=(agents||[]).find(a=>normAgent(a.agentName)===normAgent(r.name));
+        const status=agentDeskStatus(r, st, tasks);
+        return '<div class="rl" data-act="desk" data-agent="'+esc(r.name)+'"><i class="'+status+'"></i><span>'+esc(fmtAgentName(r.name))+'</span></div>';
+      }).join('')+'</div>';
+    }
+    container.innerHTML=html;
   }catch(e){ container.innerHTML='<div class="errline">Can\u2019t load the office floor: '+esc(e.message)+'</div>'; }
 }
 function openAgentCard(name){
