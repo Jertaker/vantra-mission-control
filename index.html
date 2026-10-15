@@ -94,11 +94,8 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .floor-head span{font-size:11px;color:#00ffff;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,255,255,.45)}
 .floor-legend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px;font-size:10px;color:#b9b3d0}
 .floor-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.lo{position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;border:1px solid rgba(138,43,226,.6);box-shadow:0 0 22px rgba(138,43,226,.35);background:#05050a url('office_bg.jpg') center/cover no-repeat;touch-action:manipulation}
+.lo{position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;border:1px solid rgba(138,43,226,.6);box-shadow:0 0 22px rgba(138,43,226,.35);background:#05050a url('office_bg.jpg?v=92') center/cover no-repeat;touch-action:manipulation}
 .lo::before{content:'';position:absolute;inset:0;background:rgba(5,5,12,.30);pointer-events:none}
-.lo-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;pointer-events:none;text-align:center}
-.lo-core b{display:flex;width:36px;height:36px;border-radius:50%;background:#d4af37;color:#000;font-size:14px;align-items:center;justify-content:center;border:2px solid #f5d88c;box-shadow:0 0 14px rgba(212,175,55,.85),0 0 30px rgba(138,43,226,.7);margin:0 auto}
-.lo-core span{display:block;font-size:7px;letter-spacing:2px;color:#f5d88c;margin-top:2px;text-shadow:0 0 6px #000}
 .lo-room{position:absolute;z-index:1;font-size:6.5px;letter-spacing:1.4px;color:rgba(0,255,255,.8);text-transform:uppercase;text-shadow:0 0 5px #000,0 0 5px #000;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
 .w{position:absolute;z-index:5;width:0;height:0;cursor:pointer;transition:left 2.6s linear,top 2.6s linear}
 .w-body{position:absolute;left:-15px;top:-34px;width:30px;display:flex;flex-direction:column;align-items:center}
@@ -538,6 +535,26 @@ var LO_HOME={
   'CLAW':{x:30,y:73,room:'SECURITY POST'},
   'LENNY':{x:77,y:33,room:'EVIDENCE & BOARD'}
 };
+// Explicit room-label positions (override) so wide labels never collide.
+var LO_LABELS={
+  'EVIDENCE & BOARD':{x:79,y:36},
+  'FILE TRANSFER & RECORDS':{x:73,y:16},
+  'APPROVAL GATE':{x:44,y:26},
+  'RECEPTION':{x:25,y:15},
+  'SCOUTING & RESEARCH':{x:14,y:33},
+  'OPS & COMMS':{x:38,y:44},
+  'COORDINATION ROOM':{x:83,y:43},
+  'SCHEDULING':{x:72,y:58},
+  'EXECUTIVE SUITE':{x:27,y:53},
+  'SECURITY POST':{x:29,y:64},
+  'RESILIENCE LAB':{x:22,y:59},
+  'STUDIO / VIDEO':{x:50,y:70},
+  'CREATIVE':{x:38,y:79},
+  'RECOVERY BAY':{x:62,y:79},
+  'BUILD LAB':{x:85,y:71},
+  'WAITING AREA':{x:60,y:41},
+  'LOUNGE':{x:66,y:56}
+};
 var LO_HALLS=[{x:50,y:34},{x:38,y:50},{x:62,y:50},{x:50,y:62},{x:30,y:44},{x:70,y:44},{x:50,y:70},{x:40,y:72},{x:60,y:72}];
 var LO_ALL={}; var LO_TIMER=null; var LO_TICKS=0; // v9: LO_FEED removed - only real audit events are shown
 // Canonical VANTRA looks (from the visual identity doc): black body + per-operator accent.
@@ -620,10 +637,10 @@ async function renderOfficeView(){
     window._office={roster:roster,agents:agents,tasks:tasks,asOf:new Date().toISOString()};
     clearInterval(LO_TIMER); LO_ALL={};
     var rooms={}; Object.keys(LO_HOME).forEach(function(k){ var h=LO_HOME[k]; if(!rooms[h.room]) rooms[h.room]=h; });
-    var roomHtml=Object.keys(rooms).map(function(r){ return '<span class="lo-room" style="left:'+rooms[r].x+'%;top:'+(rooms[r].y-8)+'%">'+esc(r)+'</span>'; }).join('');
-    roomHtml+='<span class="lo-room" style="left:59%;top:49.5%">WAITING AREA</span>';
-    roomHtml+='<span class="lo-room" style="left:41%;top:31%">APPROVAL GATE</span>';
-    roomHtml+='<span class="lo-room" style="left:64%;top:56%">LOUNGE</span>';
+    var roomHtml=Object.keys(rooms).map(function(r){ var lp=LO_LABELS[r]||{x:rooms[r].x,y:rooms[r].y-8}; return '<span class="lo-room" style="left:'+lp.x+'%;top:'+lp.y+'%">'+esc(r)+'</span>'; }).join('');
+    
+    
+    
     var pending=(board.approvals)||[];
     var consoleHtml='<div class="lo-console'+(pending.length?' pend':'')+'" data-act="officeApprovals" style="left:41%;top:39%" title="Approval Gate console'+(pending.length?(' \u2014 '+pending.length+' pending'):'')+'"></div>';
     var wk=roster.map(function(r,idx){
@@ -663,7 +680,7 @@ async function renderOfficeView(){
       +team
       +'<div class="floor-head"><span>LIVE OFFICE</span><span class="asof" style="margin:0 0 0 10px">data as of '+fmtET(window._office.asOf)+' ET</span><button class="abtn" style="padding:4px 8px;font-size:11px;border-color:#00ffff;color:#00ffff" data-act="refreshOffice">\u21bb</button></div>'
       +'<div class="floor-legend"><span><i style="background:#4ade80"></i>Working (ACTIVE task)</span><span><i style="background:#f0d88c"></i>Waiting</span><span><i style="background:#8a86a8"></i>Idle</span><span><i style="background:#fb923c"></i>Stale (24h+)</span><span><i style="background:#f87171"></i>Down</span></div>'
-      +'<div class="lo ov-floor">'+roomHtml+consoleHtml+'<div class="lo-core"><b>JG</b><span>MISSION CORE</span></div>'+wk+'</div>'
+      +'<div class="lo ov-floor">'+roomHtml+consoleHtml+wk+'</div>'
       +'<div class="lo-feed ov-feed" id="loFeed"></div>'
       +'<div class="lo-note">Real signals only. Working = has an ACTIVE board task. Waiting = WAITING task, they stand by Mission Core. Stale = no check-in for 24 h. Down = blocked or errored (CLAW, HERMES and LENOCLAW sit at their own station). The feed is the real audit log \u2014 no simulated chats or walk-overs. Tap a robot for room, last action, blockers and evidence. Tap the gold console for the Approval Gate.</div>';
     Object.keys(LO_ALL).forEach(function(id){ LO_ALL[id].el=document.getElementById(id); });
