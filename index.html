@@ -224,6 +224,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
 
 <script>
 const APIURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/missionControlApi";
+const COMMSURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcComms";
 let token = localStorage.getItem('mc_token') || '';
 let board = null; let view='home'; let filter='all'; let selected=null;
 let loginBusy=false; let capBusy=false;
@@ -488,21 +489,21 @@ function deskHtml(r, tasks, agents){
 // Home desk + room anchors, in percent of the artwork box.
 var LO_HOME={
   'LILY':{x:25,y:24,room:'RECEPTION'},
-  'JEN':{x:73,y:25,room:'RECORDS'},
-  'LELIC':{x:84,y:52,room:'OPERATIONS'},
+  'JEN':{x:73,y:25,room:'FILE TRANSFER & RECORDS'},
+  'LELIC':{x:84,y:52,room:'COORDINATION ROOM'},
   'SAM':{x:72,y:67,room:'SCHEDULING'},
-  'ZELUS':{x:50,y:79,room:'STUDIO'},
-  'OG VANTRA':{x:27,y:62,room:'EXECUTIVE'},
-  'VANTRA GROK':{x:14,y:42,room:'RESEARCH'},
+  'ZELUS':{x:50,y:79,room:'STUDIO / VIDEO'},
+  'OG VANTRA':{x:27,y:62,room:'EXECUTIVE SUITE'},
+  'VANTRA GROK':{x:14,y:42,room:'SCOUTING & RESEARCH'},
   'ELIO':{x:86,y:80,room:'BUILD LAB'},
   'MUSE':{x:38,y:88,room:'CREATIVE'},
-  'LENOHERMES':{x:62,y:88,room:'RUNTIME'},
-  'LENOCLAW':{x:16,y:78,room:'RUNTIME'},
-  'HERMES':{x:62,y:92,room:'RUNTIME'},
-  'CLAW':{x:16,y:84,room:'RUNTIME'}
+  'LENOHERMES':{x:62,y:88,room:'RECOVERY BAY'},
+  'LENOCLAW':{x:16,y:78,room:'RECOVERY BAY'},
+  'HERMES':{x:62,y:92,room:'RECOVERY BAY'},
+  'CLAW':{x:16,y:84,room:'RECOVERY BAY'}
 };
 var LO_HALLS=[{x:50,y:34},{x:38,y:50},{x:62,y:50},{x:50,y:62},{x:30,y:44},{x:70,y:44},{x:50,y:70},{x:40,y:72},{x:60,y:72}];
-var LO_ALL={}; var LO_TIMER=null; var LO_FEED=[];
+var LO_ALL={}; var LO_TIMER=null; var LO_FEED=[]; var LO_TICKS=0;
 // Canonical VANTRA looks (from the visual identity doc): black body + per-operator accent.
 var LO_LOOKS={
   'OG VANTRA':{ac:'#9d7cff',eye:'#8fd0ff',core:'#d4af37',cls:'og'},
@@ -554,15 +555,26 @@ function loPartners(rec){
   });
   return out;
 }
+function loGoBack(rec){
+  var pt=(rec.status==='waiting')?rec.waitSpot:(rec.status==='down'?rec.bay:rec.home);
+  rec.el.classList.add('walk'); loPlace(rec.el,pt);
+  setTimeout(function(){ rec.el.classList.remove('walk'); if(rec.status==='working') rec.el.classList.add('work'); },2800);
+}
 function loTick(){
   var ids=Object.keys(LO_ALL); if(!ids.length) return;
+  LO_TICKS++;
+  if(LO_TICKS%14===0) loLoadComms();
   ids.forEach(function(id){
     var rec=LO_ALL[id]; if(!rec||!rec.el.isConnected) return;
-    if(rec.status==='down'){ loPlace(rec.el,rec.home); rec.el.classList.remove('walk','work'); return; }
+    // DOWN = walk to the Recovery Bay once and sit there, dim
+    if(rec.status==='down'){
+      if(!rec.atBay){ rec.el.classList.add('walk'); rec.el.classList.remove('work'); loPlace(rec.el,rec.bay); rec.atBay=true; setTimeout(function(){ rec.el.classList.remove('walk'); },2800); }
+      rec.busyUntil=Date.now()+30000; return;
+    }
+    rec.atBay=false;
     if(rec.busyUntil&&Date.now()<rec.busyUntil) return;
-    var roll=Math.random();
     var partners=loPartners(rec);
-    if(partners.length && roll<0.55){
+    if(partners.length && Math.random()<0.55){
       var p=partners[Math.floor(Math.random()*partners.length)];
       var other=null; ids.forEach(function(o){ if(LO_ALL[o]&&normAgent(LO_ALL[o].name)===normAgent(p.name)) other=LO_ALL[o]; });
       if(other&&other.status!=='down'){
@@ -571,25 +583,50 @@ function loTick(){
         rec.busyUntil=Date.now()+9000;
         (function(r,o,pp){ setTimeout(function(){
           r.el.classList.remove('walk'); loSay(r,'Syncing with '+loFirst(o.name)+' ('+pp.why+')'); loSay(o,'Got it, '+loFirst(r.name));
-          LO_FEED.unshift(loFirst(r.name)+' \u2194 '+loFirst(o.name)+' \u2014 '+pp.why+(pp.task?': '+pp.task:'')); LO_FEED=LO_FEED.slice(0,4); loRenderFeed();
-        },2800); setTimeout(function(){ r.el.classList.add('walk'); loPlace(r.el,r.home); setTimeout(function(){ r.el.classList.remove('walk'); if(r.status==='working') r.el.classList.add('work'); },2800); },7400); })(rec,other,p);
+          LO_FEED.unshift({t:new Date().toISOString(),txt:loFirst(r.name)+' \u2194 '+loFirst(o.name)+' \u2014 '+pp.why+(pp.task?': '+pp.task:'')}); LO_FEED=LO_FEED.slice(0,4); loRenderFeed();
+        },2800); setTimeout(function(){ loGoBack(r); },7400); })(rec,other,p);
         return;
       }
     }
+    // WORKING = at their desk in their room, typing (real board signal)
     if(rec.status==='working'){
       rec.el.classList.remove('walk'); rec.el.classList.add('work'); loPlace(rec.el,rec.home); rec.busyUntil=Date.now()+6000; return;
     }
-    // idle or waiting: wander the halls (ambient, NOT a work signal)
-    if(roll<0.6){
-      var h=LO_HALLS[Math.floor(Math.random()*LO_HALLS.length)];
-      rec.el.classList.add('walk'); rec.el.classList.remove('work'); loPlace(rec.el,{x:h.x+(Math.random()*6-3),y:h.y+(Math.random()*4-2)});
-      rec.busyUntil=Date.now()+5200; setTimeout(function(){ rec.el.classList.remove('walk'); },2700);
+    // WAITING = walk to the Waiting Area next to Mission Core and stand there
+    if(rec.status==='waiting'){
+      if(!rec.atWait){ rec.el.classList.add('walk'); rec.el.classList.remove('work'); loPlace(rec.el,rec.waitSpot); rec.atWait=true; setTimeout(function(){ rec.el.classList.remove('walk'); },2800); }
+      rec.busyUntil=Date.now()+30000; return;
+    }
+    rec.atWait=false;
+    // IDLE = stands at their station; only an occasional short stretch nearby
+    if(Math.random()<0.3){
+      rec.el.classList.add('walk'); rec.el.classList.remove('work');
+      loPlace(rec.el,{x:rec.home.x+(Math.random()*7-3.5),y:rec.home.y+(Math.random()*5-2.5)});
+      rec.busyUntil=Date.now()+4200; setTimeout(function(){ rec.el.classList.remove('walk'); },2700);
     } else {
-      rec.el.classList.add('walk'); rec.el.classList.remove('work'); loPlace(rec.el,rec.home); rec.busyUntil=Date.now()+4000; setTimeout(function(){ rec.el.classList.remove('walk'); },2700);
+      rec.el.classList.remove('walk'); rec.el.classList.remove('work'); loPlace(rec.el,rec.home); rec.busyUntil=Date.now()+6000;
     }
   });
 }
-function loRenderFeed(){ var f=document.getElementById('loFeed'); if(!f) return; f.innerHTML=LO_FEED.length?LO_FEED.map(function(t){return '<div>\ud83d\udcac '+esc(t)+'</div>';}).join(''):'<div style="color:#8a86a8">No team handoffs right now. Workers on related tasks walk over to each other when there is one.</div>'; }
+async function loLoadComms(){
+  try{
+    const r=await fetch(COMMSURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({op:'comms'})});
+    const d=await r.json();
+    window._office.comms=(d&&d.ok&&d.events)?d.events:[];
+  }catch(e){ window._office.comms=null; }
+  loRenderFeed();
+}
+function loRenderFeed(){
+  var f=document.getElementById('loFeed'); if(!f) return;
+  var comms=(window._office&&window._office.comms)||[];
+  var rows=LO_FEED.slice(0,4).map(function(m){ return {t:m.t,txt:m.txt}; });
+  if(comms){ comms.slice(0,6).forEach(function(ev){ rows.push({t:ev.observedAt,txt:loFirst(ev.reporterAgent||'SYSTEM')+' \u2014 '+ev.messageSummary}); }); }
+  rows.sort(function(a,b){ return a.t<b.t?1:-1; });
+  rows=rows.slice(0,7);
+  f.innerHTML=rows.length
+    ? '<div style="font-size:9px;letter-spacing:1.5px;color:#00ffff;margin-bottom:2px">TEAM COMMS \u2014 LIVE</div>'+rows.map(function(r){ return '<div>\ud83d\udcac '+esc(r.txt)+' <span style="color:#8a86a8">\u00b7 '+fmtET(r.t)+' ET</span></div>'; }).join('')
+    : '<div style="color:#8a86a8">No team comms yet. Real events show here as agents report in.</div>';
+}
 async function renderOfficeView(){
   const container=$('officeFloor');
   try{
@@ -602,6 +639,7 @@ async function renderOfficeView(){
     clearInterval(LO_TIMER); LO_ALL={};
     var rooms={}; Object.keys(LO_HOME).forEach(function(k){ var h=LO_HOME[k]; if(!rooms[h.room]) rooms[h.room]=h; });
     var roomHtml=Object.keys(rooms).map(function(r){ return '<span class="lo-room" style="left:'+rooms[r].x+'%;top:'+(rooms[r].y-8)+'%">'+esc(r)+'</span>'; }).join('');
+    roomHtml+='<span class="lo-room" style="left:59%;top:49.5%">WAITING AREA</span>';
     var wk=roster.map(function(r,idx){
       var key=loKey(r.name); var home=key?LO_HOME[key]:{x:20+(idx*7)%60,y:92};
       var st=(agents||[]).find(function(a){return normAgent(a.agentName)===normAgent(r.name);});
@@ -610,7 +648,7 @@ async function renderOfficeView(){
       var active=mine.find(function(t){return t.state==='ACTIVE';});
       var lk=loLook(r.name); var bd=(-(idx*0.83)%4.6).toFixed(2)+'s';
       var id='w'+idx;
-      LO_ALL[id]={name:r.name,status:status,home:{x:home.x,y:home.y},el:null,busyUntil:0};
+      LO_ALL[id]={name:r.name,status:status,home:{x:home.x,y:home.y},waitSpot:{x:57+(idx%3)*3.5,y:53.5+Math.floor(idx/3)*3.5},bay:{x:13+(idx%2)*4,y:76+(idx%4)*3},el:null,busyUntil:0,atBay:false,atWait:false};
       return '<div class="w'+(status==='working'?' work':'')+(lk.cls?' '+lk.cls:'')+'" id="'+id+'" data-act="desk" data-agent="'+esc(r.name)+'" data-st="'+status+'" style="left:'+home.x+'%;top:'+home.y+'%;--ac:'+lk.ac+';--eye:'+lk.eye+';--core:'+lk.core+';--bd:'+bd+'" title="'+esc(fmtAgentName(r.name))+(active?' \u2014 '+esc(active.title):'')+'">'
         +'<span class="w-dot"></span><div class="w-say"></div>'
         +'<div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div>'
@@ -621,9 +659,9 @@ async function renderOfficeView(){
       +'<div class="floor-legend"><span><i style="background:#4ade80"></i>Working (board says so)</span><span><i style="background:#f0d88c"></i>Waiting</span><span><i style="background:#8a86a8"></i>Idle</span><span><i style="background:#f87171"></i>Down</span></div>'
       +'<div class="lo">'+roomHtml+'<div class="lo-core"><b>JG</b><span>MISSION CORE</span></div>'+wk+'</div>'
       +'<div class="lo-feed" id="loFeed"></div>'
-      +'<div class="lo-note">Status dots are real (from the board). Walking is: real when two workers share a project or a handoff (they meet and a bubble shows), and just ambient wandering otherwise. Tap anyone to open their card.</div>';
+      +'<div class="lo-note">Rooms match real functions. Working = at their desk typing. Waiting = they walk to the Waiting Area by Mission Core. Down = they walk to the Recovery Bay. Idle workers stand at their station (small stretches only). Syncs are real: shared project or handoff. Tap anyone for their card, or to assign them a task.</div>';
     Object.keys(LO_ALL).forEach(function(id){ LO_ALL[id].el=document.getElementById(id); });
-    loRenderFeed();
+    LO_FEED=[]; LO_TICKS=0; loLoadComms();
     setTimeout(loTick,600); LO_TIMER=setInterval(function(){ if($('officeView')&&!$('officeView').classList.contains('hidden')) loTick(); },3200);
   }catch(e){ container.innerHTML='<div class="errline">Can\u2019t load the live office: '+esc(e.message)+'</div>'; }
 }
@@ -652,9 +690,32 @@ function openAgentCard(name){
     +(st&&st.lastHeartbeat?'<div class="desc"><b>Heartbeat:</b> '+fmtDate(st.lastHeartbeat)+'</div>':'')
     +'<div class="acts">'
     +(active?'<button class="abtn gold" data-act="deskWait" data-task="'+esc(active.taskId)+'">Move to Waiting</button>':'<span style="font-size:12px;color:var(--dim)">No active task to move.</span>')
+    +'<button class="abtn" data-act="deskAssign" data-agent="'+esc(r.name)+'">Assign Task</button>'
     +'<button class="abtn" data-act="close">Close</button>'
     +'</div>';
   $('drawer').classList.remove('hidden');
+}
+
+/* ---------- assign task from the office floor (v8) ---------- */
+function openAssignForm(name){
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">\u2715</button>'
+    +'<h3>Assign task \u2192 '+esc(fmtAgentName(name))+'</h3>'
+    +'<div class="desc" style="margin-bottom:10px">The task lands on the Mission Control board with '+esc(fmtAgentName(name))+' as the assignee.</div>'
+    +'<input id="asTitle" placeholder="Task title..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:9px">'
+    +'<input id="asProject" placeholder="Project (optional)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:9px">'
+    +'<select id="asPriority" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:14px"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select>'
+    +'<div class="acts"><button class="abtn gold" data-act="deskAssignGo" data-agent="'+esc(name)+'">Assign Task</button><button class="abtn" data-act="close">Cancel</button></div>';
+  $('drawer').classList.remove('hidden');
+}
+async function submitAssign(name){
+  const title=$('asTitle').value.trim(); if(!title){ toast('Give the task a title'); return; }
+  try{
+    await api('createTask',{title:title,project:$('asProject').value.trim(),priority:$('asPriority').value,requiresApproval:'no',assignedAgent:name,idempotencyKey:('desk-'+Date.now()+'-'+deviceId())});
+    toast('Task assigned to '+fmtAgentName(name));
+    closeDrawer(); refresh();
+    if(view==='office') renderOfficeView();
+  }catch(e){ toast(e.message); }
 }
 
 /* ---------- idea approval graceful sheet (MC-IDEAS) ---------- */
@@ -781,6 +842,8 @@ document.addEventListener('click',async e=>{
     renderIdeaApprovalSheet(app||{id:el.getAttribute('data-id'),description:'Idea approval (unlinked)'});
   }
   else if(act==='desk'){ openAgentCard(el.getAttribute('data-agent')); }
+  else if(act==='deskAssign'){ openAssignForm(el.getAttribute('data-agent')); }
+  else if(act==='deskAssignGo'){ submitAssign(el.getAttribute('data-agent')); }
   else if(act==='expireApproval'){ try{ await api('expireApproval',{approvalId:el.getAttribute('data-id')}); toast('Cleared'); refresh(); }catch(e){ toast(e.message); } }
   else if(act==='deskWait'){ moveTaskToWaiting(el.getAttribute('data-task'),'Moved to WAITING from agent desk card'); }
 });
