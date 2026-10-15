@@ -1,0 +1,188 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>v9.1 office preview</title><style>
+:root{
+  --bg:#070714; --surface:#0e0e20; --surface2:#151530; --border:rgba(150,120,255,.14);
+  --purple:#9d7cff; --purple-deep:#5b3df5; --gold:#d4af37; --gold-soft:#f0d88c;
+  --green:#4ade80; --red:#f87171; --amber:#fbbf24; --text:#f2f0fa; --dim:#8a86a8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+/* iOS zoom guard + safe areas (P2-7) */
+input,select,textarea{font-size:16px}
+/* LOGIN */
+#login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 0%,#151538 0%,var(--bg) 60%);z-index:99;padding:0 20px}
+.logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--purple-deep),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;color:#fff;box-shadow:0 0 30px rgba(157,124,255,.4)}
+#login h1{font-size:19px;font-weight:700;letter-spacing:.5px;text-align:center}
+#login h1 span{color:var(--gold)}
+#login p{font-size:12px;color:var(--dim);letter-spacing:2px;text-transform:uppercase}
+#pin{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-size:18px;width:250px;text-align:center;outline:none;letter-spacing:6px}
+#pin:focus{border-color:var(--purple)}
+#loginBtn{background:linear-gradient(135deg,var(--purple-deep),var(--purple));border:none;border-radius:12px;color:#fff;font-weight:700;font-size:15px;padding:13px 0;width:250px;cursor:pointer}
+#loginBtn:disabled{opacity:.6}
+#loginErr{color:var(--red);font-size:13px;min-height:18px;text-align:center;max-width:300px;line-height:1.45}
+#loginErr .abtn{margin-left:4px}
+/* SHELL */
+header{position:sticky;top:0;z-index:10;background:rgba(7,7,20,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:15px;letter-spacing:.5px}.brand em{color:var(--gold);font-style:normal}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:7px 11px;font-size:12px;cursor:pointer}
+.hbtn.on{border-color:var(--purple);color:var(--purple)}
+.hbtn.warn{border-color:rgba(248,113,113,.4);color:var(--red)}
+nav.tabs{display:flex;gap:6px;padding:10px 16px 2px;overflow-x:auto}
+.tab{background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.tab.on{border-color:var(--purple);color:var(--purple);background:rgba(157,124,255,.08)}
+main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
+/* QUICK CAPTURE */
+#capture{display:flex;gap:8px;margin:10px 0 14px}
+#capIn{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--text);font-size:16px;outline:none}
+#capIn:focus{border-color:var(--purple)}
+#capBtn{background:linear-gradient(135deg,var(--gold),var(--gold-soft));border:none;border-radius:12px;color:#1a1500;font-weight:800;font-size:14px;padding:0 20px;cursor:pointer}
+#capBtn:disabled{opacity:.6}
+.capExtra{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 14px}
+.capExtra select,.capExtra input{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px;font-size:16px;outline:none}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.stat.s-approval b{color:var(--gold)}.stat.s-blocked b{color:var(--red)}.stat.s-active b{color:var(--green)}.stat.s-review b{color:var(--amber)}
+/* SECTIONS */
+.sec{margin-bottom:16px}
+.sec h2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin:0 0 8px 4px}
+.card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.card .t{font-size:14.5px;font-weight:600;line-height:1.35}
+.card .m{margin-top:6px;font-size:11px;color:var(--dim);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+.p-urgent{border-color:var(--red);color:var(--red)}.p-high{border-color:var(--amber);color:var(--amber)}
+.p-app{border-color:var(--gold);color:var(--gold)}
+.errline{color:var(--red);font-size:13px;padding:10px 4px;line-height:1.5}
+/* BOARD */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;min-height:120px}
+.col h3{font-size:11px;color:var(--dim);letter-spacing:1.5px;margin-bottom:8px;display:flex;justify-content:space-between}
+.col h3 i{font-style:normal;color:var(--purple);font-weight:700}
+/* APPROVALS / AGENTS */
+.apcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.apcard .acts{margin-top:10px}
+.agent{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px}
+.agent .n{font-weight:700;font-size:13.5px}
+.agent .s{font-size:11px;color:var(--dim);margin-top:2px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.rcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.rcard .rn{font-weight:800;font-size:16px;line-height:1.25;color:#fff;word-break:break-word}
+.rcard .rt{font-size:15px;line-height:1.35;color:#e6e0ff;margin-top:4px;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;cursor:pointer;padding:4px 0;min-height:22px}
+.rcard .rt.empty{color:#b9a8ff;font-style:italic}
+.rcard .rt .pen{font-size:13px;opacity:.85;margin-left:6px}
+.rcard .tag{display:inline-block;font-size:12px;font-weight:700;color:#d8ccff;background:rgba(124,92,255,.22);border:1px solid rgba(124,92,255,.5);border-radius:999px;padding:3px 10px;margin-top:6px}
+.rcard .tag.grokbot{color:#c9f7da;background:rgba(40,200,120,.18);border-color:rgba(40,200,120,.5)}
+.rcard .why{font-size:12.5px;color:#cfc8e8;margin-top:8px;line-height:1.4;word-break:break-word}
+.rcard .editrow{display:flex;gap:8px;margin-top:6px}
+.rcard .editrow input{flex:1;min-width:0;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0e0b1c;color:#fff}
+.rcard .editrow button{font-size:14px;font-weight:700;border:0;border-radius:10px;padding:10px 14px;background:#7c5cff;color:#fff}
+.rcard .editrow button.cancel{background:#2a2540;color:#d8ccff}
+.v-ok{color:var(--green);font-weight:700;font-size:11px;text-align:right}.v-no{color:var(--amber);font-weight:700;font-size:11px;text-align:right}
+/* ---------- LIVE OFFICE (animated walking workers, Oct 14 v6) ---------- */
+.floor-head{display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px}
+.floor-head span{font-size:11px;color:#00ffff;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,255,255,.45)}
+.floor-legend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px;font-size:10px;color:#b9b3d0}
+.floor-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.lo{position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;border:1px solid rgba(138,43,226,.6);box-shadow:0 0 22px rgba(138,43,226,.35);background:#05050a url('office_bg.jpg') center/cover no-repeat;touch-action:manipulation}
+.lo::before{content:'';position:absolute;inset:0;background:rgba(5,5,12,.30);pointer-events:none}
+.lo-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;pointer-events:none;text-align:center}
+.lo-core b{display:flex;width:36px;height:36px;border-radius:50%;background:#d4af37;color:#000;font-size:14px;align-items:center;justify-content:center;border:2px solid #f5d88c;box-shadow:0 0 14px rgba(212,175,55,.85),0 0 30px rgba(138,43,226,.7);margin:0 auto}
+.lo-core span{display:block;font-size:7px;letter-spacing:2px;color:#f5d88c;margin-top:2px;text-shadow:0 0 6px #000}
+.lo-room{position:absolute;z-index:1;font-size:6.5px;letter-spacing:1.4px;color:rgba(0,255,255,.8);text-transform:uppercase;text-shadow:0 0 5px #000,0 0 5px #000;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
+.w{position:absolute;z-index:5;width:0;height:0;cursor:pointer;transition:left 2.6s linear,top 2.6s linear}
+.w-body{position:absolute;left:-15px;top:-34px;width:30px;display:flex;flex-direction:column;align-items:center}
+.w-head{width:26px;height:21px;border-radius:12px 12px 8px 8px;background:radial-gradient(circle at 35% 25%,#3a3a52,#0a0a14 70%);border:1.5px solid var(--ac,#9d7cff);position:relative;box-shadow:0 0 9px var(--ac,#9d7cff),inset 0 0 4px rgba(255,255,255,.12);overflow:visible}
+.w-head::before{content:'';position:absolute;top:-3px;left:50%;width:5px;height:3px;margin-left:-2.5px;border-radius:2px 2px 0 0;background:var(--em,var(--ac,#9d7cff));box-shadow:0 0 6px var(--em,var(--ac,#9d7cff))}
+.w-eyes{position:absolute;top:7px;left:0;right:0;display:flex;justify-content:center;gap:4px}
+.w-eye{display:block;width:7px;height:8px;border-radius:50%;background:var(--eye,#7fe9ff);box-shadow:0 0 6px var(--eye,#7fe9ff),0 0 2px #fff inset;transform-origin:center;animation:blink 4.6s infinite;animation-delay:var(--bd,0s)}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}97%{transform:scaleY(1)}}
+.w[data-st="idle"]:not(.walk) .w-eyes{animation:drift 7s ease-in-out infinite;animation-delay:var(--bd,0s)}
+@keyframes drift{0%,40%,100%{transform:translateX(0)}50%,70%{transform:translateX(-2px)}80%,90%{transform:translateX(2px)}}
+.w[data-st="down"] .w-eye{animation:none;opacity:.25;transform:scaleY(.2)}
+.w-torso{width:18px;height:11px;border-radius:5px 5px 3px 3px;margin-top:-1px;background:linear-gradient(180deg,#1b1b2c,#07070d);border:1.5px solid var(--ac,#9d7cff);position:relative;box-shadow:0 0 6px var(--ac,#9d7cff)}
+.w-torso::after{content:'';position:absolute;left:50%;top:2px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--core,var(--ac,#9d7cff));box-shadow:0 0 6px var(--core,var(--ac,#9d7cff));animation:corepulse 2.4s ease-in-out infinite}
+@keyframes corepulse{0%,100%{opacity:.75}50%{opacity:1}}
+.w-arms{position:absolute;top:22px;left:-3px;right:-3px;height:8px;pointer-events:none}
+.w-arms i{position:absolute;top:0;width:4px;height:9px;border-radius:2px;background:#0c0c18;border:1px solid var(--ac,#9d7cff)}
+.w-arms i:first-child{left:0}.w-arms i:last-child{right:0}
+.w-legs{display:flex;gap:3px}
+.w-legs i{display:block;width:5px;height:6px;border-radius:0 0 2px 2px;background:#0c0c18;border:1px solid var(--ac,#9d7cff);border-top:none}
+.w.walk .w-legs i:nth-child(1){animation:step .32s ease-in-out infinite}
+.w.walk .w-legs i:nth-child(2){animation:step .32s ease-in-out infinite .16s}
+.w.walk .w-body{animation:bob .32s ease-in-out infinite}
+@keyframes step{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+.w.work .w-arms i:first-child{animation:tapL .42s ease-in-out infinite}
+.w.work .w-arms i:last-child{animation:tapR .42s ease-in-out infinite .21s}
+@keyframes tapL{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+@keyframes tapR{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+.w.wings .w-body::before,.w.wings .w-body::after{content:'';position:absolute;top:8px;width:12px;height:16px;background:linear-gradient(135deg,#22ff7a,#047a3a);opacity:.85;box-shadow:0 0 9px #22ff7a;z-index:-1}
+.w.wings .w-body::before{left:-11px;border-radius:12px 2px 12px 2px;transform:rotate(-12deg)}
+.w.wings .w-body::after{right:-11px;border-radius:2px 12px 2px 12px;transform:rotate(12deg)}
+.w.cloak .w-torso{width:22px;border-radius:3px 3px 7px 7px;margin-top:-1px}
+.w.og .w-head::before{background:#d4af37;box-shadow:0 0 6px #d4af37;width:7px;margin-left:-3.5px}
+.w-dot{position:absolute;left:10px;top:-38px;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:#8a86a8}
+.w[data-st="working"] .w-dot{background:#4ade80;box-shadow:0 0 9px #4ade80}
+.w[data-st="waiting"] .w-dot{background:#f0d88c;box-shadow:0 0 9px #f0d88c}
+.w[data-st="down"] .w-dot{background:#f87171;box-shadow:0 0 9px #f87171}
+.w[data-st="down"] .w-body{opacity:.45;filter:grayscale(.7)}
+.w-name{position:absolute;left:0;top:4px;transform:translateX(-50%);font-size:7px;font-weight:700;color:#fff;background:rgba(5,5,12,.78);border:1px solid rgba(0,255,255,.35);border-radius:5px;padding:1px 4px;white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
+.w-say{position:absolute;left:0;bottom:36px;transform:translateX(-50%);z-index:9;font-size:7.5px;color:#0b0b16;background:#e6fbff;border-radius:8px;padding:2px 6px;white-space:nowrap;box-shadow:0 0 8px rgba(0,255,255,.6);display:none;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.w.talk .w-say{display:block;animation:pop .35s ease-out}
+@keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.lo-note{font-size:9px;color:#8a86a8;margin:6px 2px 0;line-height:1.35}
+.lo-feed{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.lo-feed div{font-size:11px;color:#cfc8e8;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.35);border-radius:8px;padding:5px 8px}
+.d-dell{display:inline-block;font-size:9.5px;border:1px solid #8a86a8;color:#b9b3d0;border-radius:999px;padding:2px 7px;margin-top:5px}
+/* ---------- v9.1: stale light, partner styling, gold approval console, phone layout ---------- */
+.w[data-st="stale"] .w-dot{background:#fb923c;box-shadow:0 0 9px #fb923c}
+.w[data-st="stale"] .w-body{opacity:.85}
+.d-light.stale{background:#fb923c;box-shadow:0 0 9px #fb923c}
+.w.partner .w-head{border-color:#d4af37;box-shadow:0 0 11px rgba(212,175,55,.9)}
+.w.partner .w-name{border-color:rgba(212,175,55,.85);color:#f5d88c}
+.lo-console{position:absolute;z-index:3;transform:translate(-50%,-50%);width:30px;height:22px;cursor:pointer;background:linear-gradient(180deg,#1c1608,#0a0805);border:1.5px solid #d4af37;border-radius:4px;box-shadow:0 0 10px rgba(212,175,55,.45)}
+.lo-console::after{content:'';position:absolute;left:3px;right:3px;top:5px;height:4px;border-radius:2px;background:#d4af37;opacity:.9;box-shadow:0 0 6px #d4af37}
+.lo-console.pend{animation:goldpulse 1.5s ease-in-out infinite}
+@keyframes goldpulse{0%,100%{box-shadow:0 0 6px rgba(212,175,55,.4)}50%{box-shadow:0 0 20px rgba(212,175,55,.95)}}
+.ov-alerts{margin:2px 0 8px}
+.ov-alert{background:rgba(8,8,20,.85);border:1px solid rgba(212,175,55,.55);border-radius:10px;padding:8px 10px;margin-bottom:5px;cursor:pointer;font-size:12.5px;color:#f5d88c}
+.ov-alert .s{color:#cfc8e8;font-size:11.5px}
+.ov-team{display:none;flex-direction:column;gap:6px;margin:0 0 10px}
+.ov-team .trow{display:flex;align-items:center;gap:9px;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.3);border-radius:10px;padding:7px 10px;cursor:pointer}
+.ov-team .trow .tn{font-size:12.5px;color:var(--text);font-weight:600;flex:none}
+.ov-team .trow .tt{font-size:11.5px;color:var(--dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.asof{font-size:11.5px;color:#8a86a8;margin:2px 0 8px}
+@media(max-width:430px){
+  .ov-team{display:flex}
+  .lo-room{font-size:11px;letter-spacing:1px}
+  .w-name{font-size:11px}
+  .floor-legend{font-size:11px;gap:8px;flex-wrap:wrap}
+  .lo-note{font-size:11px}
+  .lo-feed div{font-size:11px}
+}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);backdrop-filter:blur(8px)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;box-shadow:0 0 8px var(--green)}
+.dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
+.toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--purple);color:var(--text);border-radius:12px;padding:10px 18px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;max-width:88vw}
+.toast.show{opacity:1}
+/* DRAWER */
+#drawer{position:fixed;inset:0;background:rgba(4,4,12,.7);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);border:1px solid var(--border);border-radius:18px 18px 0 0;width:100%;max-width:640px;max-height:86vh;overflow-y:auto;padding:calc(18px + env(safe-area-inset-bottom)) 18px 26px;position:relative}
+.sheet h3{font-size:17px;font-weight:700;padding-right:40px}
+.close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;width:32px;height:32px;font-size:15px;cursor:pointer}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.desc{font-size:13.5px;color:var(--dim);line-height:1.5;margin:8px 0}
+.sheet input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);outline:none;margin-top:8px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.abtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer}
+.abtn.primary{border-color:var(--purple);color:var(--purple)}
+.abtn.green{border-color:var(--green);color:var(--green)}
+.abtn.gold{border-color:var(--gold);color:var(--gold)}
+.abtn.danger{border-color:var(--red);color:var(--red)}
+.log{margin-top:14px}
+.log h4{font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.le{font-size:12.5px;color:var(--text);line-height:1.5;padding:6px 0;border-bottom:1px solid var(--border)}
+body{margin:0;background:#05050c;color:#e8e6f5;font-family:-apple-system,system-ui,sans-serif}.wrap{max-width:680px;margin:0 auto;padding:14px}</style></head><body><div class="wrap"><div style="font-size:11px;color:#8a86a8;margin-bottom:6px">PREVIEW — rendered from the live v9.1 client code with real board data (roster 14, tasks 175, audit events 40). Live page: jertaker.github.io/vantra-mission-control</div><div class="ov-alerts"><div class="ov-alert" style="border-color:rgba(74,222,128,.4);color:#b9f5cf">✓ No approvals waiting</div></div><div class="ov-team"><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#22c55e"></span><span class="tn">Elio</span><span class="tt">OFFICE-001C — Visual office floor (Boss 6 points)</span><span class="pill" style="border:1px solid #22c55e;color:#22c55e;font-size:10px;flex:none">Working</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#22c55e"></span><span class="tn">MUSE</span><span class="tt">CRM-SYNC-2026-10-08T17-50-35Z — CRM export recover</span><span class="pill" style="border:1px solid #22c55e;color:#22c55e;font-size:10px;flex:none">Working</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#fb923c"></span><span class="tn">GROK</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #fb923c;color:#fb923c;font-size:10px;flex:none">Stale</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#fb923c"></span><span class="tn">LILY</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #fb923c;color:#fb923c;font-size:10px;flex:none">Stale</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#eab308"></span><span class="tn">JEN</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #eab308;color:#eab308;font-size:10px;flex:none">Waiting</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#22c55e"></span><span class="tn">LELIC</span><span class="tt">MC-SYNC — Keep Mission Control tasks in sync with </span><span class="pill" style="border:1px solid #22c55e;color:#22c55e;font-size:10px;flex:none">Working</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#fb923c"></span><span class="tn">SAM</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #fb923c;color:#fb923c;font-size:10px;flex:none">Stale</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#fb923c"></span><span class="tn">ZELUS</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #fb923c;color:#fb923c;font-size:10px;flex:none">Stale</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#fb923c"></span><span class="tn">LENNY</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #fb923c;color:#fb923c;font-size:10px;flex:none">Stale</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#eab308"></span><span class="tn">OG VANTRA</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #eab308;color:#eab308;font-size:10px;flex:none">Waiting</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#ef4444"></span><span class="tn">LENOHERMES</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #ef4444;color:#ef4444;font-size:10px;flex:none">Down</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#ef4444"></span><span class="tn">LENOCLAW</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #ef4444;color:#ef4444;font-size:10px;flex:none">Down</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#fb923c"></span><span class="tn">HERMES</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #fb923c;color:#fb923c;font-size:10px;flex:none">Stale</span></div><div class="trow"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:#fb923c"></span><span class="tn">CLAW</span><span class="tt">no active task</span><span class="pill" style="border:1px solid #fb923c;color:#fb923c;font-size:10px;flex:none">Stale</span></div></div><div class="floor-head"><span>LIVE OFFICE</span><span class="asof" style="margin:0 0 0 10px">data as of 6:21 AM ET</span></div><div class="floor-legend"><span><i style="background:#4ade80"></i>Working (ACTIVE task)</span><span><i style="background:#f0d88c"></i>Waiting</span><span><i style="background:#8a86a8"></i>Idle</span><span><i style="background:#fb923c"></i>Stale (24h+)</span><span><i style="background:#f87171"></i>Down</span></div><div class="lo ov-floor"><span class="lo-room" style="left:25%;top:16%">RECEPTION</span><span class="lo-room" style="left:73%;top:17%">FILE TRANSFER &amp; RECORDS</span><span class="lo-room" style="left:84%;top:44%">COORDINATION ROOM</span><span class="lo-room" style="left:72%;top:59%">SCHEDULING</span><span class="lo-room" style="left:50%;top:71%">STUDIO / VIDEO</span><span class="lo-room" style="left:27%;top:54%">EXECUTIVE SUITE</span><span class="lo-room" style="left:14%;top:34%">SCOUTING &amp; RESEARCH</span><span class="lo-room" style="left:86%;top:72%">BUILD LAB</span><span class="lo-room" style="left:38%;top:80%">CREATIVE</span><span class="lo-room" style="left:62%;top:80%">RECOVERY BAY</span><span class="lo-room" style="left:23%;top:60%">RESILIENCE LAB</span><span class="lo-room" style="left:37%;top:44%">OPS &amp; COMMS</span><span class="lo-room" style="left:30%;top:65%">SECURITY POST</span><span class="lo-room" style="left:77%;top:25%">EVIDENCE &amp; BOARD</span><span class="lo-room" style="left:59%;top:49.5%">WAITING AREA</span><span class="lo-room" style="left:41%;top:31%">APPROVAL GATE</span><span class="lo-room" style="left:64%;top:56%">LOUNGE</span><div class="lo-console" style="left:41%;top:39%"></div><div class="lo-core"><b>JG</b><span>MISSION CORE</span></div><div class="w work partner" data-st="working" style="left:86%;top:80%;--ac:#818cf8;--eye:#b4bcff;--core:#d4af37;--bd:0.00s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">Elio</div></div><div class="w work" data-st="working" style="left:38%;top:88%;--ac:#e879f9;--eye:#f6b8ff;--core:#e879f9;--bd:-0.83s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">MUSE</div></div><div class="w" data-st="stale" style="left:14%;top:42%;--ac:#3b82f6;--eye:#bfd9ff;--core:#d4af37;--bd:-1.66s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">GROK</div></div><div class="w" data-st="stale" style="left:25%;top:24%;--ac:#34d399;--eye:#8affd0;--core:#34d399;--bd:-2.49s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">LILY</div></div><div class="w" data-st="waiting" style="left:73%;top:25%;--ac:#38bdf8;--eye:#cfefff;--core:#d4af37;--bd:-3.32s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">JEN</div></div><div class="w work" data-st="working" style="left:84%;top:52%;--ac:#4ade80;--eye:#a8ffc4;--core:#4ade80;--bd:-4.15s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">LELIC</div></div><div class="w" data-st="stale" style="left:72%;top:67%;--ac:#86efac;--eye:#d4ffe0;--core:#86efac;--bd:-0.38s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">SAM</div></div><div class="w" data-st="stale" style="left:50%;top:79%;--ac:#bef264;--eye:#eaffb5;--core:#bef264;--bd:-1.21s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">ZELUS</div></div><div class="w" data-st="stale" style="left:77%;top:33%;--ac:#22d3ee;--eye:#bff6ff;--core:#22d3ee;--bd:-2.04s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">LENNY</div></div><div class="w og" data-st="waiting" style="left:27%;top:62%;--ac:#9d7cff;--eye:#8fd0ff;--core:#d4af37;--bd:-2.87s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">OG VANTRA</div></div><div class="w wings" data-st="down" style="left:62%;top:88%;--ac:#22ff7a;--eye:#7dff9f;--core:#22ff7a;--bd:-3.70s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">LENOHERMES</div></div><div class="w" data-st="down" style="left:23%;top:68%;--ac:#ffa21f;--eye:#ffc766;--core:#ff8a00;--bd:-4.53s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">LENOCLAW</div></div><div class="w" data-st="stale" style="left:37%;top:52%;--ac:#a77bff;--eye:#8cffb0;--core:#3cff8f;--bd:-0.76s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">HERMES</div></div><div class="w cloak" data-st="stale" style="left:30%;top:73%;--ac:#6e7bff;--eye:#9fb4ff;--core:#8f7bff;--bd:-1.59s"><span class="w-dot"></span><div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div><div class="w-name">CLAW</div></div></div><div class="lo-feed ov-feed"><div style="font-size:11px;letter-spacing:1.5px;color:#00ffff;margin-bottom:2px">TEAM COMMS — AUDIT LOG (real events only)</div><div>📋 BOSS — Task task_1792058667341_pbk2twi9 CANCELLED by Boss (v9 build verification — cancelled, record to be deleted) [device: elio-v9-build-test (delete after test)] <span style="color:#8a86a8">· 6:04 AM ET</span></div><div>📋 BOSS — Task task_1792058667341_pbk2twi9 &quot;TEST v9 build verify — LENNY roster check (delete after)&quot; created by BOSS [READY] approval=no <span style="color:#8a86a8">· 6:04 AM ET</span></div><div>📋 BOSS — Boss logged out — session ended <span style="color:#8a86a8">· 5:58 AM ET</span></div><div>📋 BOSS — Boss session created for device &quot;lenny-office-v8-evidence-2026-10-15&quot; <span style="color:#8a86a8">· 5:56 AM ET</span></div><div>📋 BOSS — Boss session created for device &quot;phone&quot; <span style="color:#8a86a8">· 6:09 PM ET</span></div><div>📋 BOSS — Boss session created for device &quot;phone&quot; <span style="color:#8a86a8">· 8:23 PM ET</span></div><div>📋 BOSS — Boss logged out — session ended <span style="color:#8a86a8">· 11:16 PM ET</span></div><div>📋 ELIO — Task task_1791774981067_x3q96ozm &quot;ONBOARD-LENNY — complete onboarding checklist&quot; created by BOSS [READY] approval=no <span style="color:#8a86a8">· 11:16 PM ET</span></div></div><div class="lo-note">Real signals only. Working = has an ACTIVE board task. Waiting = WAITING task. Stale = no check-in for 24 h. Down = blocked or errored (CLAW, HERMES and LENOCLAW sit at their own station). The feed is the real audit log.</div></div></body></html>
