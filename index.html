@@ -418,7 +418,9 @@ async function refresh(){
 }
 function renderStats(){
   const s=board.stats||{};
-  const open=(s.total||0)-(s.completed||0);
+  // Open total = the open tiles themselves (active+ready+block/wait+review+backlog).
+  // NEVER total-completed: that wrongly counted CANCELLED as open (Boss caught it 2026-10-17).
+  const open=(s.active||0)+(s.ready||0)+((s.blocked||0)+(s.waiting||0))+(s.review||0)+(s.backlog||0);
   const tile=(n,l,cls)=>'<div class="stat '+(cls||'')+'"><b>'+(n||0)+'</b><span>'+l+'</span></div>';
   $('stats').innerHTML=
     tile(s.active,'Active','s-active')+
