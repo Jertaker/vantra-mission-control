@@ -1071,10 +1071,9 @@ const DAY_LETTERS=['Su','Mo','Tu','We','Th','Fr','Sa'];
 function etDow(ymd){const [y,m,d]=ymd.split('-').map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay();}
 
 async function renderHabits(month){
-  if(!month){
-    if(!habitsMonth) habitsMonth=monthOf(etToday());
-    month=habitsMonth;
-  }
+  // Boss directive Oct 17: the Mission Control tab shows CURRENT month / week only.
+  // History lives in the VANTRA Habit Tracker Google Sheet (synced nightly).
+  month=monthOf(etToday());
   habitsMonth=month;
   const body=$('habitsBody');
   body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Loading habits…</div>';
@@ -1083,49 +1082,49 @@ async function renderHabits(month){
   catch(e){ body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Couldn\'t load habits ('+esc(e.message)+') — pull down or tap another tab and back.</div>'; return; }
   habitsData=d;
   $('habitsAsOf').textContent='Data as of '+fmtET(d.asOf||new Date().toISOString());
-  // month tabs: current + 2 prior months
-  const cur=monthOf(etToday());
-  const tabs=[];
-  let [y,m]=cur.split('-').map(Number);
-  for(let i=0;i<3;i++){ tabs.unshift(y+'-'+String(m).padStart(2,'0')); m-=1; if(m===0){m=12;y-=1;} }
-  $('habitsMonthTabs').innerHTML=tabs.map(t=>'<button class="hb-month'+(t===month?' on':'')+'" data-hbm="'+t+'">'+new Date(t+'-02').toLocaleString('en-US',{month:'short',year:'numeric'})+'</button>').join('');
+  const cur=month;
+  // month label instead of tabs (history is in the Sheet, not here)
+  $('habitsMonthTabs').innerHTML='<span style="align-self:center;font-size:13.5px;font-weight:800;letter-spacing:2px;color:var(--gold);padding:2px 4px">'+new Date(month+'-02').toLocaleString('en-US',{month:'long',year:'numeric'}).toUpperCase()+'</span>';
   const habits=d.habits||[];
   if(!habits.length){
     body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">No habits set up yet. Tell me which habits to track and I\'ll add them.</div>';
     return;
   }
   const today=etToday();
-  const isCur=month===cur;
   const dim=daysInMonth(month);
-  const lastDay=isCur?Number(today.substring(8,10)):dim;
+  // current week = the ET week (Sunday..Saturday) containing today
+  const tDow=etDow(today);
+  const tMs=Date.UTC(Number(today.substring(0,4)),Number(today.substring(5,7))-1,Number(today.substring(8,10)));
+  const weekDates=[];
+  for(let i=0;i<7;i++){
+    const dt=new Date(tMs-(tDow-i)*86400000);
+    const iso=dt.toISOString().substring(0,10);
+    if(monthOf(iso)===month) weekDates.push(iso);
+  }
   const cis={}; (d.checkins||[]).forEach(c=>{ if(c.done) cis[c.habitKey+'|'+c.date]=1; });
   const well={}; (d.wellness||[]).forEach(w=>{ well[w.date]=w; });
   const dayOf=day=>month+'-'+String(day).padStart(2,'0');
 
   // ---- overall stats ----
   let goal=0, done=0;
-  habits.forEach(h=>{ for(let dy=1;dy<=lastDay;dy++){ goal++; if(cis[h.habitKey+'|'+dayOf(dy)]) done++; } });
+  habits.forEach(h=>{ weekDates.forEach(dt=>{ if(dt<=today){ goal++; if(cis[h.habitKey+'|'+dt]) done++; } }); });
   const pct=goal?Math.round(done/goal*100):0;
   let html='<div class="hb-stats">'
    +'<div class="hb-donut" style="background:conic-gradient(var(--green) '+pct*3.6+'deg, rgba(138,43,226,.35) 0)"><div class="hb-dpct">'+pct+'%</div></div>'
-   +'<div class="hb-kv"><div>Goal<b>'+goal+'</b></div><div>Completed<b>'+done+'</b></div><div>Left<b>'+(goal-done)+'</b></div></div></div>';
+   +'<div class="hb-kv"><div>This week<b>'+goal+'</b></div><div>Done<b>'+done+'</b></div><div>Left<b>'+(goal-done)+'</b></div></div><div style="font-size:10.5px;color:var(--dim);width:100%">This week only — full history lives in the VANTRA Habit Tracker Sheet</div></div>';
 
   // ---- daily progress bars ----
-  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">DAILY PROGRESS</h3><div class="hb-bars">';
-  let maxDoneDay=1;
-  const dayPct=[];
-  for(let dy=1;dy<=lastDay;dy++){
-    let dn=0; habits.forEach(h=>{ if(cis[h.habitKey+'|'+dayOf(dy)]) dn++; });
-    const p=habits.length?dn/habits.length:0; dayPct.push(p); if(dn>maxDoneDay)maxDoneDay=dn;
-  }
-  for(let dy=1;dy<=lastDay;dy++){
-    const hgt=Math.round(dayPct[dy-1]*66);
-    html+='<div class="hb-bar'+(dayPct[dy-1]>=1?' full':'')+'" style="height:'+hgt+'px" title="'+dy+': '+Math.round(dayPct[dy-1]*100)+'%"></div>';
-  }
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">DAILY PROGRESS — THIS WEEK</h3><div class="hb-bars">';
+  weekDates.forEach(dt=>{
+    let dn=0; habits.forEach(h=>{ if(dt<=today&&cis[h.habitKey+'|'+dt]) dn++; });
+    const p=(dt<=today&&habits.length)?dn/habits.length:0;
+    const hgt=Math.round(p*66);
+    html+='<div class="hb-bar'+(p>=1?' full':'')+'" style="height:'+hgt+'px" title="'+dt+': '+Math.round(p*100)+'%"></div>';
+  });
   html+='</div>';
 
   // ---- TODAY check-in strip ----
-  if(isCur){
+  {
     html+='<div class="hb-today"><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:2px">TODAY — '+today+'</div>';
     habits.forEach(h=>{
       const on=!!cis[h.habitKey+'|'+today];
@@ -1147,47 +1146,42 @@ async function renderHabits(month){
   }
 
   // ---- month grid ----
-  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">MONTH GRID</h3><div class="hb-gridwrap"><table class="hb-grid"><thead>';
-  // week header row
-  // two header rows: week+day numbers, then day letters
-  let hNum='<tr><th class="hname">Habit</th>', hLtr='<tr><th class="hname"></th>';
-  let curWk=0;
-  for(let dy=1;dy<=dim;dy++){
-    const dow=etDow(dayOf(dy));
-    if(dow===0){curWk++;}
-    hNum+='<th'+(dow===0?' style="border-left:1px solid var(--border)"':'')+'>'+(dow===0?'W'+curWk+' ':'')+dy+'</th>';
-    hLtr+='<th'+(dow===0?' style="border-left:1px solid var(--border)"':'')+'>'+DAY_LETTERS[dow]+'</th>';
-  }
-  html+=hNum+'</tr>'+hLtr+'</tr></thead><tbody>';
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">THIS WEEK</h3><div class="hb-gridwrap"><table class="hb-grid"><thead>';
+  let hNum='<tr><th class="hname">Habit</th>';
+  weekDates.forEach(dt=>{
+    const dd=Number(dt.substring(8,10));
+    hNum+='<th'+(dt===today?' style="color:var(--gold);font-weight:800"':'')+'>'+DAY_LETTERS[etDow(dt)]+' '+dd+'</th>';
+  });
+  html+=hNum+'</tr></thead><tbody>';
   habits.forEach(h=>{
     html+='<tr><td class="hname">'+esc(h.name)+'</td>';
-    for(let dy=1;dy<=dim;dy++){
-      const dt=dayOf(dy);
-      if(dy>lastDay){ html+='<td><span class="hb-cell future"></span></td>'; continue; }
+    weekDates.forEach(dt=>{
+      if(dt>today){ html+='<td><span class="hb-cell future"></span></td>'; return; }
       const on=!!cis[h.habitKey+'|'+dt];
       html+='<td><span class="hb-cell'+(on?' done':'')+(dt===today?' today':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+dt+'"></span></td>';
-    }
+    });
     html+='</tr>';
   });
-  // wellness rows in grid
+  // wellness rows in grid (separate: mood and sleep are different signals)
   html+='<tr><td class="hname">Mood</td>';
-  for(let dy=1;dy<=dim;dy++){
-    const w=well[dayOf(dy)];
-    html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.mood?w.mood:''):'')+'</td>';
-  }
+  weekDates.forEach(dt=>{
+    const w=well[dt];
+    html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dt<=today&&w&&w.mood?w.mood:'')+'</td>';
+  });
   html+='</tr><tr><td class="hname">Sleep h</td>';
-  for(let dy=1;dy<=dim;dy++){
-    const w=well[dayOf(dy)];
-    html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.hoursOfSleep?w.hoursOfSleep:''):'')+'</td>';
-  }
+  weekDates.forEach(dt=>{
+    const w=well[dt];
+    html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dt<=today&&w&&w.hoursOfSleep?w.hoursOfSleep:'')+'</td>';
+  });
   html+='</tr></tbody></table></div>';
 
   // ---- analysis table ----
-  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">ANALYSIS</h3><div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 12px">';
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px>ANALYSIS — THIS WEEK</h3><div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 12px">';
+  const wkElapsed=weekDates.filter(dt=>dt<=today).length;
   habits.forEach(h=>{
-    let dn=0; for(let dy=1;dy<=lastDay;dy++){ if(cis[h.habitKey+'|'+dayOf(dy)]) dn++; }
-    const hp=lastDay?Math.round(dn/lastDay*100):0;
-    html+='<div class="hb-anrow"><span class="n">'+esc(h.name)+'</span><span class="nums">Goal '+lastDay+' · Actual '+dn+' · Left '+(lastDay-dn)+'</span>'
+    let dn=0; weekDates.forEach(dt=>{ if(dt<=today&&cis[h.habitKey+'|'+dt]) dn++; });
+    const hp=wkElapsed?Math.round(dn/wkElapsed*100):0;
+    html+='<div class="hb-anrow"><span class="n">'+esc(h.name)+'</span><span class="nums">Goal '+wkElapsed+' · Actual '+dn+' · Left '+(wkElapsed-dn)+'</span>'
       +'<span class="hb-pbar"><i style="width:'+hp+'%"></i></span><span class="pc">'+hp+'%</span></div>';
   });
   html+='</div>';
