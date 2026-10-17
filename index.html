@@ -443,6 +443,11 @@ function renderStats(){
     tile(s.completed,'Done')+
     tile(open,'Open total');
 }
+// one pill: plain gray when zero, its own strong color only when it has something
+function pillHtml(n,label,activeStyle){
+  const base='font-size:11px;';
+  return '<span class="pill" style="'+base+(n>0?activeStyle:'background:transparent;border-color:rgba(255,255,255,.12);color:var(--dim);opacity:.6')+'">'+n+' '+label+'</span>';
+}
 function renderProjects(){
   // PROJECT PROGRESS (Boss, Oct 17): per-project done/total + live state pills.
   // Computed client-side from the board payload — no backend change needed.
@@ -463,6 +468,7 @@ function renderProjects(){
     const pct=total?Math.round(done/total*100):0;
     const active=list.filter(t=>t.state==='ACTIVE').length;
     const blocked=list.filter(t=>t.state==='BLOCKED'||t.state==='WAITING').length;
+    const pending=list.filter(t=>t.state==='READY'||t.state==='READY_FOR_EXECUTION').length;
     const apIds=(board.approvals||[]).map(a=>a.relatedTaskId);
     const aps=list.filter(t=>apIds.indexOf(t.taskId)>=0).length;
     const on=projFilter===p;
@@ -473,9 +479,10 @@ function renderProjects(){
       '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,.07);margin:8px 0;overflow:hidden">'+
       '<div style="height:100%;width:'+pct+'%;border-radius:4px;background:linear-gradient(90deg,#8a2be2,var(--gold))"></div></div>'+
       '<div class="m" style="display:flex;gap:6px;flex-wrap:wrap">'+
-      '<span class="pill" style="font-size:11px">'+active+' active</span>'+
-      '<span class="pill p-app" style="font-size:11px">'+aps+' approval'+(aps===1?'':'s')+'</span>'+
-      '<span class="pill" style="font-size:11px;'+(blocked>0?'background:#4a2626;border-color:#4a2626;color:#fff':'background:transparent;border-color:rgba(255,255,255,.12);color:var(--dim);opacity:.6')+'">'+blocked+' blocked</span>'+
+      pillHtml(active,'active','background:rgba(74,222,128,.16);border-color:#4ade80;color:#4ade80')+
+      pillHtml(pending,'pending','background:rgba(157,124,255,.18);border-color:#9d7cff;color:#c9b8ff')+
+      pillHtml(aps,aps===1?'approval':'approvals','background:rgba(212,175,55,.18);border-color:#d4af37;color:#f0d88c')+
+      pillHtml(blocked,'blocked','background:#4a2626;border-color:#e05555;color:#fff')+
       '</div></div>';
   }).join('');
   wrap.innerHTML=html;
