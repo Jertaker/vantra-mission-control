@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>VANTRA Mission Control</title>
+<style>
+:root{
+  --bg:#070714; --surface:#0e0e20; --surface2:#151530; --border:rgba(150,120,255,.14);
+  --purple:#9d7cff; --purple-deep:#5b3df5; --gold:#d4af37; --gold-soft:#f0d88c;
+  --green:#4ade80; --red:#f87171; --amber:#fbbf24; --text:#f2f0fa; --dim:#8a86a8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+/* iOS zoom guard + safe areas (P2-7) */
+input,select,textarea{font-size:16px}
+/* LOGIN */
+#login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 0%,#151538 0%,var(--bg) 60%);z-index:99;padding:0 20px}
+.logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--purple-deep),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;color:#fff;box-shadow:0 0 30px rgba(157,124,255,.4)}
+#login h1{font-size:19px;font-weight:700;letter-spacing:.5px;text-align:center}
+#login h1 span{color:var(--gold)}
+#login p{font-size:12px;color:var(--dim);letter-spacing:2px;text-transform:uppercase}
+#pin{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-size:18px;width:250px;text-align:center;outline:none;letter-spacing:6px}
+#pin:focus{border-color:var(--purple)}
+#loginBtn{background:linear-gradient(135deg,var(--purple-deep),var(--purple));border:none;border-radius:12px;color:#fff;font-weight:700;font-size:15px;padding:13px 0;width:250px;cursor:pointer}
+#loginBtn:disabled{opacity:.6}
+#loginErr{color:var(--red);font-size:13px;min-height:18px;text-align:center;max-width:300px;line-height:1.45}
+#loginErr .abtn{margin-left:4px}
+/* SHELL */
+header{position:sticky;top:0;z-index:10;background:rgba(7,7,20,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:15px;letter-spacing:.5px}.brand em{color:var(--gold);font-style:normal}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:7px 11px;font-size:12px;cursor:pointer}
+.hbtn.on{border-color:var(--purple);color:var(--purple)}
+.hbtn.warn{border-color:rgba(248,113,113,.4);color:var(--red)}
+nav.tabs{display:flex;gap:6px;padding:10px 16px 2px;overflow-x:auto}
+.tab{background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.tab.on{border-color:var(--purple);color:var(--purple);background:rgba(157,124,255,.08)}
+main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
+/* QUICK CAPTURE */
+#capture{display:flex;gap:8px;margin:10px 0 14px}
+#capIn{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--text);font-size:16px;outline:none}
+#capIn:focus{border-color:var(--purple)}
+#capBtn{background:linear-gradient(135deg,var(--gold),var(--gold-soft));border:none;border-radius:12px;color:#1a1500;font-weight:800;font-size:14px;padding:0 20px;cursor:pointer}
+#capBtn:disabled{opacity:.6}
+.capExtra{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 14px}
+.capExtra select,.capExtra input{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px;font-size:16px;outline:none}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.stat.s-approval b{color:var(--gold)}.stat.s-blocked b{color:var(--red)}.stat.s-active b{color:var(--green)}.stat.s-review b{color:var(--amber)}
+/* SECTIONS */
+.sec{margin-bottom:16px}
+.sec h2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin:0 0 8px 4px}
+.card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.card .t{font-size:14.5px;font-weight:600;line-height:1.35}
+.card .m{margin-top:6px;font-size:11px;color:var(--dim);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+.p-urgent{border-color:var(--red);color:var(--red)}.p-high{border-color:var(--amber);color:var(--amber)}
+.p-app{border-color:var(--gold);color:var(--gold)}
+.errline{color:var(--red);font-size:13px;padding:10px 4px;line-height:1.5}
+/* BOARD */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;min-height:120px}
+.col h3{font-size:11px;color:var(--dim);letter-spacing:1.5px;margin-bottom:8px;display:flex;justify-content:space-between}
+.col h3 i{font-style:normal;color:var(--purple);font-weight:700}
+/* APPROVALS / AGENTS */
+.apcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.apcard .acts{margin-top:10px}
+.agent{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px}
+.agent .n{font-weight:700;font-size:13.5px}
+.agent .s{font-size:11px;color:var(--dim);margin-top:2px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.rcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.rcard .rn{font-weight:800;font-size:16px;line-height:1.25;color:#fff;word-break:break-word}
+.rcard .rt{font-size:15px;line-height:1.35;color:#e6e0ff;margin-top:4px;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;cursor:pointer;padding:4px 0;min-height:22px}
+.rcard .rt.empty{color:#b9a8ff;font-style:italic}
+.rcard .rt .pen{font-size:13px;opacity:.85;margin-left:6px}
+.rcard .tag{display:inline-block;font-size:12px;font-weight:700;color:#d8ccff;background:rgba(124,92,255,.22);border:1px solid rgba(124,92,255,.5);border-radius:999px;padding:3px 10px;margin-top:6px}
+.rcard .tag.grokbot{color:#c9f7da;background:rgba(40,200,120,.18);border-color:rgba(40,200,120,.5)}
+.rcard .why{font-size:12.5px;color:#cfc8e8;margin-top:8px;line-height:1.4;word-break:break-word}
+.rcard .editrow{display:flex;gap:8px;margin-top:6px}
+.rcard .editrow input{flex:1;min-width:0;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0e0b1c;color:#fff}
+.rcard .editrow button{font-size:14px;font-weight:700;border:0;border-radius:10px;padding:10px 14px;background:#7c5cff;color:#fff}
+.rcard .editrow button.cancel{background:#2a2540;color:#d8ccff}
+.v-ok{color:var(--green);font-weight:700;font-size:11px;text-align:right}.v-no{color:var(--amber);font-weight:700;font-size:11px;text-align:right}
+/* ---------- LIVE OFFICE (animated walking workers, Oct 14 v6) ---------- */
+.floor-head{display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px}
+.floor-head span{font-size:11px;color:#00ffff;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,255,255,.45)}
+.floor-legend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px;font-size:10px;color:#b9b3d0}
+.floor-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.lo{position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;border:1px solid rgba(138,43,226,.6);box-shadow:0 0 22px rgba(138,43,226,.35);background:#05050a url('office_bg.jpg?v=92') center/cover no-repeat;touch-action:manipulation}
+.lo::before{content:'';position:absolute;inset:0;background:rgba(5,5,12,.30);pointer-events:none}
+.lo-room{position:absolute;z-index:1;font-size:6.5px;letter-spacing:1.4px;color:rgba(0,255,255,.8);text-transform:uppercase;text-shadow:0 0 5px #000,0 0 5px #000;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
+.w{position:absolute;z-index:5;width:0;height:0;cursor:pointer;transition:left 2.6s linear,top 2.6s linear}
+.w-body{position:absolute;left:-15px;top:-34px;width:30px;display:flex;flex-direction:column;align-items:center}
+.w-head{width:26px;height:21px;border-radius:12px 12px 8px 8px;background:radial-gradient(circle at 35% 25%,#3a3a52,#0a0a14 70%);border:1.5px solid var(--ac,#9d7cff);position:relative;box-shadow:0 0 9px var(--ac,#9d7cff),inset 0 0 4px rgba(255,255,255,.12);overflow:visible}
+.w-head::before{content:'';position:absolute;top:-3px;left:50%;width:5px;height:3px;margin-left:-2.5px;border-radius:2px 2px 0 0;background:var(--em,var(--ac,#9d7cff));box-shadow:0 0 6px var(--em,var(--ac,#9d7cff))}
+.w-eyes{position:absolute;top:7px;left:0;right:0;display:flex;justify-content:center;gap:4px}
+.w-eye{display:block;width:7px;height:8px;border-radius:50%;background:var(--eye,#7fe9ff);box-shadow:0 0 6px var(--eye,#7fe9ff),0 0 2px #fff inset;transform-origin:center;animation:blink 4.6s infinite;animation-delay:var(--bd,0s)}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}97%{transform:scaleY(1)}}
+.w[data-st="idle"]:not(.walk) .w-eyes{animation:drift 7s ease-in-out infinite;animation-delay:var(--bd,0s)}
+@keyframes drift{0%,40%,100%{transform:translateX(0)}50%,70%{transform:translateX(-2px)}80%,90%{transform:translateX(2px)}}
+.w[data-st="down"] .w-eye{animation:none;opacity:.25;transform:scaleY(.2)}
+.w-torso{width:18px;height:11px;border-radius:5px 5px 3px 3px;margin-top:-1px;background:linear-gradient(180deg,#1b1b2c,#07070d);border:1.5px solid var(--ac,#9d7cff);position:relative;box-shadow:0 0 6px var(--ac,#9d7cff)}
+.w-torso::after{content:'';position:absolute;left:50%;top:2px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--core,var(--ac,#9d7cff));box-shadow:0 0 6px var(--core,var(--ac,#9d7cff));animation:corepulse 2.4s ease-in-out infinite}
+@keyframes corepulse{0%,100%{opacity:.75}50%{opacity:1}}
+.w-arms{position:absolute;top:22px;left:-3px;right:-3px;height:8px;pointer-events:none}
+.w-arms i{position:absolute;top:0;width:4px;height:9px;border-radius:2px;background:#0c0c18;border:1px solid var(--ac,#9d7cff)}
+.w-arms i:first-child{left:0}.w-arms i:last-child{right:0}
+.w-legs{display:flex;gap:3px}
+.w-legs i{display:block;width:5px;height:6px;border-radius:0 0 2px 2px;background:#0c0c18;border:1px solid var(--ac,#9d7cff);border-top:none}
+.w.walk .w-legs i:nth-child(1){animation:step .32s ease-in-out infinite}
+.w.walk .w-legs i:nth-child(2){animation:step .32s ease-in-out infinite .16s}
+.w.walk .w-body{animation:bob .32s ease-in-out infinite}
+@keyframes step{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+.w.work .w-arms i:first-child{animation:tapL .42s ease-in-out infinite}
+.w.work .w-arms i:last-child{animation:tapR .42s ease-in-out infinite .21s}
+@keyframes tapL{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+@keyframes tapR{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+.w.wings .w-body::before,.w.wings .w-body::after{content:'';position:absolute;top:8px;width:12px;height:16px;background:linear-gradient(135deg,#22ff7a,#047a3a);opacity:.85;box-shadow:0 0 9px #22ff7a;z-index:-1}
+.w.wings .w-body::before{left:-11px;border-radius:12px 2px 12px 2px;transform:rotate(-12deg)}
+.w.wings .w-body::after{right:-11px;border-radius:2px 12px 2px 12px;transform:rotate(12deg)}
+.w.cloak .w-torso{width:22px;border-radius:3px 3px 7px 7px;margin-top:-1px}
+.w.og .w-head::before{background:#d4af37;box-shadow:0 0 6px #d4af37;width:7px;margin-left:-3.5px}
+.w-dot{position:absolute;left:10px;top:-38px;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:#8a86a8}
+.w[data-st="working"] .w-dot{background:#4ade80;box-shadow:0 0 9px #4ade80}
+.w[data-st="waiting"] .w-dot{background:#f0d88c;box-shadow:0 0 9px #f0d88c}
+.w[data-st="down"] .w-dot{background:#f87171;box-shadow:0 0 9px #f87171}
+.w[data-st="down"] .w-body{opacity:.45;filter:grayscale(.7)}
+.w-name{position:absolute;left:0;top:4px;transform:translateX(-50%);font-size:7px;font-weight:700;color:#fff;background:rgba(5,5,12,.78);border:1px solid rgba(0,255,255,.35);border-radius:5px;padding:1px 4px;white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
+.w-say{position:absolute;left:0;bottom:36px;transform:translateX(-50%);z-index:9;font-size:7.5px;color:#0b0b16;background:#e6fbff;border-radius:8px;padding:2px 6px;white-space:nowrap;box-shadow:0 0 8px rgba(0,255,255,.6);display:none;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.w.talk .w-say{display:block;animation:pop .35s ease-out}
+@keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.lo-note{font-size:9px;color:#8a86a8;margin:6px 2px 0;line-height:1.35}
+.lo-feed{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.lo-feed div{font-size:11px;color:#cfc8e8;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.35);border-radius:8px;padding:5px 8px}
+.d-dell{display:inline-block;font-size:9.5px;border:1px solid #8a86a8;color:#b9b3d0;border-radius:999px;padding:2px 7px;margin-top:5px}
+/* ---------- v9.1: stale light, partner styling, gold approval console, phone layout ---------- */
+.w[data-st="stale"] .w-dot{background:#fb923c;box-shadow:0 0 9px #fb923c}
+.w[data-st="stale"] .w-body{opacity:.85}
+.d-light.stale{background:#fb923c;box-shadow:0 0 9px #fb923c}
+.w.partner .w-head{border-color:#d4af37;box-shadow:0 0 11px rgba(212,175,55,.9)}
+.w.partner .w-name{border-color:rgba(212,175,55,.85);color:#f5d88c}
+.lo-console{position:absolute;z-index:3;transform:translate(-50%,-50%);width:30px;height:22px;cursor:pointer;background:linear-gradient(180deg,#1c1608,#0a0805);border:1.5px solid #d4af37;border-radius:4px;box-shadow:0 0 10px rgba(212,175,55,.45)}
+.lo-console::after{content:'';position:absolute;left:3px;right:3px;top:5px;height:4px;border-radius:2px;background:#d4af37;opacity:.9;box-shadow:0 0 6px #d4af37}
+.lo-console.pend{animation:goldpulse 1.5s ease-in-out infinite}
+@keyframes goldpulse{0%,100%{box-shadow:0 0 6px rgba(212,175,55,.4)}50%{box-shadow:0 0 20px rgba(212,175,55,.95)}}
+.ov-alerts{margin:2px 0 8px}
+.ov-alert{background:rgba(8,8,20,.85);border:1px solid rgba(212,175,55,.55);border-radius:10px;padding:8px 10px;margin-bottom:5px;cursor:pointer;font-size:12.5px;color:#f5d88c}
+.ov-alert .s{color:#cfc8e8;font-size:11.5px}
+.ov-team{display:none;flex-direction:column;gap:6px;margin:0 0 10px}
+.ov-team .trow{display:flex;align-items:center;gap:9px;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.3);border-radius:10px;padding:7px 10px;cursor:pointer}
+.ov-team .trow .tn{font-size:12.5px;color:var(--text);font-weight:600;flex:none}
+.ov-team .trow .tt{font-size:11.5px;color:var(--dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.asof{font-size:11.5px;color:#8a86a8;margin:2px 0 8px}
+@media(max-width:430px){
+  .ov-team{display:flex}
+  .lo-room{font-size:11px;letter-spacing:1px}
+  .w-name{font-size:11px}
+  .floor-legend{font-size:11px;gap:8px;flex-wrap:wrap}
+  .lo-note{font-size:11px}
+  .lo-feed div{font-size:11px}
+}
+/* HABIT TRACKER (v9.4) */
+.hb-month{background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer}
+.hb-month.on{border-color:var(--purple);color:var(--text);font-weight:700}
+.hb-today{background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.hb-trow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.hb-trow:last-child{border-bottom:none}
+.hb-chk{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--purple);flex:none;cursor:pointer;background:transparent;color:var(--purple);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
+.hb-chk.done{background:var(--green);border-color:var(--green);color:#06250f}
+.hb-tn{font-size:13.5px;font-weight:600;color:var(--text)}
+.hb-why{font-size:11px;color:var(--dim)}
+.hb-stats{display:flex;align-items:center;gap:14px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap}
+.hb-donut{width:86px;height:86px;border-radius:50%;flex:none;position:relative}
+.hb-donut::after{content:'';position:absolute;inset:14px;border-radius:50%;background:#0a0a12}
+.hb-dpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:15px;font-weight:800;color:var(--text)}
+.hb-kv{display:flex;gap:14px}
+.hb-kv div{font-size:11.5px;color:var(--dim)}
+.hb-kv b{display:block;font-size:16px;color:var(--text)}
+.hb-bars{display:flex;align-items:flex-end;gap:2px;height:70px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 10px;margin-bottom:12px;overflow-x:auto}
+.hb-bar{width:9px;min-width:9px;background:rgba(138,43,226,.5);border-radius:2px 2px 0 0;position:relative}
+.hb-bar.full{background:var(--green)}
+.hb-gridwrap{overflow-x:auto;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;margin-bottom:12px}
+table.hb-grid{border-collapse:collapse;font-size:11px;white-space:nowrap}
+table.hb-grid th{color:var(--dim);font-weight:600;padding:5px 4px;text-align:center;border-bottom:1px solid var(--border)}
+table.hb-grid th.hname,table.hb-grid td.hname{text-align:left;position:sticky;left:0;background:#0c0c1c;z-index:2;max-width:118px;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+table.hb-grid td{text-align:center;padding:2px}
+.hb-cell{width:16px;height:16px;border:1px solid rgba(138,43,226,.5);border-radius:4px;display:inline-block;cursor:pointer;background:transparent}
+.hb-cell.done{background:var(--green);border-color:var(--green);position:relative}
+.hb-cell.done::after{content:'\2713';position:absolute;inset:0;color:#06250f;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.hb-cell.future{opacity:.25;cursor:default}
+.hb-cell.today{border-color:var(--gold);box-shadow:0 0 5px rgba(212,175,55,.55)}
+.hb-anrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11.5px}
+.hb-anrow .n{width:34%;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-anrow .nums{color:var(--dim);width:26%;flex:none}
+.hb-pbar{flex:1;height:8px;border-radius:5px;background:rgba(138,43,226,.25);overflow:hidden}
+.hb-pbar i{display:block;height:100%;background:var(--green)}
+.hb-anrow .pc{width:38px;text-align:right;color:var(--green);font-weight:700;flex:none}
+.hb-wellday{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.hb-wbtn{background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:10px;padding:8px 13px;font-size:13px;cursor:pointer}
+.hb-wbtn.on{border-color:var(--gold);color:var(--gold);font-weight:700}
+.hb-sleep{width:70px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-size:13px}
+.hb-wellrow{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dim);padding:3px 0}
+.hb-wellrow .wd{width:34%;color:var(--text);flex:none}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);backdrop-filter:blur(8px)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;box-shadow:0 0 8px var(--green)}
+.dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
+.toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--purple);color:var(--text);border-radius:12px;padding:10px 18px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;max-width:88vw}
+.toast.show{opacity:1}
+/* DRAWER */
+#drawer{position:fixed;inset:0;background:rgba(4,4,12,.7);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);border:1px solid var(--border);border-radius:18px 18px 0 0;width:100%;max-width:640px;max-height:86vh;overflow-y:auto;padding:calc(18px + env(safe-area-inset-bottom)) 18px 26px;position:relative}
+.sheet h3{font-size:17px;font-weight:700;padding-right:40px}
+.close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;width:32px;height:32px;font-size:15px;cursor:pointer}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.desc{font-size:13.5px;color:var(--dim);line-height:1.5;margin:8px 0}
+.sheet input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);outline:none;margin-top:8px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.abtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer}
+.abtn.primary{border-color:var(--purple);color:var(--purple)}
+.abtn.green{border-color:var(--green);color:var(--green)}
+.abtn.gold{border-color:var(--gold);color:var(--gold)}
+.abtn.danger{border-color:var(--red);color:var(--red)}
+.log{margin-top:14px}
+.log h4{font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.le{font-size:12.5px;color:var(--text);line-height:1.5;padding:6px 0;border-bottom:1px solid var(--border)}
+</style>
+<style>body{max-width:390px;margin:0 auto}</style></head>
+<body>
+<div id="login">
+  <div class="logo">V</div>
+  <h1>VANTRA <span>Mission Control</span></h1>
+  <p>Executive Operations</p>
+  <input id="pin" type="password" placeholder="PIN" autocomplete="off" inputmode="numeric">
+  <button id="loginBtn">UNLOCK</button>
+  <div id="loginErr"></div>
+</div>
+
+<div id="shell" class="hidden">
+<header>
+  <div class="brand">VANTRA <em>MISSION CONTROL</em></div>
+  <div class="hbtns">
+    <button class="hbtn on" id="vHome">Home</button>
+    <button class="hbtn" id="vBoard">Board</button>
+    <button class="hbtn" id="vOffice">Office / HQ</button>
+    <button class="hbtn" id="vStatus">Status</button>
+    <button class="hbtn" id="vAgents">Agents</button>
+    <button class="hbtn" id="vHabits">Habits</button>
+    <button class="hbtn warn" id="vLogout">Log out</button>
+  </div>
+</header>
+<nav class="tabs" id="filters">
+  <button class="tab on" data-f="all">All</button><button class="tab" data-f="BACKLOG">Backlog</button><button class="tab" data-f="READY">Ready</button><button class="tab" data-f="ACTIVE">Active</button><button class="tab" data-f="WAITING">Waiting</button><button class="tab" data-f="BLOCKED">Blocked</button><button class="tab" data-f="REVIEW">Review</button><button class="tab" data-f="COMPLETED">Done</button>
+</nav>
+<main>
+  <div id="capture"><input id="capIn" placeholder="New task — type and go"><button id="capBtn">+ ADD</button></div>
+  <div class="capExtra">
+    <select id="capPriority"><option value="">Priority…</option><option>urgent</option><option>high</option><option>normal</option><option>low</option></select>
+    <input id="capProject" placeholder="Project (optional)">
+    <select id="capApproval"><option value="no">No approval needed</option><option value="yes">Requires my approval</option></select>
+  </div>
+  <div id="home">
+    <div class="stats" id="stats"></div>
+    <div class="sec" id="approvalsSec"><h2>Pending Approvals</h2><div id="approvals"></div></div>
+    <div class="sec"><h2 id="listTitle">All Tasks</h2><div id="tasks"></div></div>
+  </div>
+  <div id="boardView" class="hidden"><div class="board" id="board"></div></div>
+
+  <div id="officeView" class="hidden">
+    <div id="officeFloor"><div style="color:var(--dim);font-size:12px;padding:8px">Loading office floor…</div></div>
+  </div>
+
+  <div id="statusView" class="hidden">
+    <div class="stats" id="statusStats" style="margin-top:12px"></div>
+    <div class="sec" style="margin-top:12px"><h2>Team Status — every agent, live</h2><div id="teamStatus"></div></div>
+  </div>
+
+  <div id="agentsView" class="hidden">
+    <div class="sec" style="margin-top:12px"><h2>Agent Directory — Operational Truth</h2><div id="roster"></div></div>
+    <div class="sec"><h2>Live Telemetry (AgentStatus)</h2><div id="liveAgents"></div></div>
+  </div>
+  <div id="habitsView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Habit Tracker</h2>
+      <div id="habitsMonthTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"></div>
+      <div class="asof" id="habitsAsOf"></div>
+      <div id="habitsBody"><div style="color:var(--dim);font-size:12px;padding:8px">Loading habits…</div></div>
+    </div>
+  </div>
+</main>
+<footer><span><span class="dot" id="dot"></span><span id="sync">not synced</span></span><span id="whoami"></span></footer>
+</div>
+
+<div id="drawer" class="hidden"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const APIURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/missionControlApi";
+const COMMSURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcComms";
+let token = localStorage.getItem('mc_token') || '';
+let board = null; let view='home'; let filter='all'; let selected=null;
+let loginBusy=false; let capBusy=false;
+const $ = id => document.getElementById(id);
+
+function deviceId(){
+  let d = localStorage.getItem('mc_device');
+  if(!d){
+    d = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('dev-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    localStorage.setItem('mc_device', d);
+  }
+  return d;
+}
+function devLabel(){const ua=navigator.userAgent;if(/iPhone|Android.*Mobile/i.test(ua))return 'phone';if(/iPad|Tablet/i.test(ua))return 'tablet';if(/Windows/i.test(ua))return 'windows-pc';if(/Macintosh/i.test(ua))return 'mac';return 'browser';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtDate(iso){if(!iso)return '—';const d=new Date(iso);if(isNaN(d.getTime()))return '—';return d.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
+function fmtET(iso){try{return new Date(iso).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return iso;}}
+function fmtAgentName(str){if(!str) return '';var s=String(str);if(s==='CHATGPT (Manager)'||s==='CHATGPT') return 'OG VANTRA (ChatGPT)';s=s.replace(/CHATGPT\s*\(Manager\)/gi,'OG VANTRA (ChatGPT)');s=s.replace(/\bCHATGPT\b/g,'OG VANTRA (ChatGPT)');return s;}
+const PRIO_CLASS={urgent:'p-urgent',high:'p-high',normal:'p-normal',low:'p-low'};
+function prioClass(p){return PRIO_CLASS[p]||'p-normal';}
+function stateColor(s){return s==='COMPLETED'?'var(--green)':s==='BLOCKED'?'var(--red)':s==='REVIEW'?'var(--amber)':s==='ACTIVE'?'#6ee7a0':s==='WAITING'?'var(--gold)':'var(--purple)';}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+function showLogin(){$('login').classList.remove('hidden');$('shell').classList.add('hidden');}
+function showShell(){$('login').classList.add('hidden');$('shell').classList.remove('hidden');}
+function nowTime(){return new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}
+let syncConsecutiveFailures=0;
+function setDot(err,customMsg){const d=$('dot');if(err){d.className='dot err';$('sync').textContent=customMsg||('sync error '+nowTime());}else{syncConsecutiveFailures=0;d.className='dot';$('sync').textContent='synced '+nowTime();}}
+
+async function api(op, extra, retriesLeft){
+  if(typeof retriesLeft!=='number') retriesLeft=2;
+  try{
+    const res = await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({op:op},extra||{}))});
+    let d=null;
+    try{ d=await res.json(); }catch(e){
+      if(retriesLeft>0 && res.status>=500){ await new Promise(r=>setTimeout(r,1000)); return await api(op,extra,retriesLeft-1); }
+      throw new Error('Server error — no JSON response ('+res.status+')');
+    }
+    if(!d.ok && res.status===401){localStorage.removeItem('mc_token');token='';showLogin();throw new Error('auth');}
+    if(!d.ok){
+      if(retriesLeft>0 && res.status>=500){ await new Promise(r=>setTimeout(r,1000)); return await api(op,extra,retriesLeft-1); }
+      throw new Error(d.error||('op failed ('+res.status+')'));
+    }
+    return d;
+  }catch(err){
+    if(err.message==='auth') throw err;
+    if(retriesLeft>0 && (err.name==='TypeError'||String(err.message).indexOf('fetch')>=0)){ await new Promise(r=>setTimeout(r,1200)); return await api(op,extra,retriesLeft-1); }
+    throw err;
+  }
+}
+
+/* ---------- login (P1-2) ---------- */
+async function login(){
+  if(loginBusy) return;
+  const pin=$('pin').value.trim();
+  $('loginErr').textContent='';
+  if(!pin){ $('loginErr').textContent='Enter your PIN'; return; }
+  loginBusy=true; const b=$('loginBtn'); b.disabled=true; b.textContent='CHECKING…';
+  try{
+    const res=await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'login',pin:pin,deviceLabel:devLabel(),deviceId:deviceId()})});
+    let d=null; let jsonOk=true;
+    try{ d=await res.json(); }catch(e){ jsonOk=false; }
+    if(!jsonOk){ $('loginErr').textContent='Server error — try again'; $('pin').value=''; return; }
+    if(!d.ok){
+      if(res.status===401){ $('loginErr').textContent='Wrong PIN'; }
+      else if(res.status===429){ $('loginErr').textContent=(d.error||'Locked') + (d.lockUntil ? (' until ' + fmtET(d.lockUntil) + ' ET') : ''); }
+      else if(res.status>=500){ $('loginErr').textContent='Server error — try again'; }
+      else { $('loginErr').textContent=d.error||'Login failed'; }
+      $('pin').value='';
+      return;
+    }
+    token=d.token; localStorage.setItem('mc_token',token);
+    $('pin').value='';
+    showShell(); refresh();
+  }catch(e){
+    $('loginErr').textContent='Can\u2019t reach Mission Control — check your connection';
+    $('pin').value='';
+  }finally{
+    loginBusy=false; b.disabled=false; b.textContent='UNLOCK';
+  }
+}
+
+async function doLogout(){
+  try{ await api('logout'); }catch(e){ /* end the session locally even if the call fails */ }
+  localStorage.removeItem('mc_token'); token='';
+  $('loginErr').textContent='Logged out';
+  showLogin();
+}
+
+/* ---------- data ---------- */
+async function refresh(){
+  try{
+    board=await api('board');
+    setDot(false);
+    $('whoami').textContent='BOSS · '+devLabel();
+    renderStats(); renderApprovals(); renderTasks(); renderBoard();
+    if(view==='office') renderOfficeView();
+  }catch(e){
+    if(String(e.message)!=='auth'){
+      syncConsecutiveFailures++;
+      if(syncConsecutiveFailures>=2){ setDot(true,'sync error '+nowTime()); toast('Sync failed — retrying on re-connect'); }
+      else{ setDot(true,'reconnecting…'); }
+    }
+  }
+}
+function renderStats(){
+  const s=board.stats;
+  $('stats').innerHTML=
+   '<div class="stat s-active"><b>'+s.active+'</b><span>Active</span></div>'+
+   '<div class="stat"><b>'+s.ready+'</b><span>Ready</span></div>'+
+   '<div class="stat s-blocked"><b>'+(s.blocked+s.waiting)+'</b><span>Block/Wait</span></div>'+
+   '<div class="stat s-approval"><b>'+s.pendingApprovals+'</b><span>Approvals</span></div>';
+}
+function renderApprovals(){
+  const ap=board.approvals||[];
+  $('approvalsSec').style.display=ap.length?'block':'none';
+  $('approvals').innerHTML=ap.map(a=>{
+    const isIdea=String(a.type||'').indexOf('idea')>=0;
+    return '<div class="apcard"><div class="t" style="font-size:14px">'+esc(a.description||a.type)+'</div>'+
+    '<div class="m" style="margin-top:6px;font-size:11.5px;color:var(--dim)">requested by '+esc(a.requestedBy)+' · '+fmtDate(a.requestedAt)+(isIdea?' · <span class="pill p-app">IDEA</span>':'')+'</div>'+
+    (()=>{
+      const dead=a.relatedTaskId&&board&&board.tasks?board.tasks.find(t=>t.taskId===a.relatedTaskId&&(t.state==='CANCELLED'||t.state==='COMPLETED')):null;
+      if(dead) return '<div class="acts"><span class="pill p-normal" style="border-color:var(--dim);color:var(--dim)">TASK '+esc(dead.state)+' — nothing to approve</span>'+
+        '<button class="abtn" data-act="expireApproval" data-id="'+esc(a.id)+'">Clear</button></div>';
+      return '<div class="acts">'+
+      '<button class="abtn gold" data-act="decide" data-id="'+esc(a.id)+'" data-decision="approve">Approve</button>'+
+      '<button class="abtn danger" data-act="decide" data-id="'+esc(a.id)+'" data-decision="deny">Deny</button>'+
+      (a.relatedTaskId ? '<button class="abtn" data-act="open" data-id="'+esc(a.relatedTaskId)+'">Task</button>' : '<button class="abtn" data-act="openIdea" data-id="'+esc(a.id)+'">Details</button>')+
+      '</div>';
+    })()+
+    '</div></div>';
+  }).join('');
+}
+function taskCard(t){
+  return '<div class="card" data-act="open" data-id="'+esc(t.taskId)+'">'+
+    '<div class="t">'+esc(t.title)+'</div>'+
+    '<div class="m">'+
+    '<span class="pill '+prioClass(t.priority)+'">'+esc(String(t.priority||'normal').toUpperCase())+'</span>'+
+    '<span class="pill" style="border:1px solid '+stateColor(t.state)+';color:'+stateColor(t.state)+'">'+esc(t.state)+'</span>'+
+    (t.requiresApproval==='yes'?'<span class="pill p-app">APPROVAL</span>':'')+
+    (t.assignedAgent?'<span>· '+esc(fmtAgentName(t.assignedAgent))+'</span>':'')+
+    (t.project?'<span>· '+esc(t.project)+'</span>':'')+
+    '</div></div>';
+}
+function renderTasks(){
+  let ts=board.tasks;
+  if(filter==='all') ts=ts.filter(t=>t.state!=='CANCELLED'); // P1-1: All includes Done now
+  else ts=ts.filter(t=>t.state===filter);
+  $('listTitle').textContent=filter==='all'?'All Tasks':filter;
+  $('tasks').innerHTML=ts.length?ts.map(taskCard).join(''):'<div style="color:var(--dim);font-size:13px;padding:8px 4px">No tasks here. Capture one above.</div>';
+}
+const COLS=['BACKLOG','READY','ACTIVE','WAITING','BLOCKED','REVIEW','COMPLETED'];
+function renderBoard(){
+  const cols=filter==='all'?COLS:COLS.filter(c=>c===filter);
+  $('board').innerHTML=cols.map(c=>{
+    const ts=board.tasks.filter(t=>t.state===c);
+    return '<div class="col"><h3>'+c+'<i>'+ts.length+'</i></h3>'+(ts.map(taskCard).join('')||'<div style="color:var(--dim);font-size:12px">—</div>')+'</div>';
+  }).join('');
+}
+
+/* ---------- roster: readable role title under the name, tap to edit (Boss) ---------- */
+function rosterCard(r){
+  const ok=String(r.operationalTruth||'').indexOf('VERIFIED WORKING')>=0;
+  const gb=/GROK Bot/i.test(r.platform||'');
+  const role=(r.roleTitle||'').trim();
+  const roleHtml=role?esc(role):'Tap to add a role title';
+  return '<div class="rcard" id="rc-'+esc(r.id||'')+'">'
+   +'<div class="top"><div class="rn">'+esc(fmtAgentName(r.name))+'</div><div class="'+(ok?'v-ok':'v-no')+'">'+esc(r.operationalTruth)+'</div></div>'
+   +'<div class="rt'+(role?'':' empty')+'" onclick="editRole(\''+esc(r.id||'')+'\')">'+roleHtml+'<span class="pen">\u270E</span></div>'
+   +(r.platform?'<span class="tag'+(gb?' grokbot':'')+'">'+esc(r.platform)+'</span>':'')
+   +'<div class="why">'+esc(r.truthSource||'')+'</div>'
+   +'</div>';
+}
+function editRole(id){
+  const r=(window._roster||[]).find(x=>x.id===id); if(!r) return;
+  const card=$('rc-'+id); if(!card) return;
+  const rt=card.querySelector('.rt');
+  rt.onclick=null;
+  rt.innerHTML='<div class="editrow"><input id="ri-'+id+'" maxlength="120" value="'+esc(r.roleTitle||'')+'" placeholder="Role title">'
+   +'<button onclick="saveRole(\''+id+'\')">Save</button><button class="cancel" onclick="renderAgents()">Cancel</button></div>';
+  const inp=$('ri-'+id); if(inp){inp.focus();}
+}
+async function saveRole(id){
+  const inp=$('ri-'+id); if(!inp) return;
+  const val=inp.value.trim();
+  try{
+    await api('setRole',{id:id,roleTitle:val});
+    toast('Role saved');
+    await renderAgents();
+  }catch(e){
+    if(e.message!=='auth') toast('Could not save: '+e.message);
+  }
+}
+/* ---------- OFFICE / HQ VIEW ---------- */
+async function moveTaskToWaiting(taskId, reason){
+  if(!taskId){ toast('Select a task first'); return; }
+  try{
+    await api('moveTask',{taskId:taskId,to:'WAITING',reason:reason||'Moved to WAITING from Office HQ'});
+    toast('Task moved to WAITING');
+    refresh();
+    if(view==='office') renderOfficeView();
+  }catch(e){ toast(e.message); }
+}
+/* ---------- OFFICE FLOOR: visual team view ---------- */
+function normAgent(n){ return fmtAgentName(String(n||'')).trim().toUpperCase(); }
+function agentLook(name){
+  const n=normAgent(name);
+  const looks=[
+    ['ELIO',{'i':'\ud83d\udd27','bg':'linear-gradient(135deg,#7c5cff,#4f46e5)'}],
+    ['OG VANTRA',{'i':'\ud83e\udde0','bg':'linear-gradient(135deg,#5b3df5,#d4af37)'}],
+    ['LENOHERMES',{'i':'\ud83d\udedf','bg':'linear-gradient(135deg,#16a34a,#065f46)'}],
+    ['LENOCLAW',{'i':'\ud83d\udd27','bg':'linear-gradient(135deg,#f59e0b,#b45309)'}],
+    ['CLAW',{'i':'\ud83d\udee1','bg':'linear-gradient(135deg,#3b82f6,#6366f1)'}],
+    ['HERMES',{'i':'\ud83d\udce1','bg':'linear-gradient(135deg,#7c5cff,#22c55e)'}],
+    ['LILY',{'i':'\u260e','bg':'linear-gradient(135deg,#10b981,#065f46)'}],
+    ['JEN',{'i':'\ud83d\udccb','bg':'linear-gradient(135deg,#38bdf8,#1e40af)'}],
+    ['LENNY',{'i':'\ud83d\udcf8','bg':'linear-gradient(135deg,#22d3ee,#0e7490)'}],
+    ['LELIC',{'i':'\ud83c\udf9b','bg':'linear-gradient(135deg,#22c55e,#15803d)'}],
+    ['SAM',{'i':'\ud83d\udcc5','bg':'linear-gradient(135deg,#4ade80,#16a34a)'}],
+    ['ZELUS',{'i':'\ud83d\udce3','bg':'linear-gradient(135deg,#a3e635,#65a30d)'}],
+    ['MUSE',{'i':'\ud83c\udfa8','bg':'linear-gradient(135deg,#c084fc,#f0abfc)'}],
+    ['GROK',{'i':'\u26a1','bg':'linear-gradient(135deg,#3b82f6,#d4af37)'}]
+  ];
+  for(let k=0;k<looks.length;k++){ if(n.indexOf(looks[k][0])>=0) return looks[k][1]; }
+  return {'i':'\ud83e\udd16','bg':'linear-gradient(135deg,#7c5cff,#5b3df5)'};
+}
+var STALE_MS=24*3600*1000; // v9: no check-in for 24h = stale
+function agentDeskStatus(r, st, tasks){
+  const truth=String(r.operationalTruth||'');
+  const mine=tasks.filter(t=>normAgent(t.assignedAgent)===normAgent(r.name));
+  let s='idle';
+  // v9 truth rules: only a real ACTIVE board task means Working. No guessing from online/busy.
+  if(mine.some(t=>t.state==='ACTIVE')) s='working';
+  else if(mine.some(t=>t.state==='WAITING')) s='waiting';
+  else if(mine.some(t=>t.state==='BLOCKED')) s='down';
+  else if(/BLOCKED|NOT VERIFIED|OVERLOADED|FAIL/i.test(truth)) s='down';
+  else if(st&&st.status==='error') s='down';
+  else {
+    const hb=st&&st.lastHeartbeat?new Date(st.lastHeartbeat).getTime():0;
+    if(!hb||Date.now()-hb>STALE_MS) s='stale'; // v9: hasn't checked in recently
+  }
+  return s;
+}
+const STATUS_LABEL={working:'Working',waiting:'Waiting',idle:'Idle',down:'Down',stale:'Stale'};
+function deskHtml(r, tasks, agents){
+  const look=agentLook(r.name);
+  const st=(agents||[]).find(a=>normAgent(a.agentName)===normAgent(r.name));
+  const status=agentDeskStatus(r, st, tasks);
+  const mine=tasks.filter(t=>normAgent(t.assignedAgent)===normAgent(r.name));
+  const active=mine.find(t=>t.state==='ACTIVE');
+  const isClaw=normAgent(r.name).indexOf('CLAW')>=0&&normAgent(r.name).indexOf('LENOCLAW')<0;
+  const role=(r.roleTitle||'').trim();
+  return '<div class="desk" data-act="desk" data-agent="'+esc(r.name)+'" data-st="'+status+'">'
+   +'<div class="desk-top">'
+   +'<span class="d-avatar" style="background:'+look.bg+'">'+look.i+'</span>'
+   +'<span class="d-light '+status+'"></span>'
+   +'</div>'
+   +'<div class="d-name">'+esc(fmtAgentName(r.name))+'</div>'
+   +(role?'<div class="d-role">'+esc(role)+'</div>':'')
+   +'<div class="d-bubble">'+(active?('🖥 '+esc(active.title)):'<span style="color:#8a86a8">No active task</span>')+'</div>'
+   +(isClaw&&status==='idle'?'<span class="d-dell">Dell closed</span>':'')
+   +'</div>';
+}
+// Room anchor points on the artwork (percent of image). Center = JG core.
+// ---------- LIVE OFFICE v6: animated walking workers ----------
+// Home desk + room anchors, in percent of the artwork box.
+var LO_HOME={
+  'LILY':{x:25,y:24,room:'RECEPTION'},
+  'JEN':{x:73,y:25,room:'FILE TRANSFER & RECORDS'},
+  'LELIC':{x:84,y:52,room:'COORDINATION ROOM'},
+  'SAM':{x:72,y:67,room:'SCHEDULING'},
+  'ZELUS':{x:50,y:79,room:'STUDIO / VIDEO'},
+  'OG VANTRA':{x:30,y:56,room:'EXECUTIVE SUITE'},
+  'VANTRA GROK':{x:14,y:42,room:'SCOUTING & RESEARCH'},
+  'ELIO':{x:86,y:80,room:'BUILD LAB'},
+  'MUSE':{x:41,y:90,room:'CREATIVE'},
+  'LENOHERMES':{x:62,y:88,room:'RECOVERY BAY'},
+  'LENOCLAW':{x:15,y:68,room:'RESILIENCE LAB'},
+  'HERMES':{x:38,y:46,room:'OPS & COMMS'},
+  'CLAW':{x:31,y:79,room:'SECURITY POST'},
+  'LENNY':{x:80,y:36,room:'EVIDENCE & BOARD'}
+};
+// Explicit room-label positions (override) so wide labels never collide.
+var LO_LABELS={
+  'EVIDENCE & BOARD':{x:80,y:29},
+  'FILE TRANSFER & RECORDS':{x:73,y:16},
+  'APPROVAL GATE':{x:44,y:26},
+  'RECEPTION':{x:25,y:15},
+  'SCOUTING & RESEARCH':{x:14,y:33},
+  'OPS & COMMS':{x:38,y:39},
+  'COORDINATION ROOM':{x:83,y:43},
+  'SCHEDULING':{x:72,y:58},
+  'EXECUTIVE SUITE':{x:30,y:50},
+  'SECURITY POST':{x:31,y:72},
+  'RESILIENCE LAB':{x:15,y:61},
+  'STUDIO / VIDEO':{x:50,y:70},
+  'CREATIVE':{x:41,y:83},
+  'RECOVERY BAY':{x:62,y:79},
+  'BUILD LAB':{x:85,y:71},
+  'WAITING AREA':{x:60,y:41},
+  'LOUNGE':{x:66,y:56}
+};
+var LO_HALLS=[{x:50,y:34},{x:38,y:50},{x:62,y:50},{x:50,y:62},{x:30,y:44},{x:70,y:44},{x:50,y:70},{x:40,y:72},{x:60,y:72}];
+var LO_ALL={}; var LO_TIMER=null; var LO_TICKS=0; // v9: LO_FEED removed - only real audit events are shown
+// Canonical VANTRA looks (from the visual identity doc): black body + per-operator accent.
+var LO_LOOKS={
+  'OG VANTRA':{ac:'#9d7cff',eye:'#8fd0ff',core:'#d4af37',cls:'og'},
+  'LENOHERMES':{ac:'#22ff7a',eye:'#7dff9f',core:'#22ff7a',cls:'wings'},
+  'LENOCLAW':{ac:'#ffa21f',eye:'#ffc766',core:'#ff8a00',cls:''},
+  'HERMES':{ac:'#a77bff',eye:'#8cffb0',core:'#3cff8f',cls:''},
+  'CLAW':{ac:'#6e7bff',eye:'#9fb4ff',core:'#8f7bff',cls:'cloak'},
+  'LILY':{ac:'#34d399',eye:'#8affd0',core:'#34d399',cls:''},
+  'JEN':{ac:'#38bdf8',eye:'#cfefff',core:'#d4af37',cls:''},
+  'LELIC':{ac:'#4ade80',eye:'#a8ffc4',core:'#4ade80',cls:''},
+  'SAM':{ac:'#86efac',eye:'#d4ffe0',core:'#86efac',cls:''},
+  'ZELUS':{ac:'#bef264',eye:'#eaffb5',core:'#bef264',cls:''},
+  'MUSE':{ac:'#e879f9',eye:'#f6b8ff',core:'#e879f9',cls:''},
+  'ELIO':{ac:'#818cf8',eye:'#b4bcff',core:'#d4af37',cls:'partner'},
+  'VANTRA GROK':{ac:'#3b82f6',eye:'#bfd9ff',core:'#d4af37',cls:''},
+  'LENNY':{ac:'#22d3ee',eye:'#bff6ff',core:'#22d3ee',cls:''}
+};
+function loLook(name){
+  var n=normAgent(name); var keys=Object.keys(LO_LOOKS).sort(function(a,b){return b.length-a.length;});
+  for(var k=0;k<keys.length;k++){ if(n.indexOf(keys[k])>=0) return LO_LOOKS[keys[k]]; }
+  return {ac:'#9d7cff',eye:'#7fe9ff',core:'#9d7cff',cls:''};
+}
+
+function loKey(name){
+  var n=normAgent(name);
+  var keys=Object.keys(LO_HOME).sort(function(a,b){return b.length-a.length;});
+  for(var k=0;k<keys.length;k++){ if(n.indexOf(keys[k])>=0) return keys[k]; }
+  return null;
+}
+function loFirst(name){ return fmtAgentName(name).replace(/^VANTRA\s+/i,'').replace(/\s+GROK$/i,'').replace(/\s*\(.*\)/,''); }
+function loPlace(el,pt){ el.style.left=pt.x+'%'; el.style.top=pt.y+'%'; }
+function loTick(){
+  var ids=Object.keys(LO_ALL); if(!ids.length) return;
+  LO_TICKS++;
+  if(LO_TICKS%14===0) loLoadComms();
+  ids.forEach(function(id){
+    var rec=LO_ALL[id]; if(!rec||!rec.el||!rec.el.isConnected) return;
+    if(rec.status==='working'){ rec.el.classList.remove('walk'); rec.el.classList.add('work'); loPlace(rec.el,rec.home); return; }
+    rec.el.classList.remove('work');
+    if(rec.status==='down'){
+      var pt=rec.bay||rec.home; // CLAW/HERMES/LENOCLAW keep their home station as their bay (v9)
+      if(!rec.atDown){ rec.el.classList.add('walk'); loPlace(rec.el,pt); rec.atDown=true; setTimeout(function(){ rec.el.classList.remove('walk'); },2800); }
+      return;
+    }
+    rec.atDown=false;
+    if(rec.status==='waiting'){
+      if(!rec.atWait){ rec.el.classList.add('walk'); loPlace(rec.el,rec.waitSpot); rec.atWait=true; setTimeout(function(){ rec.el.classList.remove('walk'); },2800); }
+      return;
+    }
+    rec.atWait=false;
+    // idle or stale: stands at their station. v9: no wandering, no bubbles, no fake activity.
+    rec.el.classList.remove('walk'); loPlace(rec.el,rec.home);
+  });
+}
+async function loLoadComms(){
+  try{
+    const r=await fetch(COMMSURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({op:'comms'})});
+    const d=await r.json();
+    window._office.comms=(d&&d.ok&&d.events)?d.events:[];
+  }catch(e){ window._office.comms=null; }
+  loRenderFeed();
+}
+function loRenderFeed(){
+  var f=document.getElementById('loFeed'); if(!f) return;
+  var comms=(window._office&&window._office.comms)||[];
+  f.innerHTML=comms.length
+    ? '<div style="font-size:11px;letter-spacing:1.5px;color:#00ffff;margin-bottom:2px">TEAM COMMS \u2014 AUDIT LOG (real events only)</div>'+comms.slice(0,8).map(function(r){ return '<div>\ud83d\udccb '+esc(r.reporterAgent||'SYSTEM')+' \u2014 '+esc(r.messageSummary)+' <span style="color:#8a86a8">\u00b7 '+fmtET(r.observedAt)+' ET</span></div>'; }).join('')
+    : '<div style="color:#8a86a8">No comms yet \u2014 real audit events show here as the team works. Nothing is simulated.</div>';
+}
+async function renderOfficeView(){
+  const container=$('officeFloor');
+  try{
+    if(!board) board=await api('board');
+    const d=await api('agents');
+    const roster=d.roster||[];
+    const agents=d.agents||[];
+    const tasks=board.tasks||[];
+    window._office={roster:roster,agents:agents,tasks:tasks,asOf:new Date().toISOString()};
+    clearInterval(LO_TIMER); LO_ALL={};
+    var rooms={}; Object.keys(LO_HOME).forEach(function(k){ var h=LO_HOME[k]; if(!rooms[h.room]) rooms[h.room]=h; });
+    var roomHtml=Object.keys(rooms).map(function(r){ var lp=LO_LABELS[r]||{x:rooms[r].x,y:rooms[r].y-8}; return '<span class="lo-room" style="left:'+lp.x+'%;top:'+lp.y+'%">'+esc(r)+'</span>'; }).join('');
+    roomHtml+='<span class="lo-room" style="left:44%;top:27%">APPROVAL GATE</span>';
+    roomHtml+='<span class="lo-room" style="left:63%;top:44%">WAITING AREA</span>';
+    roomHtml+='<span class="lo-room" style="left:66%;top:56%">LOUNGE</span>';
+    
+    
+    
+    var pending=(board.approvals)||[];
+    var consoleHtml='<div class="lo-console'+(pending.length?' pend':'')+'" data-act="officeApprovals" style="left:41%;top:39%" title="Approval Gate console'+(pending.length?(' \u2014 '+pending.length+' pending'):'')+'"></div>';
+    var wk=roster.map(function(r,idx){
+      var key=loKey(r.name); var home=key?LO_HOME[key]:{x:20+(idx*7)%60,y:92};
+      var atHome=['CLAW','HERMES','LENOCLAW'].indexOf(key)>=0; // v9: home station, not the Recovery Bay
+      var st=(agents||[]).find(function(a){return normAgent(a.agentName)===normAgent(r.name);});
+      var status=agentDeskStatus(r,st,tasks);
+      var mine=tasks.filter(function(t){return normAgent(t.assignedAgent)===normAgent(r.name);});
+      var active=mine.find(function(t){return t.state==='ACTIVE';});
+      var lk=loLook(r.name); var bd=(-(idx*0.83)%4.6).toFixed(2)+'s';
+      var id='w'+idx;
+      LO_ALL[id]={name:r.name,status:status,home:{x:home.x,y:home.y},waitSpot:{x:57+(idx%3)*3.5,y:53.5+Math.floor(idx/3)*3.5},bay:(atHome?{x:home.x,y:home.y}:{x:13+(idx%2)*4,y:76+(idx%4)*3}),el:null,atDown:false,atWait:false};
+      return '<div class="w'+(status==='working'?' work':'')+(lk.cls?' '+lk.cls:'')+'" id="'+id+'" data-act="desk" data-agent="'+esc(r.name)+'" data-st="'+status+'" style="left:'+home.x+'%;top:'+home.y+'%;--ac:'+lk.ac+';--eye:'+lk.eye+';--core:'+lk.core+';--bd:'+bd+'" title="'+esc(fmtAgentName(r.name))+(active?' \u2014 '+esc(active.title):'')+'">'
+        +'<span class="w-dot"></span>'
+        +'<div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div>'
+        +'<div class="w-name">'+esc(loFirst(r.name))+'</div></div>';
+    }).join('');
+    var alerts='<div class="ov-alerts">'
+      +(pending.length? pending.slice(0,3).map(function(a){ return '<div class="ov-alert" data-act="officeApprovals">\ud83d\udd14 Approval needed \u2014 '+esc(String(a.description||a.type||'Approval').substring(0,80))+'<div class="s">Tap to open the Approval Gate</div></div>'; }).join('')
+        : '<div class="ov-alert" style="border-color:rgba(74,222,128,.4);color:#b9f5cf">\u2713 No approvals waiting</div>')
+      +'</div>';
+    var team='<div class="ov-team">'+roster.map(function(r){
+      var st=(agents||[]).find(function(a){return normAgent(a.agentName)===normAgent(r.name);});
+      var status=agentDeskStatus(r,st,tasks);
+      var mine=tasks.filter(function(t){return normAgent(t.assignedAgent)===normAgent(r.name);});
+      var active=mine.find(function(t){return t.state==='ACTIVE';});
+      var c=ST_COLORS[status]||'#8a86a8';
+      return '<div class="trow" data-act="desk" data-agent="'+esc(r.name)+'">'
+        +'<span style="width:9px;height:9px;border-radius:50%;flex:none;background:'+c+';box-shadow:0 0 6px '+c+'"></span>'
+        +'<span class="tn">'+esc(loFirst(r.name))+'</span>'
+        +'<span class="tt">'+(active?esc(String(active.title).substring(0,50)):'no active task')+'</span>'
+        +'<span class="pill" style="border:1px solid '+c+';color:'+c+';font-size:10px;flex:none">'+esc(STATUS_LABEL[status]||status)+'</span>'
+        +'</div>';
+    }).join('')+'</div>';
+    container.innerHTML=
+      alerts
+      +team
+      +'<div class="floor-head"><span>LIVE OFFICE</span><span class="asof" style="margin:0 0 0 10px">data as of '+fmtET(window._office.asOf)+' ET</span><button class="abtn" style="padding:4px 8px;font-size:11px;border-color:#00ffff;color:#00ffff" data-act="refreshOffice">\u21bb</button></div>'
+      +'<div class="floor-legend"><span><i style="background:#4ade80"></i>Working (ACTIVE task)</span><span><i style="background:#f0d88c"></i>Waiting</span><span><i style="background:#8a86a8"></i>Idle</span><span><i style="background:#fb923c"></i>Stale (24h+)</span><span><i style="background:#f87171"></i>Down</span></div>'
+      +'<div class="lo ov-floor">'+roomHtml+consoleHtml+wk+'</div>'
+      +'<div class="lo-feed ov-feed" id="loFeed"></div>'
+      +'<div class="lo-note">Real signals only. Working = has an ACTIVE board task. Waiting = WAITING task, they stand by Mission Core. Stale = no check-in for 24 h. Down = blocked or errored (CLAW, HERMES and LENOCLAW sit at their own station). The feed is the real audit log \u2014 no simulated chats or walk-overs. Tap a robot for room, last action, blockers and evidence. Tap the gold console for the Approval Gate.</div>';
+    Object.keys(LO_ALL).forEach(function(id){ LO_ALL[id].el=document.getElementById(id); });
+    LO_TICKS=0; loLoadComms();
+    setTimeout(loTick,600); LO_TIMER=setInterval(function(){ if($('officeView')&&!$('officeView').classList.contains('hidden')) loTick(); },3200);
+  }catch(e){ container.innerHTML='<div class="errline">Can\u2019t load the live office: '+esc(e.message)+'</div>'; }
+}
+function openOfficeApprovals(){
+  const aps=(board&&board.approvals)||[];
+  let html='<button class="close" data-act="close">\u2715</button>'
+    +'<h3>Approval Gate</h3>'
+    +'<div class="meta"><span class="pill p-app">APPROVAL GATE</span><span class="pill p-normal">'+aps.length+' PENDING</span></div>';
+  if(!aps.length){
+    html+='<div class="desc">No approvals waiting. The gold console on the floor glows when something needs your decision.</div>';
+  } else {
+    aps.forEach(function(a){
+      const linked=String(a.relatedTaskId||'');
+      html+='<div class="desc" style="border:1px solid rgba(212,175,55,.35);border-radius:10px;padding:10px;margin:8px 0">'
+        +'<b>'+esc(String(a.description||a.type||'Approval').substring(0,120))+'</b>'
+        +(linked?'<div style="margin-top:4px">Task: '+esc(linked)+'</div>':'<div style="margin-top:4px">No linked task \u2014 idea approval.</div>')
+        +'<div class="acts" style="margin-top:8px">'
+        +(linked?'<button class="abtn" data-act="open" data-id="'+esc(linked)+'">Open task</button>':'')
+        +'<button class="abtn gold" data-act="decide" data-id="'+esc(a.id)+'" data-decision="approve">Approve</button>'
+        +'<button class="abtn danger" data-act="decide" data-id="'+esc(a.id)+'" data-decision="deny">Deny</button>'
+        +'</div></div>';
+    });
+  }
+  html+='<div class="acts" style="margin-top:12px"><button class="abtn" data-act="close">Close</button></div>';
+  $('sheet').innerHTML=html; $('drawer').classList.remove('hidden');
+}
+async function openAgentCard(name){
+  const o=window._office||{roster:[],agents:[],tasks:[]};
+  const r=o.roster.find(x=>normAgent(x.name)===normAgent(name));
+  if(!r) return;
+  const st=(o.agents||[]).find(a=>normAgent(a.agentName)===normAgent(name));
+  const status=agentDeskStatus(r, st, o.tasks||[]);
+  const mine=(o.tasks||[]).filter(t=>normAgent(t.assignedAgent)===normAgent(name));
+  const active=mine.find(t=>t.state==='ACTIVE');
+  const blocked=mine.filter(t=>t.state==='BLOCKED');
+  let last='';
+  for(const t of mine){ const la=String(t.lastActivityAt||t.updatedAt||''); if(la>last) last=la; }
+  const key=loKey(r.name); const room=key?LO_HOME[key].room:'';
+  const comms=(window._office&&window._office.comms)||[];
+  const nrm=normAgent(name);
+  const lastEv=comms.find(function(ev){ return normAgent(ev.reporterAgent)===nrm; });
+  let evHtml='<i>none yet</i>';
+  if(active){
+    try{
+      const dt=await api('task',{taskId:active.taskId});
+      let ev=[]; try{ ev=typeof dt.task.evidence==='string'?JSON.parse(dt.task.evidence||'[]'):(dt.task.evidence||[]); }catch(e){ ev=[]; }
+      if(Array.isArray(ev)&&ev.length){ evHtml=ev.slice(-3).map(function(e){ return '<div class="s">'+esc(String((e&&e.reference)||(e&&e.description)||'').substring(0,90))+'</div>'; }).join(''); }
+    }catch(e){ evHtml='<i>unavailable</i>'; }
+  }
+  const statusTxt=(STATUS_LABEL[status]||status);
+  const lightColor={working:'var(--green)',waiting:'var(--gold)',idle:'var(--dim)',down:'var(--red)',stale:'#fb923c'}[status]||'var(--dim)';
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">\u2715</button>'
+    +'<h3>'+esc(fmtAgentName(r.name))+'</h3>'
+    +'<div class="meta">'
+    +'<span class="pill" style="border:1px solid '+lightColor+';color:'+lightColor+'">'+statusTxt+'</span>'
+    +'</div>'
+    +(r.roleTitle?'<div class="desc"><b>Role:</b> '+esc(r.roleTitle)+'</div>':'')
+    +'<div class="desc"><b>Room:</b> '+(room?esc(room):'<i>no home station</i>')+'</div>'
+    +'<div class="desc"><b>Current task:</b> '+(active?esc(active.title)+' <a href="#" data-act="open" data-id="'+esc(active.taskId)+'" style="color:var(--purple)">open</a>':'<i>None</i>')+'</div>'
+    +'<div class="desc"><b>Last real action:</b> '+(lastEv?esc(String(lastEv.messageSummary).substring(0,140))+' <span style="color:var(--dim)">('+fmtET(lastEv.observedAt)+' ET)</span>':'<i>no recent audit activity</i>')+'</div>'
+    +'<div class="desc"><b>Blockers:</b> '+(blocked.length?blocked.map(function(t){ return '<a href="#" data-act="open" data-id="'+esc(t.taskId)+'" style="color:var(--red)">'+esc(t.title)+'</a>'; }).join('<br>'):'<i>none</i>')+'</div>'
+    +'<div class="desc"><b>Evidence (active task):</b> '+evHtml+'</div>'
+    +'<div class="desc"><b>Last board entry:</b> '+(last?fmtET(last)+' ET':'<i>no entries yet</i>')+'</div>'
+    +(st&&st.lastHeartbeat?'<div class="desc"><b>Heartbeat:</b> '+fmtDate(st.lastHeartbeat)+'</div>':'<div class="desc"><b>Heartbeat:</b> <i>none on record</i></div>')
+    +'<div class="acts">'
+    +(active?'<button class="abtn gold" data-act="deskWait" data-task="'+esc(active.taskId)+'">Move to Waiting</button>':'<span style="font-size:12px;color:var(--dim)">No active task to move.</span>')
+    +'<button class="abtn" data-act="deskAssign" data-agent="'+esc(r.name)+'">Assign Task</button>'
+    +'<button class="abtn" data-act="close">Close</button>'
+    +'</div>';
+  $('drawer').classList.remove('hidden');
+}
+/* ---------- assign task from the office floor (v8) ---------- */
+function openAssignForm(name){
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">\u2715</button>'
+    +'<h3>Assign task \u2192 '+esc(fmtAgentName(name))+'</h3>'
+    +'<div class="desc" style="margin-bottom:10px">The task lands on the Mission Control board with '+esc(fmtAgentName(name))+' as the assignee.</div>'
+    +'<input id="asTitle" placeholder="Task title..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:9px">'
+    +'<input id="asProject" placeholder="Project (optional)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:9px">'
+    +'<select id="asPriority" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:14px"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select>'
+    +'<div class="acts"><button class="abtn gold" data-act="deskAssignGo" data-agent="'+esc(name)+'">Assign Task</button><button class="abtn" data-act="close">Cancel</button></div>';
+  $('drawer').classList.remove('hidden');
+}
+var LO_ASSIGN_BUSY=false; // v9: double-tap guard
+async function submitAssign(name){
+  if(LO_ASSIGN_BUSY) return;
+  const o=window._office||{};
+  const roster=(o.roster&&o.roster.length)?o.roster:(window._roster||[]);
+  if(!roster.some(x=>normAgent(x.name)===normAgent(name))){ toast('That agent is not on the roster'); return; } // v9: assignee must be real
+  const title=$('asTitle').value.trim(); if(!title){ toast('Give the task a title'); return; }
+  LO_ASSIGN_BUSY=true;
+  try{
+    await api('createTask',{title:title,project:$('asProject').value.trim(),priority:$('asPriority').value,requiresApproval:'no',assignedAgent:name,idempotencyKey:('desk-'+Date.now()+'-'+deviceId())});
+    toast('Task assigned to '+fmtAgentName(name));
+    closeDrawer(); refresh();
+    if(view==='office') renderOfficeView();
+  }catch(e){ toast(e.message); }
+  finally{ LO_ASSIGN_BUSY=false; }
+}
+
+/* ---------- idea approval graceful sheet (MC-IDEAS) ---------- */
+function renderIdeaApprovalSheet(appObj){
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">✕</button>'
+    +'<h3>'+esc(appObj.description||appObj.type||'Idea Approval')+'</h3>'
+    +'<div class="meta"><span class="pill p-app">IDEA APPROVAL</span><span class="pill p-normal">NO LINKED TASK</span></div>'
+    +'<div class="desc" style="color:var(--gold-soft);background:rgba(212,175,55,.1);padding:12px;border-radius:10px;border:1px solid rgba(212,175,55,.2);line-height:1.45">💡 <b>No task yet — idea approval.</b><br>This idea proposal is pending decision before a formal task is generated on the board.</div>'
+    +'<div class="m" style="margin-top:12px;font-size:12px;color:var(--dim)">Requested by: <b>'+esc(fmtAgentName(appObj.requestedBy||'Agent'))+'</b> · '+fmtDate(appObj.requestedAt)+'</div>'
+    +(appObj.id?'<div class="acts" style="margin-top:16px"><button class="abtn gold" data-act="decide" data-id="'+esc(appObj.id)+'" data-decision="approve">Approve Idea</button><button class="abtn danger" data-act="decide" data-id="'+esc(appObj.id)+'" data-decision="deny">Deny Idea</button></div>':'')
+    +'<div class="acts" style="margin-top:12px"><button class="abtn" data-act="close">Close</button></div>';
+  $('drawer').classList.remove('hidden');
+}
+
+async function renderAgents(){
+  try{
+    const d=await api('agents');
+    window._roster=d.roster||[];
+    $('roster').innerHTML=window._roster.map(rosterCard).join('')||'<div class="errline">No roster data.</div>';
+    $('liveAgents').innerHTML=(d.agents||[]).map(a=>'<div class="agent"><div><div class="n">'+esc(fmtAgentName(a.agentName))+'</div><div class="s">heartbeat '+esc(a.lastHeartbeat||'none')+'</div></div><div class="pill">'+esc(a.status)+'</div></div>').join('')||'<div style="color:var(--dim);font-size:12px">No live telemetry reported yet.</div>';
+  }catch(e){
+    $('roster').innerHTML='<div class="errline">Can\u2019t load the agent directory: '+esc(e.message)+' <button class="abtn" style="margin-top:6px;font-size:11px" data-act="retryAgents">Retry</button></div>';
+  }
+}
+
+/* ---------- TEAM STATUS (v9): status card per agent ---------- */
+const ST_COLORS={working:'#22c55e',waiting:'#eab308',down:'#ef4444',idle:'#8a86a8',stale:'#fb923c'};
+async function renderStatus(){
+  const box=$('teamStatus'); if(!box) return;
+  box.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Loading team status…</div>';
+  try{
+    const [b,a]=await Promise.all([api('board'),api('agents')]);
+    const tasks=b.tasks||[]; const agents=a.agents||[]; const roster=a.roster||[];
+    const cards=roster.map(function(r){
+      const st=agents.find(function(x){return normAgent(x.agentName)===normAgent(r.name);});
+      const status=agentDeskStatus(r, st, tasks);
+      const mine=tasks.filter(function(t){return normAgent(t.assignedAgent)===normAgent(r.name);});
+      const active=mine.find(function(t){return t.state==='ACTIVE';})||mine.find(function(t){return t.state==='WAITING'||t.state==='BLOCKED';});
+      const look=agentLook(r.name);
+      const c=ST_COLORS[status]||'#8a86a8';
+      const counts=[['ACTIVE',mine.filter(function(t){return t.state==='ACTIVE';}).length],
+                    ['WAITING',mine.filter(function(t){return t.state==='WAITING';}).length],
+                    ['BLOCKED',mine.filter(function(t){return t.state==='BLOCKED';}).length],
+                    ['DONE',mine.filter(function(t){return t.state==='COMPLETED';}).length]];
+      const isClaw=normAgent(r.name).indexOf('CLAW')>=0&&normAgent(r.name).indexOf('LENOCLAW')<0;
+      const statusTxt=(isClaw&&status==='idle')?'Dell closed':(STATUS_LABEL[status]||status);
+      return '<div class="agent" data-act="desk" data-agent="'+esc(r.name)+'" style="align-items:flex-start;cursor:pointer">'
+        +'<div style="display:flex;gap:11px;align-items:center;flex:1;min-width:0">'
+        +'<div style="width:38px;height:38px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;background:'+look.bg+'">'+look.i+'</div>'
+        +'<div style="min-width:0;flex:1">'
+        +'<div class="n">'+esc(fmtAgentName(r.name))+'</div>'
+        +'<div class="s">'+esc(r.roleTitle||'')+(r.platform?' · '+esc(r.platform):'')+'</div>'
+        +'<div class="s" style="margin-top:4px">'
+        +(active?'<b style="color:#c9c5e8">'+esc(String(active.title).substring(0,60))+'</b> <span class="pill" style="border:1px solid '+stateColor(active.state)+';color:'+stateColor(active.state)+';font-size:9.5px">'+esc(active.state)+'</span>':'<span style="color:var(--dim)">no active task</span>')
+        +'</div>'
+        +'<div class="s" style="margin-top:3px">'+(counts.map(function(x){return x[1]>0?('<b>'+x[1]+'</b> '+x[0].toLowerCase()):null;}).filter(Boolean).join(' · ')||'no tasks')+'</div>'
+        +(st&&st.lastHeartbeat?'<div class="s" style="margin-top:3px">heartbeat '+esc(fmtET(st.lastHeartbeat))+' ET</div>':'')
+        +(st&&st.lastErrorSummary?'<div class="s" style="color:var(--red);margin-top:3px">⚠ '+esc(String(st.lastErrorSummary).substring(0,80))+'</div>':'')
+        +'</div></div>'
+        +'<div class="pill" style="border:1px solid '+c+';color:'+c+';flex:none">'+esc(statusTxt.toUpperCase())+'</div>'
+        +'</div>';
+    }).join('');
+    const tally={working:0,waiting:0,down:0,idle:0,stale:0};
+    roster.forEach(function(r){
+      const st=agents.find(function(x){return normAgent(x.agentName)===normAgent(r.name);});
+      tally[agentDeskStatus(r,st,tasks)]++;
+    });
+    $('statusStats').innerHTML=
+      '<div class="stat"><div style="color:#22c55e">'+tally.working+'</div>Working</div>'
+      +'<div class="stat"><div style="color:#eab308">'+tally.waiting+'</div>Waiting</div>'
+      +'<div class="stat"><div style="color:#ef4444">'+tally.down+'</div>Down</div>'
+      +'<div class="stat"><div style="color:#8a86a8">'+tally.idle+'</div>Idle</div>'
+      +'<div class="stat"><div style="color:#fb923c">'+tally.stale+'</div>Stale</div>';
+    box.innerHTML='<div class="asof">Data as of '+fmtET(new Date().toISOString())+' ET \u00b7 Working only shows with an ACTIVE board task \u00b7 Stale = no check-in for 24 h</div>'+(cards||'<div class="errline">No roster data.</div>');
+  }catch(e){
+    box.innerHTML='<div class="errline">Can\u2019t load team status: '+esc(e.message)+' <button class="abtn" style="margin-top:6px;font-size:11px" data-act="retryStatus">Retry</button></div>';
+  }
+}
+
+/* ---------- task drawer ---------- */
+async function openTask(taskId, ideaApprovalObj){
+  if(!taskId && ideaApprovalObj){ renderIdeaApprovalSheet(ideaApprovalObj); return; }
+  try{
+    const d=await api('task',{taskId:taskId});
+    selected=d.task;
+    const t=selected;
+    const aps=d.approvals||[];
+    let acts='';
+    if(t.state==='BACKLOG') acts+='<button class="abtn primary" data-act="move" data-to="READY" data-reason="ready">→ Ready</button>';
+    if(t.state==='READY') acts+='<button class="abtn primary" data-act="move" data-to="ACTIVE" data-reason="started by Boss">Start</button><button class="abtn gold" data-act="move" data-to="WAITING" data-reason="waiting on input">Wait</button>';
+    if(t.state==='ACTIVE') acts+='<button class="abtn gold" data-act="move" data-to="WAITING" data-reason="waiting on input">Wait</button><button class="abtn" data-act="move" data-to="BLOCKED" data-reason="blocked by Boss">Block</button><button class="abtn" data-act="move" data-to="REVIEW" data-reason="ready for review">→ Review</button>';
+    if(t.state==='BLOCKED'||t.state==='WAITING') acts+='<button class="abtn green" data-act="move" data-to="ACTIVE" data-reason="unblocked by Boss">Unblock</button>';
+    if(t.state==='REVIEW') acts+='<button class="abtn gold" data-act="complete">Complete ✓</button>';
+    if(t.state!=='COMPLETED'&&t.state!=='CANCELLED') acts+='<button class="abtn danger" data-act="move" data-to="CANCELLED" data-reason="cancelled by Boss">Cancel</button>';
+    const log=(t.activityLog||[]).map(e=>'<div class="le"><b>'+esc(e.actor)+'</b> · '+esc(e.kind)+' · '+esc(String(e.text||'').substring(0,160))+'<div style="color:var(--dim);font-size:10.5px">'+fmtDate(e.at)+'</div></div>').join('');
+    const hist=(t.stateHistory||[]).map(h=>'<div class="le" style="font-size:11.5px">'+esc(h.from||'(new)')+' → <b>'+esc(h.to)+'</b> by '+esc(h.actor)+' · '+fmtDate(h.at)+'</div>').join('');
+    $('sheet').innerHTML=
+      '<button class="close" data-act="close">✕</button>'+
+      '<h3>'+esc(t.title)+'</h3>'+
+      '<div class="meta">'+
+      '<span class="pill" style="border:1px solid '+stateColor(t.state)+';color:'+stateColor(t.state)+'">'+esc(t.state)+'</span>'+
+      '<span class="pill '+prioClass(t.priority)+'">'+esc(String(t.priority||'normal').toUpperCase())+'</span>'+
+      (t.requiresApproval==='yes'?'<span class="pill p-app">APPROVAL REQUIRED</span>':'')+
+      '<span class="pill p-normal">'+esc(t.createdBy)+'</span>'+
+      (t.assignedAgent?'<span class="pill p-normal">→ '+esc(t.assignedAgent)+'</span>':'')+
+      '</div>'+
+      (t.description?'<div class="desc">'+esc(t.description)+'</div>':'')+
+      (t.errorSummary?'<div class="desc" style="color:var(--red)">⚠ '+esc(t.errorSummary)+'</div>':'')+
+      (aps.length?'<div class="sec"><h2>Approvals</h2>'+aps.map(a=>'<div class="le">Approval: <b>'+esc(a.status)+'</b> · '+fmtDate(a.decidedAt||a.requestedAt)+'</div>').join('')+'</div>':'')+
+      '<input id="noteIn" placeholder="Add note…"><button class="abtn" style="margin-top:8px" data-act="note">Post Note</button>'+
+      (t.state==='READY'?'<input id="assignIn" placeholder="Assign to agent (optional — filled in on Start)">':'')+
+      '<div class="acts">'+acts+'</div>'+
+      '<div class="log"><h4>Activity</h4>'+(log||'<div class="le">No activity yet.</div>')+'</div>'+
+      '<div class="log"><h4>State History</h4>'+(hist||'<div class="le">No history yet.</div>')+'</div>';
+    $('drawer').classList.remove('hidden');
+  }catch(e){toast(e.message);}
+}
+function closeDrawer(){$('drawer').classList.add('hidden');}
+async function move(to,reason){
+  try{
+    if(to==='ACTIVE'){
+      const a=$('assignIn');
+      if(a && a.value.trim()){ try{ await api('updateTask',{taskId:selected.taskId,assignedAgent:a.value.trim()}); }catch(e){ } }
+    }
+    await api('moveTask',{taskId:selected.taskId,to:to,reason:reason});
+    toast('→ '+to);
+    refresh();
+    openTask(selected.taskId); // P2-1: drawer stays open so the new status is visible
+  }catch(e){toast(e.message);}
+}
+async function complete(){
+  try{
+    await api('complete',{taskId:selected.taskId,verified:true,note:'Boss verified from client'});
+    toast('Completed ✓');
+    refresh();
+    openTask(selected.taskId);
+  }catch(e){toast(e.message);}
+}
+async function addNote(){
+  const v=$('noteIn').value.trim();
+  if(!v) return;
+  try{ await api('note',{taskId:selected.taskId,text:v}); toast('Note added'); openTask(selected.taskId); }catch(e){toast(e.message);}
+}
+async function decide(id,decision){
+  try{ await api('decideApproval',{approvalId:id,decision:decision,note:'decided from client'}); toast(decision==='approve'?'Approved ✓':'Denied'); refresh(); }catch(e){toast(e.message);}
+}
+async function createTask(){
+  if(capBusy) return; // P2-3: double-tap guard
+  const title=$('capIn').value.trim(); if(!title) return;
+  capBusy=true; $('capBtn').disabled=true;
+  try{
+    await api('createTask',{title:title,priority:($('capPriority').value||'normal'),project:$('capProject').value.trim(),requiresApproval:$('capApproval').value,idempotencyKey:('cap-'+Date.now()+'-'+deviceId())});
+    $('capIn').value=''; $('capProject').value=''; $('capPriority').value=''; $('capApproval').value='no'; // P2-3: reset selects
+    toast('Task captured');
+    refresh();
+  }catch(e){toast(e.message);}
+  finally{ capBusy=false; $('capBtn').disabled=false; }
+}
+
+/* ---------- delegated wiring (P0-2: no inline onclick anywhere) ---------- */
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');
+  if(!el) return;
+  const act=el.getAttribute('data-act');
+  if(act==='open') openTask(el.getAttribute('data-id'));
+  else if(act==='decide') decide(el.getAttribute('data-id'),el.getAttribute('data-decision'));
+  else if(act==='move') move(el.getAttribute('data-to'),el.getAttribute('data-reason'));
+  else if(act==='complete') complete();
+  else if(act==='note') addNote();
+  else if(act==='close') closeDrawer();
+  else if(act==='logout') doLogout();
+  else if(act==='retry') boot(true);
+  else if(act==='retryAgents') renderAgents();
+  else if(act==='retryStatus') renderStatus();
+  else if(act==='refreshOffice') renderOfficeView();
+  else if(act==='officeApprovals'||act==='openApprovalAlert'){ openOfficeApprovals(); }
+  else if(act==='openIdea'){
+    const app=(board&&board.approvals)?board.approvals.find(a=>a.id===el.getAttribute('data-id')):null;
+    renderIdeaApprovalSheet(app||{id:el.getAttribute('data-id'),description:'Idea approval (unlinked)'});
+  }
+  else if(act==='desk'){ openAgentCard(el.getAttribute('data-agent')); }
+  else if(act==='deskAssign'){ openAssignForm(el.getAttribute('data-agent')); }
+  else if(act==='deskAssignGo'){ submitAssign(el.getAttribute('data-agent')); }
+  else if(act==='expireApproval'){ try{ await api('expireApproval',{approvalId:el.getAttribute('data-id')}); toast('Cleared'); refresh(); }catch(e){ toast(e.message); } }
+  else if(act==='deskWait'){ moveTaskToWaiting(el.getAttribute('data-task'),'Moved to WAITING from agent desk card'); }
+});
+$('loginBtn').addEventListener('click',login);
+$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+$('capBtn').addEventListener('click',createTask);
+$('capIn').addEventListener('keydown',e=>{if(e.key==='Enter')createTask();});
+$('vLogout').addEventListener('click',doLogout);
+function setView(v){
+  view=v;
+  $('home').classList.toggle('hidden',v!=='home');
+  $('boardView').classList.toggle('hidden',v!=='board');
+  $('officeView').classList.toggle('hidden',v!=='office');
+  $('agentsView').classList.toggle('hidden',v!=='agents');
+  $('habitsView').classList.toggle('hidden',v!=='habits');
+  $('statusView').classList.toggle('hidden',v!=='status');
+  $('vStatus').classList.toggle('on',v==='status');
+  $('vHome').classList.toggle('on',v==='home');
+  $('vBoard').classList.toggle('on',v==='board');
+  $('vOffice').classList.toggle('on',v==='office');
+  $('vAgents').classList.toggle('on',v==='agents');
+  $('vHabits').classList.toggle('on',v==='habits');
+  if(v==='agents') renderAgents(); // P2-5: agents fetched only when the view is open
+  if(v==='office') renderOfficeView();
+  if(v==='status') renderStatus();
+  if(v==='habits') renderHabits();
+}
+$('vHome').addEventListener('click',()=>setView('home'));
+$('vBoard').addEventListener('click',()=>setView('board'));
+$('vOffice').addEventListener('click',()=>setView('office'));
+$('vStatus').addEventListener('click',()=>setView('status'));
+$('vAgents').addEventListener('click',()=>setView('agents'));
+$('vHabits').addEventListener('click',()=>setView('habits'));
+// ================= HABIT TRACKER (v9.4) =================
+// Remade from Boss's reference screenshots (Drive: Habit Tracking Tool):
+// daily-progress bars, overall stats donut, month grid with checkboxes,
+// analysis table, mood + sleep wellness. Real data only — check-ins live in
+// the HabitCheckIn entity; the grid fills as Boss actually checks in.
+let habitsData=null, habitsMonth=null, habitsBusy=false;
+function etToday(){ // yyyy-mm-dd in Boss's timezone (ET)
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const g=t=>p.find(x=>x.type===t).value; return g('year')+'-'+g('month')+'-'+g('day');
+}
+function monthOf(iso){return iso.substring(0,7);}
+function daysInMonth(ym){const [y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
+const DAY_LETTERS=['Su','Mo','Tu','We','Th','Fr','Sa'];
+function etDow(ymd){const [y,m,d]=ymd.split('-').map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay();}
+
+async function renderHabits(month){
+  if(!month){
+    if(!habitsMonth) habitsMonth=monthOf(etToday());
+    month=habitsMonth;
+  }
+  habitsMonth=month;
+  const body=$('habitsBody');
+  body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Loading habits…</div>';
+  let d;
+  try{ d=await api('habits',{month}); }
+  catch(e){ body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Couldn\'t load habits ('+esc(e.message)+') — pull down or tap another tab and back.</div>'; return; }
+  habitsData=d;
+  $('habitsAsOf').textContent='Data as of '+fmtET(d.asOf||new Date().toISOString());
+  // month tabs: current + 2 prior months
+  const cur=monthOf(etToday());
+  const tabs=[];
+  let [y,m]=cur.split('-').map(Number);
+  for(let i=0;i<3;i++){ tabs.unshift(y+'-'+String(m).padStart(2,'0')); m-=1; if(m===0){m=12;y-=1;} }
+  $('habitsMonthTabs').innerHTML=tabs.map(t=>'<button class="hb-month'+(t===month?' on':'')+'" data-hbm="'+t+'">'+new Date(t+'-02').toLocaleString('en-US',{month:'short',year:'numeric'})+'</button>').join('');
+  const habits=d.habits||[];
+  if(!habits.length){
+    body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">No habits set up yet. Tell me which habits to track and I\'ll add them.</div>';
+    return;
+  }
+  const today=etToday();
+  const isCur=month===cur;
+  const dim=daysInMonth(month);
+  const lastDay=isCur?Number(today.substring(8,10)):dim;
+  const cis={}; (d.checkins||[]).forEach(c=>{ if(c.done) cis[c.habitKey+'|'+c.date]=1; });
+  const well={}; (d.wellness||[]).forEach(w=>{ well[w.date]=w; });
+  const dayOf=day=>month+'-'+String(day).padStart(2,'0');
+
+  // ---- overall stats ----
+  let goal=0, done=0;
+  habits.forEach(h=>{ for(let dy=1;dy<=lastDay;dy++){ goal++; if(cis[h.habitKey+'|'+dayOf(dy)]) done++; } });
+  const pct=goal?Math.round(done/goal*100):0;
+  let html='<div class="hb-stats">'
+   +'<div class="hb-donut" style="background:conic-gradient(var(--green) '+pct*3.6+'deg, rgba(138,43,226,.35) 0)"><div class="hb-dpct">'+pct+'%</div></div>'
+   +'<div class="hb-kv"><div>Goal<b>'+goal+'</b></div><div>Completed<b>'+done+'</b></div><div>Left<b>'+(goal-done)+'</b></div></div></div>';
+
+  // ---- daily progress bars ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">DAILY PROGRESS</h3><div class="hb-bars">';
+  let maxDoneDay=1;
+  const dayPct=[];
+  for(let dy=1;dy<=lastDay;dy++){
+    let dn=0; habits.forEach(h=>{ if(cis[h.habitKey+'|'+dayOf(dy)]) dn++; });
+    const p=habits.length?dn/habits.length:0; dayPct.push(p); if(dn>maxDoneDay)maxDoneDay=dn;
+  }
+  for(let dy=1;dy<=lastDay;dy++){
+    const hgt=Math.round(dayPct[dy-1]*66);
+    html+='<div class="hb-bar'+(dayPct[dy-1]>=1?' full':'')+'" style="height:'+hgt+'px" title="'+dy+': '+Math.round(dayPct[dy-1]*100)+'%"></div>';
+  }
+  html+='</div>';
+
+  // ---- TODAY check-in strip ----
+  if(isCur){
+    html+='<div class="hb-today"><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:2px">TODAY — '+today+'</div>';
+    habits.forEach(h=>{
+      const on=!!cis[h.habitKey+'|'+today];
+      html+='<div class="hb-trow"><button class="hb-chk'+(on?' done':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+today+'">'+(on?'\u2713':'')+'</button>'
+        +'<div><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.executionLink||'')+'</div></div></div>';
+    });
+    // wellness inputs for today
+    const w=well[today]||{};
+    html+='<div style="margin-top:10px"><div style="font-size:11px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px">WELLNESS — MOOD &amp; SLEEP</div>'
+      +'<div class="hb-wellday">'
+      +[1,2,3,4,5].map(mv=>'<button class="hb-wbtn'+(w.mood===mv?' on':'')+'" data-hbmood="'+mv+'">'+mv+'</button>').join('')
+      +'<input class="hb-sleep" id="hbSleepIn" type="number" min="0" max="24" step="0.5" placeholder="sleep h" value="'+(w.hoursOfSleep||'')+'">'
+      +'<button class="hb-wbtn" id="hbSleepGo">Set sleep</button>'
+      +'</div></div></div>';
+  }
+
+  // ---- month grid ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">MONTH GRID</h3><div class="hb-gridwrap"><table class="hb-grid"><thead>';
+  // week header row
+  // two header rows: week+day numbers, then day letters
+  let hNum='<tr><th class="hname">Habit</th>', hLtr='<tr><th class="hname"></th>';
+  let curWk=0;
+  for(let dy=1;dy<=dim;dy++){
+    const dow=etDow(dayOf(dy));
+    if(dow===0){curWk++;}
+    hNum+='<th'+(dow===0?' style="border-left:1px solid var(--border)"':'')+'>'+(dow===0?'W'+curWk+' ':'')+dy+'</th>';
+    hLtr+='<th'+(dow===0?' style="border-left:1px solid var(--border)"':'')+'>'+DAY_LETTERS[dow]+'</th>';
+  }
+  html+=hNum+'</tr>'+hLtr+'</tr></thead><tbody>';
+  habits.forEach(h=>{
+    html+='<tr><td class="hname">'+esc(h.name)+'</td>';
+    for(let dy=1;dy<=dim;dy++){
+      const dt=dayOf(dy);
+      if(dy>lastDay){ html+='<td><span class="hb-cell future"></span></td>'; continue; }
+      const on=!!cis[h.habitKey+'|'+dt];
+      html+='<td><span class="hb-cell'+(on?' done':'')+(dt===today?' today':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+dt+'"></span></td>';
+    }
+    html+='</tr>';
+  });
+  // wellness rows in grid
+  html+='<tr><td class="hname">Mood</td>';
+  for(let dy=1;dy<=dim;dy++){
+    const w=well[dayOf(dy)];
+    html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.mood?w.mood:'·'):'')+'</td>';
+  }
+  html+='</tr><tr><td class="hname">Sleep h</td>';
+  for(let dy=1;dy<=dim;dy++){
+    const w=well[dayOf(dy)];
+    html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.hoursOfSleep?w.hoursOfSleep:'·'):'')+'</td>';
+  }
+  html+='</tr></tbody></table></div>';
+
+  // ---- analysis table ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">ANALYSIS</h3><div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 12px">';
+  habits.forEach(h=>{
+    let dn=0; for(let dy=1;dy<=lastDay;dy++){ if(cis[h.habitKey+'|'+dayOf(dy)]) dn++; }
+    const hp=lastDay?Math.round(dn/lastDay*100):0;
+    html+='<div class="hb-anrow"><span class="n">'+esc(h.name)+'</span><span class="nums">Goal '+lastDay+' · Actual '+dn+' · Left '+(lastDay-dn)+'</span>'
+      +'<span class="hb-pbar"><i style="width:'+hp+'%"></i></span><span class="pc">'+hp+'%</span></div>';
+  });
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+// tap handling: checkbox toggles (double-tap safe), mood, sleep, month tabs
+document.addEventListener('click', async el => {
+  const t=el.target;
+  if(!t||!t.getAttribute) return;
+  const mb=t.getAttribute('data-hbm');
+  if(mb!==null&&mb!==''&&t.classList.contains('hb-month')){ renderHabits(mb); return; }
+  if(t.id==='hbSleepGo'){
+    const v=Number(($('hbSleepIn')||{}).value);
+    if(!v&&v!==0){ toast('Enter hours first'); return; }
+    if(habitsBusy) return; habitsBusy=true;
+    try{ await api('habitWellness',{date:etToday(),hoursOfSleep:v}); toast('Sleep saved'); renderHabits(); }
+    catch(e){ toast(e.message); habitsBusy=false; }
+    return;
+  }
+  const mv=t.getAttribute('data-hbmood');
+  if(mv){ if(habitsBusy) return; habitsBusy=true;
+    try{ await api('habitWellness',{date:etToday(),mood:Number(mv)}); toast('Mood '+mv+' saved'); renderHabits(); }
+    catch(e){ toast(e.message); habitsBusy=false; }
+    return; }
+  const hk=t.getAttribute('data-hbchk');
+  if(hk){
+    if(habitsBusy) return; // no duplicate check-ins on double-tap
+    const day=t.getAttribute('data-hbday');
+    const isDone=t.classList.contains('done');
+    habitsBusy=true;
+    t.classList.toggle('done'); t.textContent=isDone?'':'\u2713';
+    try{
+      await api('habitCheck',{habitKey:hk,date:day,done:!isDone,idempotencyKey:'hb-'+hk+'-'+day+'-'+Date.now()});
+      habitsBusy=false; renderHabits();
+    }catch(e){ toast(e.message); habitsBusy=false; renderHabits(); }
+    return;
+  }
+});
+
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  filter=b.dataset.f;
+  if(view==='board') renderBoard(); else renderTasks(); // P1-1: tabs filter the Board too
+}));
+setInterval(()=>{if(token) refresh();},45000);
+window.addEventListener('online',()=>{ if(token) refresh(); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && token) refresh(); });
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && token) refresh();});
+
+/* ---------- boot (P1-4: real errors, retry) ---------- */
+async function boot(isRetry){
+  $('loginErr').textContent='';
+  if(!token) return;
+  $('loginErr').textContent='Connecting…';
+  try{
+    const res=await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({op:'board'})});
+    if(res.status===401){localStorage.removeItem('mc_token');token='';$('loginErr').textContent='';return;}
+    if(!res.ok) throw new Error('server');
+    let d=null;
+    try{ d=await res.json(); }catch(e){ throw new Error('json'); }
+    if(!d || !d.ok) throw new Error('server');
+    $('loginErr').textContent='';
+    showShell();
+    refresh();
+  }catch(e){
+    $('loginErr').innerHTML='Can\u2019t reach Mission Control. <button class="abtn" data-act="retry">Retry</button>';
+  }
+}
+boot(false);
+</script>
+<script>const SEED=[{"habitKey": "HB-01", "name": "Prospect calls / new outreach", "category": "BUSINESS", "cadence": "daily", "unit": "calls", "executionLink": "KPI Prospect Calls -> Scorecard: AMWAY/LTD -> Prospect calls / new outreach"}, {"habitKey": "HB-02", "name": "Audios completed", "category": "LEARNING", "cadence": "daily", "unit": "audios", "executionLink": "KPI Audios -> Scorecard LEARNING: Audios completed"}, {"habitKey": "HB-03", "name": "Short-form posts published", "category": "CONTENT", "cadence": "daily", "unit": "posts", "executionLink": "Scorecard MEDIA: Short-form posts published"}, {"habitKey": "HB-04", "name": "Songs advanced / recorded", "category": "MUSIC", "cadence": "weekly", "unit": "songs", "executionLink": "Scorecard MEDIA: Songs advanced / recorded"}, {"habitKey": "HB-05", "name": "Consistent fitness routine", "category": "FITNESS", "cadence": "daily", "unit": "sessions", "executionLink": "Personal-DNA: consistent fitness routine"}, {"habitKey": "HB-06", "name": "Ditto PV / customer PV", "category": "FINANCIAL", "cadence": "daily", "unit": "PV actions", "executionLink": "Scorecard: Personal Core 300 & Team Core 150"}, {"habitKey": "HB-07", "name": "Info session / training attendance", "category": "TEAM", "cadence": "weekly", "unit": "sessions", "executionLink": "KPI Info Session/Training -> Scorecard PEOPLE"}, {"habitKey": "HB-08", "name": "Priority tasks completed", "category": "SYSTEMS", "cadence": "daily", "unit": "tasks", "executionLink": "Scorecard VANTRA & SYSTEMS: priority tasks"}];</script>
+
+<script>
+window.addEventListener('error',e=>console.log('JSERR',e.message));
+// ---- PREVIEW STUB: fake api so the habits view renders without login ----
+const FIXTURES={
+ habits:(extra)=>{
+   const hs=JSON.parse(JSON.stringify(SEED));
+   const cis=[]; const m=extra.month||'2026-10';
+   hs.forEach((h,i)=>{
+     for(let d=1;d<=17;d++){
+       const hit=(d+i)%3===0||d===17&&i%2===0;
+       if(hit) cis.push({habitKey:h.habitKey,date:m+'-'+String(d).padStart(2,'0'),done:true,value:'',note:''});
+     }
+   });
+   const well=[{date:m+'-15',mood:4,hoursOfSleep:7},{date:m+'-16',mood:3,hoursOfSleep:6.5},{date:m+'-17',mood:5,hoursOfSleep:8}];
+   return {ok:true,month:m,habits:hs,checkins:cis,wellness:well,asOf:new Date().toISOString()};
+ }
+};
+api=function(op,extra){
+ const f=FIXTURES[op];
+ return Promise.resolve(f?f(extra||{}):{ok:true,stats:{},tasks:[],approvals:[],agents:[],roster:[]});
+};
+document.getElementById('login').classList.add('hidden');
+document.getElementById('shell').classList.remove('hidden');
+setView('habits');
+</script>
+
+</body>
+</html>
