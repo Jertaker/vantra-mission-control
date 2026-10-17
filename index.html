@@ -168,6 +168,48 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
   .lo-note{font-size:11px}
   .lo-feed div{font-size:11px}
 }
+/* HABIT TRACKER (v9.4) */
+.hb-month{background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer}
+.hb-month.on{border-color:var(--purple);color:var(--text);font-weight:700}
+.hb-today{background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.hb-trow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.hb-trow:last-child{border-bottom:none}
+.hb-chk{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--purple);flex:none;cursor:pointer;background:transparent;color:var(--purple);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
+.hb-chk.done{background:var(--green);border-color:var(--green);color:#06250f}
+.hb-tn{font-size:13.5px;font-weight:600;color:var(--text)}
+.hb-why{font-size:11px;color:var(--dim)}
+.hb-stats{display:flex;align-items:center;gap:14px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap}
+.hb-donut{width:86px;height:86px;border-radius:50%;flex:none;position:relative}
+.hb-donut::after{content:'';position:absolute;inset:14px;border-radius:50%;background:#0a0a12}
+.hb-dpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:15px;font-weight:800;color:var(--text)}
+.hb-kv{display:flex;gap:14px}
+.hb-kv div{font-size:11.5px;color:var(--dim)}
+.hb-kv b{display:block;font-size:16px;color:var(--text)}
+.hb-bars{display:flex;align-items:flex-end;gap:2px;height:70px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 10px;margin-bottom:12px;overflow-x:auto}
+.hb-bar{width:9px;min-width:9px;background:rgba(138,43,226,.5);border-radius:2px 2px 0 0;position:relative}
+.hb-bar.full{background:var(--green)}
+.hb-gridwrap{overflow-x:auto;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;margin-bottom:12px}
+table.hb-grid{border-collapse:collapse;font-size:11px;white-space:nowrap}
+table.hb-grid th{color:var(--dim);font-weight:600;padding:5px 4px;text-align:center;border-bottom:1px solid var(--border)}
+table.hb-grid th.hname,table.hb-grid td.hname{text-align:left;position:sticky;left:0;background:#0c0c1c;z-index:2;max-width:118px;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+table.hb-grid td{text-align:center;padding:2px}
+.hb-cell{width:16px;height:16px;border:1px solid rgba(138,43,226,.5);border-radius:4px;display:inline-block;cursor:pointer;background:transparent}
+.hb-cell.done{background:var(--green);border-color:var(--green);position:relative}
+.hb-cell.done::after{content:'\2713';position:absolute;inset:0;color:#06250f;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.hb-cell.future{opacity:.25;cursor:default}
+.hb-cell.today{border-color:var(--gold);box-shadow:0 0 5px rgba(212,175,55,.55)}
+.hb-anrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11.5px}
+.hb-anrow .n{width:34%;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-anrow .nums{color:var(--dim);width:26%;flex:none}
+.hb-pbar{flex:1;height:8px;border-radius:5px;background:rgba(138,43,226,.25);overflow:hidden}
+.hb-pbar i{display:block;height:100%;background:var(--green)}
+.hb-anrow .pc{width:38px;text-align:right;color:var(--green);font-weight:700;flex:none}
+.hb-wellday{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.hb-wbtn{background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:10px;padding:8px 13px;font-size:13px;cursor:pointer}
+.hb-wbtn.on{border-color:var(--gold);color:var(--gold);font-weight:700}
+.hb-sleep{width:70px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-size:13px}
+.hb-wellrow{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dim);padding:3px 0}
+.hb-wellrow .wd{width:34%;color:var(--text);flex:none}
 footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);backdrop-filter:blur(8px)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;box-shadow:0 0 8px var(--green)}
 .dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
@@ -211,6 +253,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
     <button class="hbtn" id="vOffice">Office / HQ</button>
     <button class="hbtn" id="vStatus">Status</button>
     <button class="hbtn" id="vAgents">Agents</button>
+    <button class="hbtn" id="vHabits">Habits</button>
     <button class="hbtn warn" id="vLogout">Log out</button>
   </div>
 </header>
@@ -243,6 +286,14 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
   <div id="agentsView" class="hidden">
     <div class="sec" style="margin-top:12px"><h2>Agent Directory — Operational Truth</h2><div id="roster"></div></div>
     <div class="sec"><h2>Live Telemetry (AgentStatus)</h2><div id="liveAgents"></div></div>
+  </div>
+  <div id="habitsView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Habit Tracker</h2>
+      <div id="habitsMonthTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"></div>
+      <div class="asof" id="habitsAsOf"></div>
+      <div id="habitsBody"><div style="color:var(--dim);font-size:12px;padding:8px">Loading habits…</div></div>
+    </div>
   </div>
 </main>
 <footer><span><span class="dot" id="dot"></span><span id="sync">not synced</span></span><span id="whoami"></span></footer>
@@ -985,21 +1036,194 @@ function setView(v){
   $('boardView').classList.toggle('hidden',v!=='board');
   $('officeView').classList.toggle('hidden',v!=='office');
   $('agentsView').classList.toggle('hidden',v!=='agents');
+  $('habitsView').classList.toggle('hidden',v!=='habits');
   $('statusView').classList.toggle('hidden',v!=='status');
   $('vStatus').classList.toggle('on',v==='status');
   $('vHome').classList.toggle('on',v==='home');
   $('vBoard').classList.toggle('on',v==='board');
   $('vOffice').classList.toggle('on',v==='office');
   $('vAgents').classList.toggle('on',v==='agents');
+  $('vHabits').classList.toggle('on',v==='habits');
   if(v==='agents') renderAgents(); // P2-5: agents fetched only when the view is open
   if(v==='office') renderOfficeView();
   if(v==='status') renderStatus();
+  if(v==='habits') renderHabits();
 }
 $('vHome').addEventListener('click',()=>setView('home'));
 $('vBoard').addEventListener('click',()=>setView('board'));
 $('vOffice').addEventListener('click',()=>setView('office'));
 $('vStatus').addEventListener('click',()=>setView('status'));
 $('vAgents').addEventListener('click',()=>setView('agents'));
+$('vHabits').addEventListener('click',()=>setView('habits'));
+// ================= HABIT TRACKER (v9.4) =================
+// Remade from Boss's reference screenshots (Drive: Habit Tracking Tool):
+// daily-progress bars, overall stats donut, month grid with checkboxes,
+// analysis table, mood + sleep wellness. Real data only — check-ins live in
+// the HabitCheckIn entity; the grid fills as Boss actually checks in.
+let habitsData=null, habitsMonth=null, habitsBusy=false;
+function etToday(){ // yyyy-mm-dd in Boss's timezone (ET)
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const g=t=>p.find(x=>x.type===t).value; return g('year')+'-'+g('month')+'-'+g('day');
+}
+function monthOf(iso){return iso.substring(0,7);}
+function daysInMonth(ym){const [y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
+const DAY_LETTERS=['Su','Mo','Tu','We','Th','Fr','Sa'];
+function etDow(ymd){const [y,m,d]=ymd.split('-').map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay();}
+
+async function renderHabits(month){
+  if(!month){
+    if(!habitsMonth) habitsMonth=monthOf(etToday());
+    month=habitsMonth;
+  }
+  habitsMonth=month;
+  const body=$('habitsBody');
+  body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Loading habits…</div>';
+  let d;
+  try{ d=await api('habits',{month}); }
+  catch(e){ body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Couldn\'t load habits ('+esc(e.message)+') — pull down or tap another tab and back.</div>'; return; }
+  habitsData=d;
+  $('habitsAsOf').textContent='Data as of '+fmtET(d.asOf||new Date().toISOString());
+  // month tabs: current + 2 prior months
+  const cur=monthOf(etToday());
+  const tabs=[];
+  let [y,m]=cur.split('-').map(Number);
+  for(let i=0;i<3;i++){ tabs.unshift(y+'-'+String(m).padStart(2,'0')); m-=1; if(m===0){m=12;y-=1;} }
+  $('habitsMonthTabs').innerHTML=tabs.map(t=>'<button class="hb-month'+(t===month?' on':'')+'" data-hbm="'+t+'">'+new Date(t+'-02').toLocaleString('en-US',{month:'short',year:'numeric'})+'</button>').join('');
+  const habits=d.habits||[];
+  if(!habits.length){
+    body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">No habits set up yet. Tell me which habits to track and I\'ll add them.</div>';
+    return;
+  }
+  const today=etToday();
+  const isCur=month===cur;
+  const dim=daysInMonth(month);
+  const lastDay=isCur?Number(today.substring(8,10)):dim;
+  const cis={}; (d.checkins||[]).forEach(c=>{ if(c.done) cis[c.habitKey+'|'+c.date]=1; });
+  const well={}; (d.wellness||[]).forEach(w=>{ well[w.date]=w; });
+  const dayOf=day=>month+'-'+String(day).padStart(2,'0');
+
+  // ---- overall stats ----
+  let goal=0, done=0;
+  habits.forEach(h=>{ for(let dy=1;dy<=lastDay;dy++){ goal++; if(cis[h.habitKey+'|'+dayOf(dy)]) done++; } });
+  const pct=goal?Math.round(done/goal*100):0;
+  let html='<div class="hb-stats">'
+   +'<div class="hb-donut" style="background:conic-gradient(var(--green) '+pct*3.6+'deg, rgba(138,43,226,.35) 0)"><div class="hb-dpct">'+pct+'%</div></div>'
+   +'<div class="hb-kv"><div>Goal<b>'+goal+'</b></div><div>Completed<b>'+done+'</b></div><div>Left<b>'+(goal-done)+'</b></div></div></div>';
+
+  // ---- daily progress bars ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">DAILY PROGRESS</h3><div class="hb-bars">';
+  let maxDoneDay=1;
+  const dayPct=[];
+  for(let dy=1;dy<=lastDay;dy++){
+    let dn=0; habits.forEach(h=>{ if(cis[h.habitKey+'|'+dayOf(dy)]) dn++; });
+    const p=habits.length?dn/habits.length:0; dayPct.push(p); if(dn>maxDoneDay)maxDoneDay=dn;
+  }
+  for(let dy=1;dy<=lastDay;dy++){
+    const hgt=Math.round(dayPct[dy-1]*66);
+    html+='<div class="hb-bar'+(dayPct[dy-1]>=1?' full':'')+'" style="height:'+hgt+'px" title="'+dy+': '+Math.round(dayPct[dy-1]*100)+'%"></div>';
+  }
+  html+='</div>';
+
+  // ---- TODAY check-in strip ----
+  if(isCur){
+    html+='<div class="hb-today"><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:2px">TODAY — '+today+'</div>';
+    habits.forEach(h=>{
+      const on=!!cis[h.habitKey+'|'+today];
+      html+='<div class="hb-trow"><button class="hb-chk'+(on?' done':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+today+'">'+(on?'\u2713':'')+'</button>'
+        +'<div><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.executionLink||'')+'</div></div></div>';
+    });
+    // wellness inputs for today
+    const w=well[today]||{};
+    html+='<div style="margin-top:10px"><div style="font-size:11px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px">WELLNESS — MOOD &amp; SLEEP</div>'
+      +'<div class="hb-wellday">'
+      +[1,2,3,4,5].map(mv=>'<button class="hb-wbtn'+(w.mood===mv?' on':'')+'" data-hbmood="'+mv+'">'+mv+'</button>').join('')
+      +'<input class="hb-sleep" id="hbSleepIn" type="number" min="0" max="24" step="0.5" placeholder="sleep h" value="'+(w.hoursOfSleep||'')+'">'
+      +'<button class="hb-wbtn" id="hbSleepGo">Set sleep</button>'
+      +'</div></div></div>';
+  }
+
+  // ---- month grid ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">MONTH GRID</h3><div class="hb-gridwrap"><table class="hb-grid"><thead>';
+  // week header row
+  // two header rows: week+day numbers, then day letters
+  let hNum='<tr><th class="hname">Habit</th>', hLtr='<tr><th class="hname"></th>';
+  let curWk=0;
+  for(let dy=1;dy<=dim;dy++){
+    const dow=etDow(dayOf(dy));
+    if(dow===0){curWk++;}
+    hNum+='<th'+(dow===0?' style="border-left:1px solid var(--border)"':'')+'>'+(dow===0?'W'+curWk+' ':'')+dy+'</th>';
+    hLtr+='<th'+(dow===0?' style="border-left:1px solid var(--border)"':'')+'>'+DAY_LETTERS[dow]+'</th>';
+  }
+  html+=hNum+'</tr>'+hLtr+'</tr></thead><tbody>';
+  habits.forEach(h=>{
+    html+='<tr><td class="hname">'+esc(h.name)+'</td>';
+    for(let dy=1;dy<=dim;dy++){
+      const dt=dayOf(dy);
+      if(dy>lastDay){ html+='<td><span class="hb-cell future"></span></td>'; continue; }
+      const on=!!cis[h.habitKey+'|'+dt];
+      html+='<td><span class="hb-cell'+(on?' done':'')+(dt===today?' today':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+dt+'"></span></td>';
+    }
+    html+='</tr>';
+  });
+  // wellness rows in grid
+  html+='<tr><td class="hname">Mood</td>';
+  for(let dy=1;dy<=dim;dy++){
+    const w=well[dayOf(dy)];
+    html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.mood?w.mood:'·'):'')+'</td>';
+  }
+  html+='</tr><tr><td class="hname">Sleep h</td>';
+  for(let dy=1;dy<=dim;dy++){
+    const w=well[dayOf(dy)];
+    html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.hoursOfSleep?w.hoursOfSleep:'·'):'')+'</td>';
+  }
+  html+='</tr></tbody></table></div>';
+
+  // ---- analysis table ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">ANALYSIS</h3><div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 12px">';
+  habits.forEach(h=>{
+    let dn=0; for(let dy=1;dy<=lastDay;dy++){ if(cis[h.habitKey+'|'+dayOf(dy)]) dn++; }
+    const hp=lastDay?Math.round(dn/lastDay*100):0;
+    html+='<div class="hb-anrow"><span class="n">'+esc(h.name)+'</span><span class="nums">Goal '+lastDay+' · Actual '+dn+' · Left '+(lastDay-dn)+'</span>'
+      +'<span class="hb-pbar"><i style="width:'+hp+'%"></i></span><span class="pc">'+hp+'%</span></div>';
+  });
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+// tap handling: checkbox toggles (double-tap safe), mood, sleep, month tabs
+document.addEventListener('click', async el => {
+  const t=el.target;
+  if(!t||!t.getAttribute) return;
+  const mb=t.getAttribute('data-hbm');
+  if(mb!==null&&mb!==''&&t.classList.contains('hb-month')){ renderHabits(mb); return; }
+  if(t.id==='hbSleepGo'){
+    const v=Number(($('hbSleepIn')||{}).value);
+    if(!v&&v!==0){ toast('Enter hours first'); return; }
+    if(habitsBusy) return; habitsBusy=true;
+    try{ await api('habitWellness',{date:etToday(),hoursOfSleep:v}); toast('Sleep saved'); renderHabits(); }
+    catch(e){ toast(e.message); habitsBusy=false; }
+    return;
+  }
+  const mv=t.getAttribute('data-hbmood');
+  if(mv){ if(habitsBusy) return; habitsBusy=true;
+    try{ await api('habitWellness',{date:etToday(),mood:Number(mv)}); toast('Mood '+mv+' saved'); renderHabits(); }
+    catch(e){ toast(e.message); habitsBusy=false; }
+    return; }
+  const hk=t.getAttribute('data-hbchk');
+  if(hk){
+    if(habitsBusy) return; // no duplicate check-ins on double-tap
+    const day=t.getAttribute('data-hbday');
+    const isDone=t.classList.contains('done');
+    habitsBusy=true;
+    t.classList.toggle('done'); t.textContent=isDone?'':'\u2713';
+    try{
+      await api('habitCheck',{habitKey:hk,date:day,done:!isDone,idempotencyKey:'hb-'+hk+'-'+day+'-'+Date.now()});
+      habitsBusy=false; renderHabits();
+    }catch(e){ toast(e.message); habitsBusy=false; renderHabits(); }
+    return;
+  }
+});
+
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
