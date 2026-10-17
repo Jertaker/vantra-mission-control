@@ -1132,12 +1132,16 @@ async function renderHabits(month){
       html+='<div class="hb-trow"><button class="hb-chk'+(on?' done':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+today+'">'+(on?'\u2713':'')+'</button>'
         +'<div><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.executionLink||'')+'</div></div></div>';
     });
-    // wellness inputs for today
+    // wellness inputs for today — MOOD and SLEEP are separate trackers on purpose:
+    // bad sleep + good mood (or the reverse) are different signals (Boss, Oct 17)
     const w=well[today]||{};
-    html+='<div style="margin-top:10px"><div style="font-size:11px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px">WELLNESS — MOOD &amp; SLEEP</div>'
+    html+='<div style="margin-top:10px"><div style="font-size:11px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px">MOOD — how do you feel today?</div>'
       +'<div class="hb-wellday">'
       +[1,2,3,4,5].map(mv=>'<button class="hb-wbtn'+(w.mood===mv?' on':'')+'" data-hbmood="'+mv+'">'+mv+'</button>').join('')
-      +'<input class="hb-sleep" id="hbSleepIn" type="number" min="0" max="24" step="0.5" placeholder="sleep h" value="'+(w.hoursOfSleep||'')+'">'
+      +'</div>'
+      +'<div style="font-size:11px;letter-spacing:1.5px;color:var(--dim);margin:8px 0 4px">SLEEP — hours last night</div>'
+      +'<div class="hb-wellday">'
+      +'<input class="hb-sleep" id="hbSleepIn" type="number" min="0" max="24" step="0.5" placeholder="hours" value="'+(w.hoursOfSleep||'')+'">'
       +'<button class="hb-wbtn" id="hbSleepGo">Set sleep</button>'
       +'</div></div></div>';
   }
