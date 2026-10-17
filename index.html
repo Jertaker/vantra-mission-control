@@ -1169,12 +1169,12 @@ async function renderHabits(month){
   html+='<tr><td class="hname">Mood</td>';
   for(let dy=1;dy<=dim;dy++){
     const w=well[dayOf(dy)];
-    html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.mood?w.mood:'·'):'')+'</td>';
+    html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.mood?w.mood:''):'')+'</td>';
   }
   html+='</tr><tr><td class="hname">Sleep h</td>';
   for(let dy=1;dy<=dim;dy++){
     const w=well[dayOf(dy)];
-    html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.hoursOfSleep?w.hoursOfSleep:'·'):'')+'</td>';
+    html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dy<=lastDay?(w&&w.hoursOfSleep?w.hoursOfSleep:''):'')+'</td>';
   }
   html+='</tr></tbody></table></div>';
 
