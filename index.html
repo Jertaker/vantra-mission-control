@@ -1226,12 +1226,12 @@ async function renderHabits(month){
   html+='<tr><td class="hname">Mood</td>';
   weekDates.forEach(dt=>{
     const w=well[dt];
-    html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dt<=today&&w&&w.mood?w.mood:'')+'</td>';
+    html+='<td style="font-weight:'+(w&&w.mood?'800':'400')+';color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dt<=today&&w&&w.mood?w.mood:(dt<=today?'–':''))+'</td>';
   });
-  html+='</tr><tr><td class="hname">Sleep Hr.</td>';
+  html+='</tr><tr><td class="hname">Sleep (hours)</td>';
   weekDates.forEach(dt=>{
     const w=well[dt];
-    html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dt<=today&&w&&w.hoursOfSleep?w.hoursOfSleep:'')+'</td>';
+    html+='<td style="font-weight:'+(w&&w.hoursOfSleep?'800':'400')+';color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dt<=today&&w&&w.hoursOfSleep?w.hoursOfSleep:(dt<=today?'–':''))+'</td>';
   });
   html+='</tr></tbody></table></div>';
 
@@ -1258,13 +1258,13 @@ document.addEventListener('click', async el => {
     const v=Number(($('hbSleepIn')||{}).value);
     if(!v&&v!==0){ toast('Enter hours first'); return; }
     if(habitsBusy) return; habitsBusy=true;
-    try{ await api('habitWellness',{date:etToday(),hoursOfSleep:v}); toast('Sleep saved'); renderHabits(); }
+    try{ await api('habitWellness',{date:etToday(),hoursOfSleep:v}); habitsBusy=false; toast('Sleep saved'); renderHabits(); }
     catch(e){ toast(e.message); habitsBusy=false; }
     return;
   }
   const mv=t.getAttribute('data-hbmood');
   if(mv){ if(habitsBusy) return; habitsBusy=true;
-    try{ await api('habitWellness',{date:etToday(),mood:Number(mv)}); toast('Mood '+mv+' saved'); renderHabits(); }
+    try{ await api('habitWellness',{date:etToday(),mood:Number(mv)}); habitsBusy=false; toast('Mood '+mv+' saved'); renderHabits(); }
     catch(e){ toast(e.message); habitsBusy=false; }
     return; }
   const hk=t.getAttribute('data-hbchk');
