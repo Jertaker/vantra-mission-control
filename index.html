@@ -1226,7 +1226,7 @@ async function renderHabits(month){
     const w=well[dt];
     html+='<td style="color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dt<=today&&w&&w.mood?w.mood:'')+'</td>';
   });
-  html+='</tr><tr><td class="hname">Sleep h</td>';
+  html+='</tr><tr><td class="hname">Sleep Hr.</td>';
   weekDates.forEach(dt=>{
     const w=well[dt];
     html+='<td style="color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dt<=today&&w&&w.hoursOfSleep?w.hoursOfSleep:'')+'</td>';
