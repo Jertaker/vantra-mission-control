@@ -312,6 +312,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
 <script>
 const APIURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/missionControlApi";
 const COMMSURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcComms";
+const HVURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHabitValue";
 let token = localStorage.getItem('mc_token') || '';
 let board = null; let view='home'; let filter='all', projFilter=''; let selected=null;
 let loginBusy=false; let capBusy=false;
@@ -362,6 +363,16 @@ async function api(op, extra, retriesLeft){
   }
 }
 
+// count-habit value save (Boss, Oct 17: some habits are a NUMBER per day, like sleep)
+async function hvApi(payload){
+  const res=await fetch(HVURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+  let d=null; try{ d=await res.json(); }catch(e){}
+  if(!d||!d.ok){
+    if(res.status===401){ localStorage.removeItem('mc_token'); token=''; showLogin(); throw new Error('auth'); }
+    throw new Error((d&&d.error)||('save failed ('+res.status+')'));
+  }
+  return d;
+}
 /* ---------- login (P1-2) ---------- */
 async function login(){
   if(loginBusy) return;
@@ -1157,7 +1168,8 @@ async function renderHabits(month){
     const iso=dt.toISOString().substring(0,10);
     if(monthOf(iso)===month) weekDates.push(iso);
   }
-  const cis={}; (d.checkins||[]).forEach(c=>{ if(c.done) cis[c.habitKey+'|'+c.date]=1; });
+  const cis={}; const civ={}; (d.checkins||[]).forEach(c=>{ const k=c.habitKey+'|'+c.date; if(c.done) cis[k]=1; const v=Number(c.value||''); if(v>0) civ[k]=v; });
+  const isCount=h=> !!h.unit; // unit set => Boss logs a NUMBER per day; no unit => plain check
   const well={}; (d.wellness||[]).forEach(w=>{ well[w.date]=w; });
   const dayOf=day=>month+'-'+String(day).padStart(2,'0');
 
@@ -1188,8 +1200,16 @@ async function renderHabits(month){
     html+='<div class="hb-today"><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:2px">TODAY — '+today+'</div>';
     habits.forEach(h=>{
       const on=!!cis[h.habitKey+'|'+today];
-      html+='<div class="hb-trow"><button class="hb-chk'+(on?' done':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+today+'">'+(on?'\u2713':'')+'</button>'
-        +'<div><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.executionLink||'')+'</div></div></div>';
+      if(isCount(h)){
+        const v=civ[h.habitKey+'|'+today];
+        html+='<div class="hb-trow" style="align-items:center">'
+          +'<div style="flex:1;min-width:0"><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.unit)+' per day</div></div>'
+          +'<input class="hb-sleep" id="hbin_'+h.habitKey+'" type="number" min="0" max="9999" step="1" inputmode="numeric" placeholder="0" value="'+(v||'')+'">'
+          +'<button class="hb-wbtn" data-hbval="'+h.habitKey+'">Set</button></div>';
+      } else {
+        html+='<div class="hb-trow"><button class="hb-chk'+(on?' done':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+today+'">'+(on?'\u2713':'')+'</button>'
+          +'<div><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.executionLink||'')+'</div></div></div>';
+      }
     });
     // wellness inputs for today — MOOD and SLEEP are separate trackers on purpose:
     // bad sleep + good mood (or the reverse) are different signals (Boss, Oct 17)
@@ -1217,6 +1237,11 @@ async function renderHabits(month){
     html+='<tr><td class="hname">'+esc(h.name)+'</td>';
     weekDates.forEach(dt=>{
       if(dt>today){ html+='<td><span class="hb-cell future"></span></td>'; return; }
+      if(isCount(h)){
+        const v=civ[h.habitKey+'|'+dt];
+        html+='<td style="text-align:center;font-weight:'+(v?'800':'400')+';color:'+(v?'var(--gold)':'var(--dim)')+'">'+(v?esc(String(v)):'\u2013')+'</td>';
+        return;
+      }
       const on=!!cis[h.habitKey+'|'+dt];
       html+='<td><span class="hb-cell'+(on?' done':'')+(dt===today?' today':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+dt+'"></span></td>';
     });
@@ -1239,6 +1264,12 @@ async function renderHabits(month){
   html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px>ANALYSIS — THIS WEEK</h3><div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 12px">';
   const wkElapsed=weekDates.filter(dt=>dt<=today).length;
   habits.forEach(h=>{
+    if(isCount(h)){
+      let tot=0, days=0; weekDates.forEach(dt=>{ if(dt<=today){ const v=civ[h.habitKey+'|'+dt]; if(v){ tot+=v; days++; } } });
+      html+='<div class="hb-anrow"><span class="n">'+esc(h.name)+'</span><span class="nums">Week total '+tot+' · logged on '+days+' day'+(days===1?'':'s')+'</span>'
+        +'<span class="hb-pbar"><i style="width:'+Math.min(100,days*100/wkElapsed)+'%"></i></span><span class="pc">'+tot+' '+esc(h.unit)+'</span></div>';
+      return;
+    }
     let dn=0; weekDates.forEach(dt=>{ if(dt<=today&&cis[h.habitKey+'|'+dt]) dn++; });
     const hp=wkElapsed?Math.round(dn/wkElapsed*100):0;
     html+='<div class="hb-anrow"><span class="n">'+esc(h.name)+'</span><span class="nums">Goal '+wkElapsed+' · Actual '+dn+' · Left '+(wkElapsed-dn)+'</span>'
@@ -1267,6 +1298,16 @@ document.addEventListener('click', async el => {
     try{ await api('habitWellness',{date:etToday(),mood:Number(mv)}); habitsBusy=false; toast('Mood '+mv+' saved'); renderHabits(); }
     catch(e){ toast(e.message); habitsBusy=false; }
     return; }
+  const hv=t.getAttribute('data-hbval');
+  if(hv){
+    const inp=$('hbin_'+hv);
+    const v=Number((inp||{}).value);
+    if(!v&&v!==0){ toast('Enter a number first'); return; }
+    if(habitsBusy) return; habitsBusy=true;
+    try{ await hvApi({op:'set',habitKey:hv,date:etToday(),value:v}); habitsBusy=false; toast('Saved'); renderHabits(); }
+    catch(e){ if(e.message!=='auth'){ toast(e.message); habitsBusy=false; } }
+    return;
+  }
   const hk=t.getAttribute('data-hbchk');
   if(hk){
     if(habitsBusy) return; // no duplicate check-ins on double-tap
