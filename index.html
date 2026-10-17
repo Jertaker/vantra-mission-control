@@ -179,14 +179,26 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .hb-tn{font-size:13.5px;font-weight:600;color:var(--text)}
 .hb-why{font-size:11px;color:var(--dim)}
 .hb-stats{display:flex;align-items:center;gap:14px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap}
-.hb-donut{width:86px;height:86px;border-radius:50%;flex:none;position:relative}
-.hb-donut::after{content:'';position:absolute;inset:14px;border-radius:50%;background:#0a0a12}
-.hb-dpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:15px;font-weight:800;color:var(--text)}
+.hb-donut{width:124px;height:124px;border-radius:50%;flex:none;position:relative;box-shadow:0 0 18px rgba(74,222,128,.18)}
+.hb-donut::after{content:'';position:absolute;inset:16px;border-radius:50%;background:#0a0a12}
+.hb-dpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:26px;font-weight:800;color:var(--text)}
+.hb-rings{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:12px;margin-bottom:12px}
+.hb-ring{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:0}
+.hb-ringc{width:58px;height:58px;border-radius:50%;position:relative;flex:none}
+.hb-ringc::after{content:'';position:absolute;inset:7px;border-radius:50%;background:#0a0a12}
+.hb-ringc span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:13px;font-weight:800;color:var(--text)}
+.hb-ring .rn{font-size:10.5px;color:var(--dim);line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hb-ring .rs{font-size:10px;color:var(--gold)}
 .hb-kv{display:flex;gap:22px;flex:1;min-width:0}
 .hb-kv div{min-width:52px}
 .hb-kv div{font-size:11.5px;color:var(--dim)}
 .hb-kv b{display:block;font-size:16px;color:var(--text)}
 .hb-bars{display:flex;align-items:flex-end;gap:8px;height:104px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 10px;margin-bottom:12px;overflow-x:auto}
+.hb-month{display:block;height:auto;padding:8px 6px}
+.hb-monthwrap{display:flex;align-items:flex-end;gap:2px;max-height:96px;overflow-x:auto;background:repeating-linear-gradient(to top, rgba(255,255,255,.08) 0 1px, transparent 1px 19px)}
+.hb-monthwrap .hb-col{flex:none;width:12px;gap:2px}
+.hb-monthwrap .hb-bar{width:8px;flex:none;min-width:8px}
+.hb-monthwrap .dl{font-size:9px}
 .hb-bar{flex:1;min-width:0;background:rgba(138,43,226,.5);border-radius:3px 3px 0 0;position:relative}
 .hb-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;min-width:0}
 .hb-col .pc{font-size:10px;color:var(--dim)}
@@ -274,6 +286,13 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
     <select id="capApproval"><option value="no">No approval needed</option><option value="yes">Requires my approval</option></select>
   </div>
   <div id="home">
+    <div class="sec" id="todoSec"><h2 style="letter-spacing:2px;font-size:12px;color:var(--gold)">MY TO-DOS</h2>
+      <div id="todoAdd" style="display:flex;gap:6px;margin:6px 0 10px;flex-wrap:wrap">
+        <input id="todoIn" placeholder="Add a to-do for you" style="flex:1;min-width:150px">
+        <input id="todoDue" type="date" title="Due date (optional)" style="width:138px">
+        <button id="todoBtn" class="hb-wbtn">+ ADD</button>
+      </div>
+      <div id="todoList"></div></div>
     <div class="stats" id="stats"></div>
     <div class="sec" id="projSec"><h2 style="letter-spacing:2px;font-size:12px;color:var(--gold)">PROJECT PROGRESS</h2><div id="projWrap"></div></div>
     <div class="sec" id="approvalsSec"><h2>Pending Approvals</h2><div id="approvals"></div></div>
@@ -312,6 +331,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
 <script>
 const APIURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/missionControlApi";
 const COMMSURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcComms";
+const TODOURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcTodos";
 const HVURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHabitValue";
 let token = localStorage.getItem('mc_token') || '';
 let board = null; let view='home'; let filter='all', projFilter=''; let selected=null;
@@ -373,6 +393,15 @@ async function hvApi(payload){
   }
   return d;
 }
+async function todoApi(payload){
+  const res=await fetch(TODOURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+  let d=null; try{ d=await res.json(); }catch(e){}
+  if(!d||!d.ok){
+    if(res.status===401){ localStorage.removeItem('mc_token'); token=''; showLogin(); throw new Error('auth'); }
+    throw new Error((d&&d.error)||('save failed ('+res.status+')'));
+  }
+  return d;
+}
 /* ---------- login (P1-2) ---------- */
 async function login(){
   if(loginBusy) return;
@@ -417,7 +446,7 @@ async function refresh(){
     board=await api('board');
     setDot(false);
     $('whoami').textContent='BOSS · '+devLabel();
-    renderStats(); renderProjects(); renderApprovals(); renderTasks(); renderBoard();
+    renderStats(); renderProjects(); renderApprovals(); renderTasks(); renderBoard(); loadTodos();
     if(view==='office') renderOfficeView();
   }catch(e){
     if(String(e.message)!=='auth'){
@@ -1104,6 +1133,83 @@ $('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
 $('capBtn').addEventListener('click',createTask);
 $('capIn').addEventListener('keydown',e=>{if(e.key==='Enter')createTask();});
 $('vLogout').addEventListener('click',doLogout);
+// ================= MY TO-DOS (Boss, Oct 17) =================
+// Things Boss has to do himself. Grouped by urgency; dated items show how soon,
+// undated items are plain check-offs. Done items fade out after ~1.5 days.
+let todosData=[], todoBusy=false;
+function todoBucket(t){
+  if(t.done) return 'done';
+  const today=etToday();
+  if(t.dueDate){
+    if(t.dueDate<today) return 'overdue';
+    if(t.dueDate===today) return 'today';
+    const diff=Math.round((Date.parse(t.dueDate+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000);
+    return diff<=7?'week':'later';
+  }
+  return t.priority==='today'?'today':(t.priority==='soon'||t.priority==='week')?'week':'later';
+}
+function todoDueLabel(t){
+  if(!t.dueDate) return '';
+  const today=etToday();
+  const diff=Math.round((Date.parse(t.dueDate+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000);
+  if(diff<0) return Math.abs(diff)+' day'+(Math.abs(diff)===1?'':'s')+' overdue';
+  if(diff===0) return 'due today';
+  if(diff===1) return 'due tomorrow';
+  return 'due '+new Date(t.dueDate+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+}
+function renderTodos(){
+  const wrap=$('todoList'); if(!wrap) return;
+  const groups=[['overdue','OVERDUE','#e05555'],['today','TODAY','var(--gold)'],['week','THIS WEEK','#c9b8ff'],['later','LATER / NO RUSH','var(--dim)'],['done','DONE','var(--green)']];
+  const by={}; groups.forEach(g=>by[g[0]]=[]);
+  todosData.forEach(t=>by[todoBucket(t)].push(t));
+  const byDue=(a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999');
+  groups.forEach(g=>by[g[0]].sort(byDue));
+  const openCount=todosData.filter(t=>!t.done).length;
+  if(!todosData.length){ wrap.innerHTML='<div style="color:var(--dim);font-size:12px;padding:2px 2px 8px">Nothing on your plate. Add the things only you can do.</div>'; return; }
+  let html='';
+  groups.forEach(g=>{
+    const list=by[g[0]]; if(!list.length) return;
+    html+='<div style="font-size:10.5px;letter-spacing:1.5px;color:'+g[2]+';margin:8px 0 4px;font-weight:700">'+g[1]+' <span style="color:var(--dim);font-weight:400">'+list.length+'</span></div>';
+    list.forEach(t=>{
+      const due=todoDueLabel(t);
+      const dueCol=g[0]==='overdue'?'#e05555':g[0]==='today'?'var(--gold)':'var(--dim)';
+      html+='<div class="hb-trow" style="align-items:center'+(t.done?';opacity:.55':'')+'">'
+        +'<button class="hb-chk'+(t.done?' done':'')+'" data-todo="'+esc(t.id)+'" data-tdone="'+(t.done?'0':'1')+'">'+(t.done?'\u2713':'')+'</button>'
+        +'<div style="flex:1;min-width:0"><div class="hb-tn"'+(t.done?' style="text-decoration:line-through"':'')+'>'+esc(t.title)+'</div>'
+        +(due?'<div class="hb-why" style="color:'+dueCol+'">'+due+'</div>':'')+'</div>'
+        +'<button data-tdel="'+esc(t.id)+'" style="background:none;border:none;color:var(--dim);font-size:16px;padding:4px 8px;cursor:pointer" title="Delete">\u00D7</button></div>';
+    });
+  });
+  wrap.innerHTML=html;
+}
+async function loadTodos(){
+  try{ const d=await todoApi({op:'list'}); todosData=d.todos||[]; renderTodos(); }
+  catch(e){ if(e.message!=='auth'){ const w=$('todoList'); if(w) w.innerHTML='<div style="color:var(--dim);font-size:12px">Couldn\'t load to-dos ('+esc(e.message)+')</div>'; } }
+}
+document.addEventListener('click',async ev=>{
+  const t=ev.target.closest?ev.target.closest('[data-todo],[data-tdel],#todoBtn'):null;
+  if(!t) return;
+  if(todoBusy) return;
+  if(t.id==='todoBtn'){
+    const title=($('todoIn').value||'').trim();
+    if(!title){ toast('Type the to-do first'); return; }
+    todoBusy=true;
+    try{ await todoApi({op:'add',title:title,dueDate:$('todoDue').value||''}); $('todoIn').value=''; $('todoDue').value=''; todoBusy=false; toast('Added'); await loadTodos(); }
+    catch(e){ todoBusy=false; if(e.message!=='auth') toast(e.message); }
+    return;
+  }
+  if(t.hasAttribute('data-tdel')){
+    if(!window.confirm('Delete this to-do?')) return;
+    todoBusy=true;
+    try{ await todoApi({op:'delete',id:t.getAttribute('data-tdel')}); todoBusy=false; await loadTodos(); }
+    catch(e){ todoBusy=false; if(e.message!=='auth') toast(e.message); }
+    return;
+  }
+  const id=t.getAttribute('data-todo');
+  todoBusy=true;
+  try{ await todoApi({op:'toggle',id:id,done:t.getAttribute('data-tdone')==='1'}); todoBusy=false; await loadTodos(); }
+  catch(e){ todoBusy=false; if(e.message!=='auth') toast(e.message); }
+});
 function setView(v){
   view=v;
   $('home').classList.toggle('hidden',v!=='home');
@@ -1185,22 +1291,44 @@ async function renderHabits(month){
   habits.forEach(h=>{ weekDates.forEach(dt=>{ goal++; if(dt<=today && cis[h.habitKey+'|'+dt]) done++; }); });
   const pct=goal?Math.round(done/goal*100):0;
   let html='<div class="hb-stats">'
-   +'<div class="hb-donut" style="background:conic-gradient(var(--green) '+pct*3.6+'deg, rgba(138,43,226,.35) 0)"><div class="hb-dpct">'+pct+'%</div></div>'
+   +'<div class="hb-donut" style="background:conic-gradient('+(pct>=100?'var(--gold)':'var(--green)')+' '+pct*3.6+'deg, rgba(138,43,226,.35) 0)"><div class="hb-dpct">'+pct+'%</div></div>'
    +'<div class="hb-kv"><div>Goal<b>'+goal+'</b></div><div>Done<b>'+done+'</b></div><div>Left<b>'+(goal-done)+'</b></div></div><div style="font-size:10.5px;color:var(--dim);width:100%">Goal = '+habits.length+' habits x '+weekDates.length+' days this week. Full history lives in the VANTRA Habit Tracker Sheet.</div></div>';
 
   // ---- daily progress bars ----
-  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">DAILY PROGRESS — THIS WEEK</h3><div class="hb-bars">';
-  weekDates.forEach(dt=>{
+  // ---- small ring per habit (Boss, Oct 17: satisfying 0-100% rings, not thin bars) ----
+  {
+    const colorFor=p=>p>=100?'var(--gold)':p>=60?'var(--green)':p>0?'#8a2be2':'rgba(255,255,255,.18)';
+    let rh='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">HABIT RINGS — THIS WEEK</h3><div class="hb-rings">';
+    const elapsedN=weekDates.filter(dt=>dt<=today).length||1;
+    habits.forEach(h=>{
+      let hp, sub;
+      if(isCount(h)){
+        let tot=0, days=0; weekDates.forEach(dt=>{ if(dt<=today){ const v=civ[h.habitKey+'|'+dt]; if(v){ tot+=v; days++; } } });
+        hp=Math.round(days/elapsedN*100); sub=tot+' '+h.unit;
+      } else {
+        let dn=0; weekDates.forEach(dt=>{ if(dt<=today&&cis[h.habitKey+'|'+dt]) dn++; });
+        hp=Math.round(dn/elapsedN*100); sub=dn+'/'+elapsedN+' days';
+      }
+      rh+='<div class="hb-ring"><div class="hb-ringc" style="background:conic-gradient('+colorFor(hp)+' '+hp*3.6+'deg, rgba(138,43,226,.28) 0)"><span>'+hp+'%</span></div>'
+        +'<div class="rn">'+esc(h.name)+'</div><div class="rs">'+esc(sub)+'</div></div>';
+    });
+    rh+='</div>';
+    html+=rh;
+  }
+
+  // DAILY PROGRESS over the whole month (Boss, Oct 17: like the reference chart —
+  // one thin bar per day, % guide lines behind, day number under each bar)
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">DAILY PROGRESS — THIS MONTH <span style="font-weight:400;text-transform:none;letter-spacing:0">(1 bar per day, green = perfect day)</span></h3><div class="hb-bars hb-month"><div class="hb-monthwrap">';
+  for(let day=1;day<=dim;day++){
+    const dt=dayOf(day); const fut=dt>today;
     let dn=0; habits.forEach(h=>{ if(dt<=today&&cis[h.habitKey+'|'+dt]) dn++; });
-    const fut=dt>today;
     const p=(!fut&&habits.length)?dn/habits.length:0;
-    const hgt=Math.max(3,Math.round(p*56));
+    const hgt=Math.max(2,Math.round(p*56));
     html+='<div class="hb-col'+(dt===today?' today':'')+'">'
-      +'<span class="pc">'+(fut?'':Math.round(p*100)+'%')+'</span>'
-      +'<div class="hb-bar'+(p>=1?' full':'')+'" style="height:'+hgt+'px;'+(fut?'opacity:.25':'')+'"></div>'
-      +'<span class="dl">'+DAY_LETTERS[etDow(dt)]+' '+Number(dt.substring(8,10))+'</span></div>';
-  });
-  html+='</div>';
+      +'<div class="hb-bar'+(p>=1?' full':'')+'" style="height:'+hgt+'px;'+(fut?'opacity:.12;':'')+'" title="'+dt+'"></div>'
+      +'<span class="dl">'+day+'</span></div>';
+  }
+  html+='</div></div>';
 
   // ---- TODAY check-in strip ----
   {
@@ -1283,6 +1411,61 @@ async function renderHabits(month){
       +'<span class="hb-pbar"><i style="width:'+hp+'%"></i></span><span class="pc">'+hp+'%</span></div>';
   });
   html+='</div>';
+
+  // ---- TRENDS (Boss, Oct 17: see if I am on an upward spiral, downward, or flat) ----
+  {
+    const W=320,H=96,PX=8,PY=8;
+    const pts=[]; // per elapsed day of the month: completion %, mood, sleep
+    for(let day=1;day<=dim;day++){
+      const dt=dayOf(day); if(dt>today) break;
+      let dn=0; habits.forEach(h=>{ if(cis[h.habitKey+'|'+dt]) dn++; });
+      const w=well[dt]||{};
+      pts.push({day:day, pct:habits.length?dn/habits.length*100:0, mood:w.mood||null, sleep:w.hoursOfSleep||null});
+    }
+    const xAt=(i,n)=>PX+(n<=1?0:i*(W-2*PX)/(n-1));
+    const line=(vals,max,color,sw,dash)=>{ // vals may contain nulls: draw segments between known points
+      let d='',pen=false;
+      vals.forEach((v,i)=>{ if(v==null){pen=false;return;} const x=xAt(i,vals.length).toFixed(1), y=(H-PY-(v/max)*(H-2*PY)).toFixed(1); d+=(pen?' L':' M')+x+' '+y; pen=true; });
+      return d?'<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>':'';
+    };
+    const grid='<line x1="'+PX+'" y1="'+(H-PY)+'" x2="'+(W-PX)+'" y2="'+(H-PY)+'" stroke="rgba(255,255,255,.12)"/><line x1="'+PX+'" y1="'+(H/2)+'" x2="'+(W-PX)+'" y2="'+(H/2)+'" stroke="rgba(255,255,255,.07)"/><line x1="'+PX+'" y1="'+PY+'" x2="'+(W-PX)+'" y2="'+PY+'" stroke="rgba(255,255,255,.07)"/>';
+    const card=(title,sub,svg,legend)=>'<div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:10px 10px 6px;margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><div style="font-size:12px;font-weight:700;color:var(--text)">'+title+'</div><div style="font-size:11px">'+sub+'</div></div>'
+      +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+grid+svg+'</svg>'
+      +(legend?'<div style="font-size:10px;color:var(--dim);display:flex;gap:12px;padding:2px 4px 4px">'+legend+'</div>':'')+'</div>';
+    html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">TRENDS — THIS MONTH</h3>';
+    const loggedDays=pts.filter(p=>p.pct>0||p.mood||p.sleep).length;
+    if(pts.length<3||loggedDays<3){
+      html+='<div style="color:var(--dim);font-size:12px;padding:6px 4px 12px">Trends show up after 3 days of check-ins this month.</div>';
+    } else {
+      // smoothed (trailing 7-day average) completion line
+      const raw=pts.map(p=>p.pct);
+      const sm=raw.map((_,i)=>{ const a=raw.slice(Math.max(0,i-6),i+1); return a.reduce((x,y)=>x+y,0)/a.length; });
+      // verdict: last 7 days vs the 7 days before (needs 8+ days; else first half vs second half)
+      const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+      let recent,prior;
+      if(raw.length>=14){ recent=avg(raw.slice(-7)); prior=avg(raw.slice(-14,-7)); }
+      else { const mid=Math.floor(raw.length/2); prior=avg(raw.slice(0,mid)); recent=avg(raw.slice(mid)); }
+      const diff=Math.round(recent-prior);
+      let verdict,vcol,arrow;
+      if(diff>=5){ verdict='UPWARD SPIRAL'; vcol='var(--green)'; arrow='\u25B2'; }
+      else if(diff<=-5){ verdict='DOWNWARD'; vcol='#e05555'; arrow='\u25BC'; }
+      else { verdict='HOLDING STEADY'; vcol='var(--gold)'; arrow='\u25AC'; }
+      const sub='<b style="color:'+vcol+'">'+arrow+' '+verdict+'</b> <span style="color:var(--dim)">('+(diff>0?'+':'')+diff+' pts vs earlier)</span>';
+      const dots=raw.map((v,i)=>'<circle cx="'+xAt(i,raw.length).toFixed(1)+'" cy="'+(H-PY-(v/100)*(H-2*PY)).toFixed(1)+'" r="1.8" fill="rgba(138,43,226,.8)"/>').join('');
+      html+=card('Habit completion',sub, dots+line(sm,100,'#4ade80',2.4),'<span><b style="color:#4ade80">\u2014</b> 7-day trend</span><span><b style="color:#8a2be2">\u2022</b> each day</span>');
+      // mood + sleep lines (like the reference chart)
+      const moods=pts.map(p=>p.mood), sleeps=pts.map(p=>p.sleep);
+      const hasW=moods.some(v=>v!=null)||sleeps.some(v=>v!=null);
+      if(hasW){
+        html+=card('Mood &amp; sleep','<span style="color:var(--dim)">mood 1-5 · sleep hours</span>',
+          line(sleeps,12,'#c9b8ff',2,'')+line(moods,5,'#d4af37',2.4,''),
+          '<span><b style="color:#d4af37">\u2014</b> Mood</span><span><b style="color:#c9b8ff">\u2014</b> Hours of sleep</span>');
+      } else {
+        html+='<div style="color:var(--dim);font-size:12px;padding:0 4px 12px">Log mood and sleep a few days and their lines appear here.</div>';
+      }
+    }
+  }
   body.innerHTML=html;
 }
 
