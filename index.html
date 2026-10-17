@@ -214,6 +214,27 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .cal-agt{flex:none;width:74px;font-size:11px;color:var(--gold)}
 .cal-agn{font-size:13px;color:var(--text)}
 .cal-agl{font-size:10.5px;color:var(--dim)}
+.kn-card{background:#15151a;border:1px solid rgba(138,43,226,.28);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer}
+.kn-cat{font-size:10px;letter-spacing:2px;color:#d1d1d1;text-transform:uppercase}
+.kn-t{font-size:15px;font-weight:700;color:#fff;margin:3px 0 2px}
+.kn-d{font-size:11px;color:#a0a0a0;line-height:1.45;word-break:break-word}
+.kn-ev{background:#15151a;border-radius:12px;padding:11px 14px;margin-bottom:8px;border-left:3px solid #22c55e}
+.kn-ev.gold{border-left-color:#eab308}
+.kn-ev.red{border-left-color:#e05555}
+.kn-evlab{font-size:9.5px;letter-spacing:2px;color:#d1d1d1}
+.kn-evtxt{font-size:13px;font-weight:600;color:#fff;margin-top:2px}
+.kn-evsub{font-size:10.5px;color:#a0a0a0;margin-top:1px}
+.kn-ro{display:inline-block;background:rgba(138,43,226,.16);border:1px solid rgba(138,43,226,.4);border-radius:999px;padding:5px 14px;font-size:11px;color:#d1d1d1;margin:4px 0 10px}
+.kn-add{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.kn-add input{flex:1;min-width:110px}
+.hl-tile{background:#15151a;border:1px solid rgba(138,43,226,.28);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.hl-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hl-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.st-row{background:#15151a;border:1px solid rgba(138,43,226,.28);border-radius:12px;padding:11px 14px;margin-bottom:9px}
+.st-lab{font-size:10px;letter-spacing:2px;color:#d1d1d1}
+.st-t{font-size:14px;font-weight:600;color:#fff;margin-top:2px}
+.st-btn{background:rgba(124,92,255,.15);border:1px solid rgba(138,43,226,.4);color:#fff;border-radius:8px;font-size:11.5px;padding:7px 12px}
+.st-btn.red{border-color:rgba(224,85,85,.5);background:rgba(224,85,85,.12)}
 .hb-donut{width:124px;height:124px;border-radius:50%;flex:none;position:relative;box-shadow:0 0 18px rgba(74,222,128,.18)}
 .hb-donut::after{content:'';position:absolute;inset:16px;border-radius:50%;background:#0a0a12}
 .hb-dpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:26px;font-weight:800;color:var(--text)}
@@ -309,6 +330,9 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
     <button class="hbtn" id="vHabits">Habits</button>
     <button class="hbtn" id="vContent">Content</button>
     <button class="hbtn" id="vCalendar">Calendar</button>
+    <button class="hbtn" id="vKnowledge">Knowledge</button>
+    <button class="hbtn" id="vHealth">Health</button>
+    <button class="hbtn" id="vSettings">Settings</button>
     <button class="hbtn warn" id="vLogout">Log out</button>
   </div>
 </header>
@@ -370,6 +394,45 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
       <div class="cal-grid" id="calGrid"></div>
       <div style="font-size:10px;color:var(--dim);margin-top:6px"><span style="color:#bdf5d3">&#9632;</span> Google Calendar &nbsp; <span style="color:#f1dfa0">&#9632;</span> Content publish dates</div>
       <div class="cal-agenda" id="calAgenda"></div>
+    </div>
+  </div>
+  <div id="knowledgeView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Knowledge</h2>
+      <div id="knDocs"></div>
+      <div class="kn-add">
+        <input id="knCat" placeholder="Label (LOG, SOP...)" style="width:120px">
+        <input id="knTitle" placeholder="Title" style="flex:1;min-width:120px">
+        <input id="knUrl" placeholder="https://link" style="flex:1;min-width:120px">
+        <button id="knAdd" class="hb-wbtn">+ ADD</button>
+      </div>
+      <h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:14px 0 2px">EVIDENCE</h3>
+      <div style="font-size:16px;font-weight:700;color:#fff;margin:2px 0 2px">Recent Records</div>
+      <div class="kn-ro">read-only</div>
+      <div id="knEvents"></div>
+    </div>
+  </div>
+  <div id="healthView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>System Health</h2>
+      <div id="hlAgents"></div>
+      <h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:14px 0 2px">RECENT SYSTEM EVENTS</h3>
+      <div id="hlEvents"></div>
+    </div>
+  </div>
+  <div id="settingsView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Settings</h2>
+      <div class="st-row"><div class="st-lab">CHANGE PIN</div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <input id="setPin" type="password" inputmode="numeric" placeholder="New PIN (6+)" style="flex:1;min-width:100px">
+          <input id="setPin2" type="password" inputmode="numeric" placeholder="Repeat" style="flex:1;min-width:100px">
+          <button id="setPinBtn" class="st-btn">Save</button>
+        </div>
+        <div style="font-size:10.5px;color:var(--dim);margin-top:5px">Changes the Mission Control PIN everywhere. You stay logged in on this device.</div></div>
+      <div class="st-row"><div class="st-lab">ACTIVE SESSIONS</div><div id="setSessions" style="margin-top:6px"></div></div>
+      <div class="st-row"><div class="st-lab">ABOUT</div>
+        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.13<br>Sessions last 24 hours. Log out ends yours early.</div></div>
     </div>
   </div>
   <div id="habitsView" class="hidden">
@@ -1428,6 +1491,88 @@ document.addEventListener('click',async ev=>{
     cpBusy=false; await loadContent();
   }catch(e){ cpBusy=false; if(e.message!=='auth') toast(e.message); }
 });
+
+// ================= KNOWLEDGE / HEALTH / SETTINGS (Boss, Oct 17) =================
+let knDocs=[], knEvents=[], knBusy=false;
+function ago(iso){ if(!iso) return ''; const m=Math.round((Date.now()-new Date(iso).getTime())/60000); if(isNaN(m)||m<0) return ''; if(m<60) return m+'m ago'; if(m<1440) return Math.round(m/60)+'h ago'; return Math.round(m/1440)+'d ago'; }
+function sevClass(e){ return e.severity==='error'?'red':(e.severity==='warn'?'gold':''); }
+function renderKnowledge(){
+  let h='';
+  if(!knDocs.length) h+='<div class="cp-empty">No docs yet — add one below</div>';
+  knDocs.forEach(d=>{ h+='<div class="kn-card" data-kndoc="'+esc(d.url||'')+'"><div style="display:flex;justify-content:space-between;gap:8px"><div style="min-width:0"><div class="kn-cat">'+esc(d.category)+'</div><div class="kn-t">'+esc(d.title)+'</div></div><button data-kndel="'+esc(d.id)+'" style="background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer">\u00D7</button></div><div class="kn-d">'+esc(d.description)+'</div></div>'; });
+  $('knDocs').innerHTML=h;
+  let e='';
+  if(!knEvents.length) e='<div class="cp-empty">No records yet</div>';
+  knEvents.slice(0,10).forEach(ev=>{ e+='<div class="kn-ev '+sevClass(ev)+'"><div class="kn-evlab">'+esc(ev.eventType||'RECORD').toUpperCase()+' \u00b7 '+ago(ev.observedAt)+'</div><div class="kn-evtxt">'+esc(ev.messageSummary||'(no summary)')+'</div><div class="kn-evsub">'+esc(ev.reporterAgent||'')+'</div></div>'; });
+  $('knEvents').innerHTML=e;
+}
+async function loadKnowledge(){
+  try{ const [d,ev]=await Promise.all([contentApi({op:'docList'}),contentApi({op:'recentEvents'}).catch(()=>({events:[]}))]);
+    knDocs=d.items||[]; knEvents=(ev.events||[]); renderKnowledge(); }
+  catch(e){ if(e.message!=='auth') $('knDocs').innerHTML='<div class="cp-empty">Could not load ('+esc(e.message)+')</div>'; }
+}
+// ---- health ----
+async function loadHealth(){
+  try{
+    const [ev,err]=await Promise.all([contentApi({op:'recentEvents'}).catch(e=>{ if(e.message==='auth') throw e; return {events:[]}; }), contentApi({op:'recentEvents',severity:'error'}).catch(e=>{ if(e.message==='auth') throw e; return {events:[]}; })]);
+    const agents=(board&&board.agents)||[];
+    let h='';
+    if(!agents.length) h+='<div class="cp-empty">No agent telemetry yet</div>';
+    agents.forEach(a=>{
+      const st=String(a.status||'').toLowerCase();
+      const col=st.includes('down')||st.includes('error')?'#e05555':(st.includes('working')||st.includes('active')||st.includes('online')?'#22c55e':'#eab308');
+      h+='<div class="hl-tile"><div class="hl-row"><div style="min-width:0"><div class="st-t">'+esc(fmtAgentName(a.agentName||a.name||'agent'))+'</div><div class="kn-evsub">'+esc(a.status||'unknown')+' \u00b7 heartbeat '+ago(a.lastHeartbeat||'')+'</div></div><div class="hl-dot" style="background:'+col+'"></div></div>'+(a.lastErrorSummary?'<div class="kn-evsub" style="color:#e05555;margin-top:4px">'+esc(a.lastErrorSummary)+'</div>':'')+'</div>';
+    });
+    $('hlAgents').innerHTML=h;
+    let eh='';
+    const errs=err.events||[];
+    if(!ev.events||!ev.events.length) eh='<div class="cp-empty">No system events yet</div>';
+    else eh=ev.events.slice(0,8).map(x=>'<div class="kn-ev '+sevClass(x)+'"><div class="kn-evlab">'+esc(x.eventType)+' \u00b7 '+ago(x.observedAt)+'</div><div class="kn-evtxt">'+esc(x.messageSummary)+'</div></div>').join('')
+      +(errs.length?'<div style="font-size:11px;color:#e05555;margin-top:2px">'+errs.length+' error event(s) recorded \u2014 full list in Knowledge</div>':'');
+    $('hlEvents').innerHTML=eh;
+  }catch(e){ if(e.message!=='auth') $('hlAgents').innerHTML='<div class="cp-empty">Could not load ('+esc(e.message)+')</div>'; }
+}
+// ---- settings ----
+let mySessionId='';
+async function loadSettings(){
+  try{
+    const d=await api('sessions');
+    const ss=(d.sessions||[]).sort((a,b)=>String(b.lastSeenAt||b.createdAt||'').localeCompare(String(a.lastSeenAt||a.createdAt||'')));
+    let h='';
+    ss.forEach((x,xi)=>{ h+='<div class="hl-tile"><div class="hl-row"><div style="min-width:0"><div class="st-t">'+esc(x.deviceLabel||'device')+'</div><div class="kn-evsub">'+ago(x.lastSeenAt||x.createdAt)+' \u00b7 expires '+new Date(x.expiresAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})+'</div></div>'+(xi===0?'<span style="font-size:10px;color:var(--gold)">NEWEST \u2014 LIKELY THIS DEVICE</span>':'<button class="st-btn red" data-sessrevoke="'+esc(x.id)+'">Revoke</button>')+'</div></div>'; });
+    if(!ss.length) h='<div class="cp-empty">No sessions found</div>';
+    $('setSessions').innerHTML=h;
+  }catch(e){ if(e.message!=='auth') $('setSessions').innerHTML='<div class="cp-empty">Could not load sessions</div>'; }
+}
+document.addEventListener('click',async ev=>{
+  const g=ev.target.closest?ev.target.closest('[data-kndoc],[data-sessrevoke],#knAdd,#setPinBtn,[data-kndel]'):null;
+  if(!g) return;
+  if(g.hasAttribute('data-kndel')){ if(!window.confirm('Remove this doc from the list?')) return; if(knBusy) return; knBusy=true;
+    try{ await contentApi({op:'docDelete',id:g.getAttribute('data-kndel')}); await loadKnowledge(); }catch(e){ toast(e.message); } knBusy=false; return; }
+  if(g.hasAttribute('data-kndoc')){ const u=g.getAttribute('data-kndoc'); if(u) window.open(u,'_blank'); return; }
+  if(g.id==='knAdd'){
+    if(knBusy) return; knBusy=true;
+    const title=($('knTitle').value||'').trim(), url=($('knUrl').value||'').trim(), category=($('knCat').value||'DOC').trim();
+    if(!title||!url){ knBusy=false; toast('Need a title and a link'); return; }
+    try{ await contentApi({op:'docAdd',title:title,url:url,category:category}); $('knTitle').value=''; $('knUrl').value=''; $('knCat').value=''; toast('Doc added'); await loadKnowledge(); }catch(e){ toast(e.message); }
+    knBusy=false; return;
+  }
+  if(g.id==='setPinBtn'){
+    if(knBusy) return; const p1=($('setPin').value||''), p2=($('setPin2').value||'');
+    if(p1.length<6){ toast('PIN must be 6+ characters'); return; }
+    if(p1!==p2){ toast('PINs do not match'); return; }
+    if(!window.confirm('Change the Mission Control PIN everywhere?')) return;
+    knBusy=true;
+    try{ await api('rotatePin',{newPin:p1}); $('setPin').value=''; $('setPin2').value=''; toast('PIN changed'); }catch(e){ toast(e.message); }
+    knBusy=false; return;
+  }
+  if(g.hasAttribute('data-sessrevoke')){
+    if(!window.confirm('Revoke this session? That device has to log in again.')) return;
+    if(knBusy) return; knBusy=true;
+    try{ await api('revokeSession',{id:g.getAttribute('data-sessrevoke')}); toast('Session revoked'); await loadSettings(); }catch(e){ toast(e.message); }
+    knBusy=false; return;
+  }
+});
 function setView(v){
   view=v;
   $('home').classList.toggle('hidden',v!=='home');
@@ -1439,6 +1584,12 @@ function setView(v){
   $('calendarView').classList.toggle('hidden',v!=='calendar');
   $('vContent').classList.toggle('on',v==='content');
   $('vCalendar').classList.toggle('on',v==='calendar');
+  $('vKnowledge').classList.toggle('on',v==='knowledge');
+  $('vHealth').classList.toggle('on',v==='health');
+  $('vSettings').classList.toggle('on',v==='settings');
+  $('knowledgeView').classList.toggle('hidden',v!=='knowledge');
+  $('healthView').classList.toggle('hidden',v!=='health');
+  $('settingsView').classList.toggle('hidden',v!=='settings');
   $('statusView').classList.toggle('hidden',v!=='status');
   $('vStatus').classList.toggle('on',v==='status');
   $('vHome').classList.toggle('on',v==='home');
@@ -1452,6 +1603,9 @@ function setView(v){
   if(v==='habits') renderHabits();
   if(v==='content') loadContent();
   if(v==='calendar') loadCalendar();
+  if(v==='knowledge') loadKnowledge();
+  if(v==='health') loadHealth();
+  if(v==='settings') loadSettings();
 }
 $('vHome').addEventListener('click',()=>setView('home'));
 $('vBoard').addEventListener('click',()=>setView('board'));
@@ -1461,6 +1615,9 @@ $('vAgents').addEventListener('click',()=>setView('agents'));
 $('vHabits').addEventListener('click',()=>setView('habits'));
 $('vContent').addEventListener('click',()=>setView('content'));
 $('vCalendar').addEventListener('click',()=>setView('calendar'));
+$('vKnowledge').addEventListener('click',()=>setView('knowledge'));
+$('vHealth').addEventListener('click',()=>setView('health'));
+$('vSettings').addEventListener('click',()=>setView('settings'));
 // ================= HABIT TRACKER (v9.4) =================
 // Remade from Boss's reference screenshots (Drive: Habit Tracking Tool):
 // daily-progress bars, overall stats donut, month grid with checkboxes,
@@ -1544,11 +1701,8 @@ async function renderHabits(month){
     const yAt=(v,max)=>(H-PY-(Math.min(v,max)/max)*(H-2*PY)).toFixed(1);
     // smooth path through the known points (simple catmull-style curve)
     const smooth=(arr,max)=>{ const P=[]; arr.forEach((v,i)=>{ if(v!=null) P.push([xAt(i),+yAt(v,max)]); });
-      if(P.length<2) return ''; let d='M'+P[0][0].toFixed(1)+' '+P[0][1];
-      for(let i=0;i<P.length-1;i++){ const p0=P[i-1]||P[i],p1=P[i],p2=P[i+1],p3=P[i+2]||p2;
-        const c1x=p1[0]+(p2[0]-p0[0])/6,c1y=p1[1]+(p2[1]-p0[1])/6,c2x=p2[0]-(p3[0]-p1[0])/6,c2y=p2[1]-(p3[1]-p1[1])/6;
-        d+=' C'+c1x.toFixed(1)+' '+c1y.toFixed(1)+','+c2x.toFixed(1)+' '+c2y.toFixed(1)+','+p2[0].toFixed(1)+' '+p2[1].toFixed(1); }
-      return d; };
+      if(P.length<2) return '';
+      return 'M'+P.map(p=>p[0].toFixed(1)+' '+p[1]).join(' L'); }; // Boss, Oct 17: straight lines, day to day
     const pathEl=(d,color,sw)=>d?'<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>':'';
     const areaEl=(arr,max,color)=>{ const d=smooth(arr,max); if(!d) return '';
   return '<path d="'+d+' L'+xAt(arr.length-1).toFixed(1)+' '+(H-PY)+' L'+xAt(0).toFixed(1)+' '+(H-PY)+' Z" fill="url(#g'+color.replace(/[^a-z0-9]/gi,'')+color.length+')" stroke="none"/>'; };
