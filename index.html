@@ -474,8 +474,8 @@ function renderProjects(){
       '<div style="height:100%;width:'+pct+'%;border-radius:4px;background:linear-gradient(90deg,#8a2be2,var(--gold))"></div></div>'+
       '<div class="m" style="display:flex;gap:6px;flex-wrap:wrap">'+
       '<span class="pill" style="font-size:11px">'+active+' active</span>'+
-      '<span class="pill" style="font-size:11px;background:#4a2626;border-color:#4a2626;color:#fff">'+blocked+' blocked</span>'+
       '<span class="pill p-app" style="font-size:11px">'+aps+' approval'+(aps===1?'':'s')+'</span>'+
+      '<span class="pill" style="font-size:11px;background:#4a2626;border-color:#4a2626;color:#fff">'+blocked+' blocked</span>'+
       '</div></div>';
   }).join('');
   wrap.innerHTML=html;
