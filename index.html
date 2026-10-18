@@ -235,6 +235,10 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .st-t{font-size:14px;font-weight:600;color:#fff;margin-top:2px}
 .st-btn{background:rgba(124,92,255,.15);border:1px solid rgba(138,43,226,.4);color:#fff;border-radius:8px;font-size:11.5px;padding:7px 12px}
 .st-btn.red{border-color:rgba(224,85,85,.5);background:rgba(224,85,85,.12)}
+.tsearch{display:flex;align-items:center;gap:8px;background:#15151a;border:1px solid rgba(138,43,226,.35);border-radius:10px;padding:8px 12px;margin:6px 0 10px}
+.tsearch input{flex:1;background:none;border:none;color:#fff;font-size:14px;outline:none;min-width:0}
+.tsearch .sq{color:var(--gold);font-size:13px}
+.tsearch .sclr{color:var(--dim);font-size:15px;cursor:pointer;padding:0 3px}
 .hb-donut{width:124px;height:124px;border-radius:50%;flex:none;position:relative;box-shadow:0 0 18px rgba(74,222,128,.18)}
 .hb-donut::after{content:'';position:absolute;inset:16px;border-radius:50%;background:#0a0a12}
 .hb-dpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:26px;font-weight:800;color:var(--text)}
@@ -357,9 +361,9 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
     <div class="stats" id="stats"></div>
     <div class="sec" id="projSec"><h2 style="letter-spacing:2px;font-size:12px;color:var(--gold)">PROJECT PROGRESS</h2><div id="projWrap"></div></div>
     <div class="sec" id="approvalsSec"><h2>Pending Approvals</h2><div id="approvals"></div></div>
-    <div class="sec"><h2 id="listTitle">All Tasks</h2><div id="tasks"></div></div>
+    <div class="sec"><h2 id="listTitle">All Tasks</h2><div class="tsearch" id="tsWrap1"><span class="sq">&#128269;</span><input id="taskSearch1" placeholder="Search tasks, agents, projects..." autocomplete="off"><span class="sclr" id="tsclear1" style="display:none">&times;</span></div><div id="tasks"></div></div>
   </div>
-  <div id="boardView" class="hidden"><div class="board" id="board"></div></div>
+  <div id="boardView" class="hidden"><div class="tsearch" id="tsWrap2"><span class="sq">&#128269;</span><input id="taskSearch2" placeholder="Search tasks, agents, projects..." autocomplete="off"><span class="sclr" id="tsclear2" style="display:none">&times;</span></div><div class="board" id="board"></div></div>
 
   <div id="officeView" class="hidden">
     <div id="officeFloor"><div style="color:var(--dim);font-size:12px;padding:8px">Loading office floor…</div></div>
@@ -457,7 +461,7 @@ const CONTENTURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functio
 const TODOURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcTodos";
 const HVURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHabitValue";
 let token = localStorage.getItem('mc_token') || '';
-let board = null; let view='home'; let filter='all', projFilter=''; let selected=null;
+let board = null; let view='home'; let filter='all', projFilter=''; let selected=null; let q='';
 let loginBusy=false; let capBusy=false;
 const $ = id => document.getElementById(id);
 
@@ -570,6 +574,7 @@ async function refresh(){
     setDot(false);
     $('whoami').textContent='BOSS · '+devLabel();
     renderStats(); renderProjects(); renderApprovals(); renderTasks(); renderBoard(); loadTodos();
+    bindSearch(1); bindSearch(2);
     if(view==='office') renderOfficeView();
   }catch(e){
     if(String(e.message)!=='auth'){
@@ -673,19 +678,44 @@ function taskCard(t){
     (t.project?'<span>· '+esc(t.project)+'</span>':'')+
     '</div></div>';
 }
+function matchTask(t){
+  if(!q) return true;
+  const hay=[t.title,t.taskId,t.project,t.assignedAgent,t.state,t.description,t.notes,t.resultSummary].map(x=>String(x||'')).join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
+}
+function bindSearch(n){
+  const inp=$('taskSearch'+n), clr=$('tsclear'+n);
+  if(!inp) return;
+  bindSearch._b=bindSearch._b||{};
+  if(bindSearch._b[n]) return;
+  bindSearch._b[n]=1;
+  inp.value=q;
+  inp.addEventListener('input',()=>{
+    q=inp.value.trim();
+    const other=$('taskSearch'+(n===1?2:1)); if(other&&other!==document.activeElement) other.value=q;
+    if($('tsclear'+n)) $('tsclear'+n).style.display=q?'inline':'none';
+    if($('tsclear'+(n===1?2:1))) $('tsclear'+(n===1?2:1)).style.display=q?'inline':'none';
+    if(view==='board') renderBoard(); else renderTasks();
+  });
+  if(clr) clr.addEventListener('click',()=>{ q=''; inp.value=''; $('tsclear1').style.display='none'; $('tsclear2').style.display='none'; if(view==='board') renderBoard(); else renderTasks(); });
+}
 function renderTasks(){
   let ts=board.tasks;
   if(filter==='all') ts=ts.filter(t=>t.state!=='CANCELLED'); // P1-1: All includes Done now
   else ts=ts.filter(t=>t.state===filter);
   if(projFilter) ts=ts.filter(t=>(t.project||'No project')===projFilter); // PROJECT PROGRESS tap filter
-  $('listTitle').textContent=(filter==='all'?'All Tasks':filter)+(projFilter?(' — '+projFilter+' (tap card again to clear)'):'');
+  const preQ=ts.length; ts=ts.filter(matchTask);
+  let lt=(filter==='all'?'All Tasks':filter)+(projFilter?(' — '+projFilter+' (tap card again to clear)'):'')+(q?(' — '+ts.length+' match'+(ts.length===1?'':'es')+' for "'+q+'"'):'');
+  $('listTitle').textContent=lt;
+  if(q&&!ts.length){ $('tasks').innerHTML='<div style="color:var(--dim);font-size:13px;padding:8px 4px">No tasks match "'+esc(q)+'". Try another word.</div>'; return; }
   $('tasks').innerHTML=ts.length?ts.map(taskCard).join(''):'<div style="color:var(--dim);font-size:13px;padding:8px 4px">No tasks here. Capture one above.</div>';
 }
 const COLS=['BACKLOG','READY','ACTIVE','WAITING','BLOCKED','REVIEW','COMPLETED'];
 function renderBoard(){
   const cols=filter==='all'?COLS:COLS.filter(c=>c===filter);
   $('board').innerHTML=cols.map(c=>{
-    const ts=board.tasks.filter(t=>t.state===c);
+    const ts=board.tasks.filter(t=>t.state===c&&matchTask(t));
+    if(q&&!ts.length) return '';
     return '<div class="col"><h3>'+c+'<i>'+ts.length+'</i></h3>'+(ts.map(taskCard).join('')||'<div style="color:var(--dim);font-size:12px">—</div>')+'</div>';
   }).join('');
 }
