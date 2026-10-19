@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="favicon.png">
 <title>VANTRA Mission Control</title>
 <style>
 :root{
@@ -65,7 +67,17 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .p-app{border-color:var(--gold);color:var(--gold)}
 .errline{color:var(--red);font-size:13px;padding:10px 4px;line-height:1.5}
 /* BOARD */
-.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
+.board{display:flex;flex-wrap:wrap;gap:10px;padding-bottom:8px}
+.h-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--border);margin:0 6px 6px 0;background:rgba(8,8,20,.85)}
+.h-sec{margin:10px 0 2px;font-size:12px;letter-spacing:1.6px;color:var(--dim);font-weight:800}
+.h-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:7px 2px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}
+.h-row .l{color:var(--text);min-width:0}
+.h-row .v{color:var(--dim);text-align:right;white-space:nowrap}
+.hd-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px;box-shadow:0 0 6px currentColor}
+.h-gate{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;margin:0 4px 4px 0;border:1px solid}
+.board .col{flex:1 1 100%}
+@media(min-width:520px){.board .col{flex:1 1 calc(33.33% - 7px)}}
+@media(min-width:1024px){.board .col{flex:1 1 calc(25% - 8px)}}
 .col{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;min-height:120px}
 .col h3{font-size:11px;color:var(--dim);letter-spacing:1.5px;margin-bottom:8px;display:flex;justify-content:space-between}
 .col h3 i{font-style:normal;color:var(--purple);font-weight:700}
@@ -96,7 +108,7 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .floor-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
 .lo{position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;border:1px solid rgba(138,43,226,.6);box-shadow:0 0 22px rgba(138,43,226,.35);background:#05050a url('office_bg.jpg?v=92') center/cover no-repeat;touch-action:manipulation}
 .lo::before{content:'';position:absolute;inset:0;background:rgba(5,5,12,.30);pointer-events:none}
-.lo-room{position:absolute;z-index:1;font-size:6.5px;letter-spacing:1.4px;color:rgba(0,255,255,.8);text-transform:uppercase;text-shadow:0 0 5px #000,0 0 5px #000;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
+.lo-room{position:absolute;z-index:1;font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(235,255,255,.95);text-transform:uppercase;text-shadow:0 0 6px #000,0 1px 2px #000;background:rgba(5,5,12,.62);border:1px solid rgba(0,255,255,.35);border-radius:5px;padding:1px 6px;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
 .w{position:absolute;z-index:5;width:0;height:0;cursor:pointer;transition:left 2.6s linear,top 2.6s linear}
 .w-body{position:absolute;left:-15px;top:-34px;width:30px;display:flex;flex-direction:column;align-items:center}
 .w-head{width:26px;height:21px;border-radius:12px 12px 8px 8px;background:radial-gradient(circle at 35% 25%,#3a3a52,#0a0a14 70%);border:1.5px solid var(--ac,#9d7cff);position:relative;box-shadow:0 0 9px var(--ac,#9d7cff),inset 0 0 4px rgba(255,255,255,.12);overflow:visible}
@@ -162,7 +174,7 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .asof{font-size:11.5px;color:#8a86a8;margin:2px 0 8px}
 @media(max-width:430px){
   .ov-team{display:flex}
-  .lo-room{font-size:11px;letter-spacing:1px}
+  .lo-room{font-size:13px;letter-spacing:1.2px}
   .w-name{font-size:11px}
   .floor-legend{font-size:11px;gap:8px;flex-wrap:wrap}
   .lo-note{font-size:11px}
@@ -317,8 +329,10 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
   <div class="logo">V</div>
   <h1>VANTRA <span>Mission Control</span></h1>
   <p>Executive Operations</p>
+  <form id="pinForm" style="display:contents" onsubmit="event.preventDefault();">
   <input id="pin" type="password" placeholder="PIN" autocomplete="off" inputmode="numeric">
   <button id="loginBtn">UNLOCK</button>
+  </form>
   <div id="loginErr"></div>
 </div>
 
@@ -418,7 +432,10 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
   </div>
   <div id="healthView" class="hidden">
     <div class="sec" style="margin-top:12px">
-      <h2>System Health</h2>
+      <h2>System Health <span class="asof" id="hAsOf"></span></h2>
+      <div id="hlStrip"></div>
+      <div id="hlPhase1"></div>
+      <h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:14px 0 2px">AGENTS — LIVE TELEMETRY</h3>
       <div id="hlAgents"></div>
       <h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:14px 0 2px">RECENT SYSTEM EVENTS</h3>
       <div id="hlEvents"></div>
@@ -429,14 +446,16 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
       <h2>Settings</h2>
       <div class="st-row"><div class="st-lab">CHANGE PIN</div>
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <form id="setPinForm" style="display:flex;gap:8px" onsubmit="event.preventDefault();">
           <input id="setPin" type="password" inputmode="numeric" placeholder="New PIN (6+)" style="flex:1;min-width:100px">
           <input id="setPin2" type="password" inputmode="numeric" placeholder="Repeat" style="flex:1;min-width:100px">
           <button id="setPinBtn" class="st-btn">Save</button>
+          </form>
         </div>
         <div style="font-size:10.5px;color:var(--dim);margin-top:5px">Changes the Mission Control PIN everywhere. You stay logged in on this device.</div></div>
       <div class="st-row"><div class="st-lab">ACTIVE SESSIONS</div><div id="setSessions" style="margin-top:6px"></div></div>
       <div class="st-row"><div class="st-lab">ABOUT</div>
-        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.13<br>Sessions last 24 hours. Log out ends yours early.</div></div>
+        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.18<br>Sessions last 24 hours. Log out ends yours early.</div></div>
     </div>
   </div>
   <div id="habitsView" class="hidden">
@@ -1542,8 +1561,87 @@ async function loadKnowledge(){
   catch(e){ if(e.message!=='auth') $('knDocs').innerHTML='<div class="cp-empty">Could not load ('+esc(e.message)+')</div>'; }
 }
 // ---- health ----
+const HURL="https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHealthApi";
+async function healthSnap(){
+  const r=await fetch(HURL,{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok){ if(r.status===401) throw new Error('auth'); throw new Error('HTTP '+r.status); }
+  return (await r.json()).snapshot;
+}
+function hAgeH(iso){ if(!iso) return 1e9; const t=Date.parse(iso); if(isNaN(t)) return 1e9; return (Date.now()-t)/3600000; }
+function hCol(h,gy,gr){ return h<gy?'#22c55e':(h<gr?'#eab308':'#e05555'); }
+function hRow(label,val,col,detail){
+  return '<div class="h-row"><div class="l"><span class="hd-dot" style="background:'+(col||'#22c55e')+'"></span> '+label+(detail?'<div style="font-size:11px;color:var(--dim);margin:2px 0 0 15px">'+detail+'</div>':'')+'</div><div class="v">'+val+'</div></div>';
+}
+function hChip(name,col){ return '<span class="h-chip" style="border-color:'+col+'30"><span class="hd-dot" style="background:'+col+';margin-top:0"></span>'+name+'</span>'; }
+const APP_VERSION="v9.18";
+function renderHealthPhase1(sn){
+  const G='#22c55e',Y='#eab308',R='#e05555';
+  if(!sn){ $('hlStrip').innerHTML=''; $('hlPhase1').innerHTML='<div class="cp-empty">No health snapshot yet — the first refresh is running.</div>'; return; }
+  $('hAsOf').textContent='as of '+fmtET(sn.at)+' ET · refreshes every 30 min';
+  const c=sn.crm||{}, b=sn.backups||{}, bd=sn.board||{}, rs=sn.runs||{}, ap=sn.apps||{}, live=sn.live||{}, gates=sn.gates||{}, own=sn.ownership||{}, keys=sn.keys||{}, docs=sn.docs||{}, rh=sn.reviewHold||{};
+  const worst=arr=>arr.includes(R)?R:(arr.includes(Y)?Y:G);
+  // section colors
+  const colCRM=worst([hCol(hAgeH(c.exportAt),24,72), (c.syncErrors>0?R:hCol(hAgeH(c.syncAt||sn.at),0.75,2))]);
+  const wbAge=b.workbooks&&b.workbooks.length?Math.max.apply(null,b.workbooks.map(w=>hAgeH(w.at))):1e9;
+  const colBK=worst([hCol(hAgeH(b.jglAt),26,50), hCol(wbAge,26,50)]);
+  const runAge=rs&&rs.ts?hAgeH(new Date(new Date(rs.ts.replace(' ET','').replace(' ','T')+'Z').getTime()-0).toISOString()):1e9;
+  const runErr=rs&&String(rs.result||'').toUpperCase().indexOf('ERROR')>=0;
+  const mism=rs?parseInt(rs.mismatches||'0'):0;
+  const colBS=worst([hCol(hAgeH(bd.p3At),24,72), runErr?R:hCol(runAge,0.75,2), mism===0?G:(mism<=5?Y:R), (rs&&rs.held&&rs.held!=='-')?Y:G]);
+  const verBoard=(ap.boardShipped?'v'+ap.boardShipped:'?');
+  const verRepo=(/v\d+(\.\d+)?/i.test(ap.commitMsg||'')?'v'+(ap.commitMsg.match(/v(\d+(?:\.\d+)?)/i)||[])[1]:'?');
+  const verOk=verBoard===APP_VERSION&&verRepo===APP_VERSION;
+  const colAPP=verOk?G:Y;
+  const colRisk=worst([live.blocked===0?G:(live.blocked<=10&&!live.staleBlocked?Y:R), live.pendingApprovals===0?G:(live.pendingApprovals<=3&&hAgeH(live.oldestPendingAt)<48?Y:R), gates.g1&&gates.g1.open?Y:G, gates.g2&&gates.g2.open?Y:G, gates.g3&&gates.g3.open?Y:G, sn.applyRedFlag?R:G, (own['MC-OWNERSHIP-001']==='OPEN'||own['BASE44-EXIT-001']==='OPEN')?Y:G]);
+  const team=(sn.team&&sn.team.agents)||[];
+  const colTeam=team.length?worst(team.map(a=>String(a.state||'').toUpperCase().includes('DOWN')?R:hCol(hAgeH(a.ts),1,24))):Y;
+  const p0=docs.p0UpdateNeeded||0, upd=(docs.statusCounts&&docs.statusCounts['UPDATE NEEDED'])||0, nr=(docs.statusCounts&&docs.statusCounts['NOT REVIEWED'])||0;
+  const colDocs=p0>0?R:((upd+nr)>0?Y:G);
+  $('hlStrip').innerHTML=hChip('CRM',colCRM)+hChip('Backups',colBK)+hChip('Board & Sync',colBS)+hChip('Apps',colAPP)+hChip('Risk Control',colRisk)+hChip('AI Team',colTeam)+hChip('Docs',colDocs);
+  let h='';
+  // CRM
+  h+='<div class="h-sec">CRM</div>';
+  h+=hRow('Last full export', (c.exportAt?fmtET(c.exportAt)+' ET · '+(c.exportName||'').replace('vantra-crm-full-','').replace('.json',''):'none'), hCol(hAgeH(c.exportAt),24,72));
+  h+=hRow('Sync mode · last run', (c.syncMode||'?')+' · '+(c.syncAt?fmtET(c.syncAt)+' ET':'—'), c.syncErrors>0?R:hCol(hAgeH(c.syncAt||sn.at),0.75,2), (c.syncErrors>0?c.syncErrors+' error(s)':''));
+  h+=hRow('Review queue (dry run)', String(c.reviewCount!=null?c.reviewCount:'—')+' rows for review', Y, 'information only — matching is reviewed before APPLY');
+  h+=hRow('Likely duplicates beyond review', String(c.likelyDuplicates!=null?c.likelyDuplicates:'—'), c.likelyDuplicates==null?Y:(c.likelyDuplicates===0?G:Y), c.likelyDuplicates==null?'field appears once the updated sync script is installed (gate G3 signal)':'');
+  // Backups
+  h+='<div class="h-sec">Backups</div>';
+  h+=hRow('3 AM CRM snapshot', (b.jglAt?fmtET(b.jglAt)+' ET · '+ago(b.jglAt):'none'), hCol(hAgeH(b.jglAt),26,50));
+  (b.workbooks||[]).forEach(w=>{ h+=hRow(w.name.replace(/ snapshot.*/,'')+' snapshot', fmtET(w.at)+' ET', hCol(hAgeH(w.at),26,50)); });
+  if(!(b.workbooks||[]).length) h+=hRow('Workbook snapshots','none yet',R);
+  // Board & sync
+  h+='<div class="h-sec">Board & Sync</div>';
+  h+=hRow('Last board change (Part 3)', bd.p3At?ago(bd.p3At):'—', hCol(hAgeH(bd.p3At),24,72));
+  h+=hRow('Last hash run · result', rs&&rs.ts?(rs.ts+' · '+rs.result):'no Runs rows yet', (rs&&rs.ts)?(runErr?R:hCol(runAge,0.75,2)):R, rs&&rs.hash?('hash '+String(rs.hash).slice(0,10)):'');
+  h+=hRow('Board vs app mismatches', rs?String(mism):'—', mism===0?G:(mism<=5?Y:R));
+  h+=hRow('Held cards (DONE_HOLD)', rs?String(rs.held||'-'):'—', (rs&&rs.held&&rs.held!=='-')?Y:G, 'JEN passed the CRM-SHOWCASE-001 privacy check 10-19 09:06 ET — hold released');
+  // Apps
+  h+='<div class="h-sec">Apps</div>';
+  h+=hRow('Version app / board / repo', APP_VERSION+' / '+verBoard+' / '+verRepo, verOk?G:Y, verOk?'':'app, board and repo now aligned at '+APP_VERSION+' (v9.18 correction round)');
+  h+=hRow('Last front-end deploy', ap.commitAt?ago(ap.commitAt)+' ('+(ap.commitSha||'')+')':'—', hCol(hAgeH(ap.commitAt),48,168));
+  // Risk control
+  h+='<div class="h-sec">Risk Control</div>';
+  h+=hRow('Blocked / Waiting', (live.blocked||0)+' blocked / '+(live.waiting||0)+' waiting', live.blocked===0?G:(live.blocked<=10&&!live.staleBlocked?Y:R), live.staleBlocked?live.staleBlocked+' blocked longer than 7 days':'');
+  h+=hRow('Pending approvals', String(live.pendingApprovals||0), live.pendingApprovals===0?G:(live.pendingApprovals<=3&&hAgeH(live.oldestPendingAt)<48?Y:R), live.oldestPendingAt?('oldest '+ago(live.oldestPendingAt)):'');
+  const gate=(g,o)=>'<span class="h-gate" style="color:'+(o?Y:G)+';border-color:'+(o?Y:G)+'55">'+g+' '+(o?'OPEN':'CLOSED')+'</span>';
+  h+='<div class="h-row"><div class="l"><span class="hd-dot" style="background:'+((gates.g1&&gates.g1.open)||(gates.g2&&gates.g2.open)||(gates.g3&&gates.g3.open)?Y:G)+'"></span> CRM APPLY gates '+(sn.applyRedFlag?'— RED: APPLY IS ON WITH A GATE OPEN':'')+'<div style="margin:4px 0 0 15px">'+gate('G1 import',gates.g1&&gates.g1.open)+gate('G2 fresh export',gates.g2&&gates.g2.open)+gate('G3 duplicates',gates.g3&&gates.g3.open)+'</div><div style="font-size:11px;color:var(--dim);margin:4px 0 0 15px">'+(gates.g1&&gates.g1.note||'')+'</div></div><div class="v">'+String((live.crmCount||0))+' CRM records</div></div>';
+  h+=hRow('APPLY prerequisite — Boss answers', String(rh.bossOpen!=null?rh.bossOpen:'—')+' open', (rh.bossOpen||0)>0?Y:G);
+  h+=hRow('Ownership-transfer cards', 'MC-OWNERSHIP-001: '+(own['MC-OWNERSHIP-001']||'?')+' · BASE44-EXIT-001: '+(own['BASE44-EXIT-001']||'?'), (own['MC-OWNERSHIP-001']==='OPEN'||own['BASE44-EXIT-001']==='OPEN')?Y:G);
+  h+=hRow('Agent keys (status only)', (keys.rows||0)+' registered · '+(keys.active||0)+' active', (keys.expiredUsed>0)?R:((keys.expiringSoon>0)?Y:G));
+  // AI team
+  h+='<div class="h-sec">AI Team (heartbeats)</div>';
+  if(team.length) team.forEach(a=>{ h+=hRow(esc(fmtAgentName(a.name)), (a.state||'?')+' · '+(a.ts?ago(a.ts):'—')+(a.task?' · '+esc(String(a.task).slice(0,40)):''), String(a.state||'').toUpperCase().includes('DOWN')?R:hCol(hAgeH(a.ts),1,24)); });
+  else h+=hRow('Heartbeats','no agents have written heartbeats yet',Y,'only LILY and JEN write heartbeats (PHASE 2 covers the rest)');
+  // Docs
+  h+='<div class="h-sec">Docs (audit register)</div>';
+  const dc=docs.statusCounts||{};
+  h+=hRow('Register status', Object.keys(dc).map(k=>k+': '+dc[k]).join(' · ')||'—', p0>0?R:((upd+nr)>0?Y:G), docs.oldestVerified?('oldest verified '+docs.oldestVerified):'');
+  $('hlPhase1').innerHTML=h;
+}
 async function loadHealth(){
   try{
+    healthSnap().then(renderHealthPhase1).catch(e=>{ if(e.message!=='auth') $('hlPhase1').innerHTML='<div class="cp-empty">Could not load health snapshot ('+esc(e.message)+')</div>'; });
     const [ev,err]=await Promise.all([contentApi({op:'recentEvents'}).catch(e=>{ if(e.message==='auth') throw e; return {events:[]}; }), contentApi({op:'recentEvents',severity:'error'}).catch(e=>{ if(e.message==='auth') throw e; return {events:[]}; })]);
     const agents=(board&&board.agents)||[];
     let h='';

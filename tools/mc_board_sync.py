@@ -65,11 +65,25 @@ def parse_cards(text):
                     break
                 if not t:
                     continue
-                mm = re.match(r"^Priority:\s*([A-Za-z/ ]+?)\s*\|\s*Status:\s*([^|]+?)\s*\|\s*Owner:\s*(.+)$", t)
+                # 2026-10-19 fix: Priority used to be [A-Za-z/ ]+, so any P1/P2/P3/P4
+                # or annotated priority ("P2 (assigned by ...)") killed the whole
+                # metadata match and the card lost its status -> imported as BACKLOG.
+                mm = re.match(r"^Priority:\s*(.+?)\s*\|\s*Status:\s*([^|]+?)\s*\|\s*Owner:\s*(.+)$", t)
                 if mm and not pri:
                     pri, status, owner = mm.group(1).strip(), mm.group(2).strip(), mm.group(3).strip()
                     continue
                 body.append(t)
+            # fallback: cards that put Status on its own line ("Status: OPEN") or in
+            # another combined line still deserve their state.
+            if not status:
+                for b in body:
+                    ms = re.match(r"^Status:\s*(.+)$", b) or re.search(r"[|;]\s*Status:\s*([^|;]+)", b)
+                    if ms:
+                        status = ms.group(1).strip()
+                        break
+            # BLK-* blocker cards carry no Status line at all — they are blockers by ID.
+            if not status and cid.startswith("BLK-"):
+                status = "BLOCKED"
             cards[cid] = {"id": cid, "title": title, "priority": pri,
                           "status": status, "owner": owner, "body": body[:8],
                           "shape": "card"}
@@ -93,6 +107,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--app-tasks")
     ap.add_argument("--full-dump", action="store_true")
+    ap.add_argument("--payload", action="store_true")
     args = ap.parse_args()
 
     text = fetch_text()
@@ -100,11 +115,37 @@ def main():
     print("DOC_HASH " + h)
     cards = parse_cards(text)
     json.dump(cards, open("board_cards.json", "w"), indent=1)
+    json.dump({"docHash": h, "cards": len(cards)}, open("/tmp/board_hash.json", "w"))
     print("CARDS %d" % len(cards))
     if args.full_dump:
         for k in sorted(cards):
             c = cards[k]
             print("-", k, "|", c["status"] or "?", "|", (c["title"] or "")[:70])
+        return
+
+    if args.payload:
+        st = json.load(open("/tmp/board_hash.json"))
+        new = json.load(open("new_cards.json"))
+        done = json.load(open("done_cards.json"))
+        # HOLD (Boss, 2026-10-19): no auto done-flip until JEN confirms.
+        # Remove the ID from this set when Boss passes her confirmation.
+        # DONE_HOLD released 2026-10-19: JEN passed CRM-SHOWCASE-001's privacy check (Part 3, 09:06 ET).
+        held = []
+        for d in held:
+            print("HOLD: %s stays ACTIVE pending JEN confirmation" % d["taskId"])
+        for c in new:
+            c["body"] = "\n".join(c.get("body", [])[:10])[:1500]
+        payload = {
+            "changed": True,
+            "docHash": st["docHash"],
+            "docId": DOC_ID,
+            "part": "Part 3 (LIVE BOARD)",
+            "cards": st["cards"],
+            "newCards": new,
+            "doneIds": [d["taskId"] for d in done],
+        }
+        print("PAYLOAD_READY")
+        print(json.dumps(payload))
         return
 
     if not args.app_tasks:
@@ -126,8 +167,12 @@ def main():
         at = app_by_id.get(cid) or title_ids.get(cid)
         if not at:
             new.append(c)
-        elif ("DONE" in s or "RESOLVED" in s) and "ACTIVE" not in s and "CLAIMED" not in s and at.get("state") not in ("COMPLETED", "CANCELLED"):
-            done.append({"taskId": at["taskId"], "card": c, "state": at.get("state")})
+        elif at.get("state") not in ("COMPLETED", "CANCELLED") and "ACTIVE" not in s and "CLAIMED" not in s:
+            # Only the status HEAD counts (before any parenthetical or em-dash detail),
+            # so prose like "WAITING (diligence research pass DONE ...)" is not a done card.
+            head = s.split("(")[0].split("\u2014")[0].strip()
+            if "DONE" in head or "RESOLVED" in head:
+                done.append({"taskId": at["taskId"], "card": c, "state": at.get("state")})
     json.dump(new, open("new_cards.json", "w"), indent=1)
     json.dump(done, open("done_cards.json", "w"), indent=1)
     print("NEW %d | DONE_FLIP %d" % (len(new), len(done)))
