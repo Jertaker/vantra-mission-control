@@ -47,7 +47,13 @@ function render(){const v=$("view");
   <input id="ad_pin" type="password" inputmode="numeric" maxlength="12" placeholder="••••" style="text-align:center;letter-spacing:6px;font-size:20px">
   <button class="btn" style="width:100%" onclick="adLogin()">Unlock</button>
   <p class="small" style="margin-top:10px">Team only. Wrong attempts lock this page progressively.</p></div>`;return}
- v.innerHTML=`<div class="card"><div class="h2">Courses &amp; assignments</div><span class="small" id="oc_list">Loading…</span></div>
+ v.innerHTML=`<div class="card"><div class="h2">Members &amp; access</div><span class="small" id="om_list">Loading…</span></div>
+ <div class="card"><div class="h2">Post a deal or offer</div>
+  <label>Title</label><input id="ad_title" maxlength="200">
+  <label>Details</label><textarea id="ad_body" maxlength="10000"></textarea>
+  <button class="btn" onclick="postDeal()">Post deal</button>
+  <div class="small" style="margin-top:8px" id="od_list"></div></div>
+ <div class="card"><div class="h2">Courses &amp; assignments</div><span class="small" id="oc_list">Loading…</span></div>
  <div class="card"><div class="h2">Publish a course</div>
   <label>Module</label><input id="ac_mod" placeholder="e.g. LTD / Amway">
   <label>Title</label><input id="ac_title">
@@ -71,9 +77,12 @@ function render(){const v=$("view");
   <button class="btn" onclick="adDo('addKnowledge',{title:$('ak_title').value,category:$('ak_cat').value,body:$('ak_body').value,sourceUrl:$('ak_url').value},'Added to approved library')">Add</button></div>
  <div class="card"><div class="h2">Stats</div><span class="small" id="ad_stats">Loading…</span></div>
  <button class="btn sec" onclick="adminTok='';localStorage.removeItem('vh_admin');render()">Log out</button>`;
+ api("adminMembers",{},adminTok).then(j=>{if(!j.ok||!$("om_list"))return;const ms=j.members||[];$("om_list").innerHTML=ms.length?ms.map(m=>`<div class="lesson" style="display:flex;align-items:center;gap:8px"><div style="flex:1"><b>${esc(m.name)}</b><div class="small">${esc(m.email)}</div></div><select style="width:auto" onchange="adDo('setMemberAudience',{id:'${m.id}',audience:this.value},'Access saved')"><option value="member" ${m.audience==="member"||!m.audience?"selected":""}>No access</option><option value="customer" ${m.audience==="customer"?"selected":""}>Customer</option><option value="team" ${m.audience==="team"?"selected":""}>Team</option></select></div>`).join(""):'No one has signed in yet. When someone signs in with their invite, they show up here and you give them Customer access.'});
+ api("adminDeals",{},adminTok).then(j=>{if(!j.ok||!$("od_list"))return;const d=j.deals||[];$("od_list").textContent=d.length?"Live deals: "+d.map(x=>x.title).join(" · "):"No deals posted yet."});
  api("adminCourses",{},adminTok).then(j=>{if(!j.ok||!$("oc_list"))return;const cs=j.courses||[];$("oc_list").innerHTML=cs.length?cs.map(c=>`<div class="lesson" style="display:flex;align-items:center;gap:8px"><div style="flex:1"><b>${esc(c.title)}</b><div class="small">${c.audience==="customer"?"Customers":c.audience==="team"?"Team":"UNASSIGNED — visible to no one"}</div></div><select style="width:auto" onchange="adDo('setCourseAudience',{id:'${c.id}',audience:this.value},'Assignment saved')"><option value="" ${!c.audience?"selected":""}>Nobody</option><option value="customer" ${c.audience==="customer"?"selected":""}>Customers</option><option value="team" ${c.audience==="team"?"selected":""}>Team</option></select></div>`).join(""):'<span class="small">No courses yet. Publish one below — it stays invisible until you assign it.</span>'})
  api("adminStats",{},adminTok).then(j=>{if(!j.ok){adminTok="";localStorage.removeItem("vh_admin");toast(j.error);render();return}$("ad_stats").textContent=Object.entries(j.stats).map(([k,v])=>k+": "+v).join(" · ")})}
 async function adLogin(){const pin=$("ad_pin").value.trim();if(!pin)return;const j=await api("adminLogin",{pin,deviceLabel:navigator.userAgent.slice(0,40)});if(j.ok){adminTok=j.token;localStorage.setItem("vh_admin",adminTok);toast("Admin ready");render()}else{$("ad_pin").value="";toast(j.error)}}
+async function postDeal(){const t=$("ad_title").value.trim(),b=$("ad_body").value.trim();if(!t||!b)return toast("Title and details, please");await adDo("createDeal",{title:t,body:b},"Deal posted — customers only");render()}
 async function adDo(op,data,msg){const j=await api(op,data,adminTok);if(j.ok){toast(msg)}else{toast(j.error);if(j.error&&j.error.includes("Admin session")){adminTok="";localStorage.removeItem("vh_admin");render()}}}
 render();
 </script>
