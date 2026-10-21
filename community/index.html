@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<title>VANTRA Community Hub</title>
+<link rel="icon" href="../favicon.png">
+<style>
+:root{
+  --bg:#0b0e14;--card:#12161f;--card2:#161b26;--line:#232a38;--gold:#d4af37;--gold2:#f0d078;
+  --txt:#e8e4d8;--dim:#8b93a5;--green:#3ddc84;--blue:#5aa7ff;--red:#ff6b6b;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px}
+body{padding-bottom:76px}
+a{color:var(--blue);text-decoration:none}
+.hide{display:none!important}
+/* header */
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0b0e14 70%,rgba(11,14,20,.92));border-bottom:1px solid var(--line);padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
+.emblem{width:34px;height:34px;flex:none;border-radius:8px;background:radial-gradient(circle at 35% 30%,#f7e28b,var(--gold) 55%,#8a6d1f);display:flex;align-items:center;justify-content:center;font-weight:800;color:#14100a;font-size:13px;letter-spacing:-.5px;box-shadow:0 0 14px rgba(212,175,55,.45)}
+header h1{font-size:17px;font-weight:700;letter-spacing:.3px}
+header .sub{font-size:11px;color:var(--dim);margin-top:1px}
+.spacer{flex:1}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap}
+.chip.on{background:rgba(212,175,55,.14);border-color:var(--gold);color:var(--gold2)}
+/* layout */
+main{max-width:720px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--gold);margin:6px 0 10px;font-weight:700}
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:20px;color:var(--gold2)}
+.stat span{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.btn{display:inline-block;background:linear-gradient(135deg,var(--gold),#b8932c);color:#14100a;font-weight:700;border:none;border-radius:10px;padding:10px 16px;font-size:14px;cursor:pointer}
+.btn.sec{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.btn.mini{padding:6px 12px;font-size:12.5px;border-radius:8px}
+.btn:disabled{opacity:.5}
+input,textarea,select{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;font-size:15px;font-family:inherit;margin-bottom:10px}
+textarea{min-height:90px;resize:vertical}
+label{font-size:12px;color:var(--dim);display:block;margin:4px 0 4px}
+.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#0d1017f2;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom))}
+.tab{flex:1;text-align:center;color:var(--dim);font-size:10px;cursor:pointer;padding:2px 0;position:relative}
+.tab svg{width:22px;height:22px;display:block;margin:0 auto 2px}
+.tab.on{color:var(--gold2)}
+.dot{position:absolute;top:0;right:calc(50% - 16px);width:8px;height:8px;border-radius:50%;background:var(--red)}
+.post{border:1px solid var(--line);border-radius:12px;background:var(--card2);padding:12px;margin-bottom:10px}
+.post .t{font-weight:700;font-size:15px;margin-bottom:3px}
+.post .meta{font-size:11.5px;color:var(--dim);margin-bottom:8px}
+.pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(212,175,55,.12);color:var(--gold2);border:1px solid rgba(212,175,55,.3);margin-right:6px}
+.pill.qa{background:rgba(90,167,255,.12);color:var(--blue);border-color:rgba(90,167,255,.3)}
+.pill.win{background:rgba(61,220,132,.12);color:var(--green);border-color:rgba(61,220,132,.3)}
+.pill.res{background:rgba(61,220,132,.16);color:var(--green);border-color:rgba(61,220,132,.4)}
+.cmt{border-top:1px solid var(--line);padding:8px 0 2px;font-size:13.5px}
+.cmt .who{color:var(--gold2);font-size:11.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mini-link{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline}
+/* chat dock */
+.chatdock{position:fixed;right:12px;bottom:82px;z-index:40;width:min(360px,calc(100vw - 24px));background:var(--card);border:1px solid var(--gold);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;max-height:70vh}
+.chatdock .hd{padding:9px 12px;background:rgba(212,175,55,.1);font-size:13px;font-weight:700;color:var(--gold2);display:flex;justify-content:space-between;cursor:pointer}
+.chatmsgs{overflow-y:auto;padding:10px 12px;flex:1;min-height:120px}
+.cmsg{margin-bottom:8px;font-size:13.5px}
+.cmsg .who{color:var(--gold2);font-size:11px}
+.chatinput{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
+.chatinput input{margin:0}
+.fab{position:fixed;right:14px;bottom:86px;z-index:35;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#b8932c);color:#14100a;border:none;font-size:22px;cursor:pointer;box-shadow:0 4px 18px rgba(212,175,55,.4)}
+.evdate{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-align:center;min-width:56px}
+.evdate b{display:block;font-size:20px;color:var(--gold2)}
+.evdate span{font-size:10px;color:var(--dim);text-transform:uppercase}
+.lbrow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.lbrow .rank{width:26px;text-align:center;color:var(--dim);font-weight:700}
+.lbrow .pts{margin-left:auto;color:var(--gold2);font-weight:700}
+.goalbar{height:10px;border-radius:999px;background:var(--card2);border:1px solid var(--line);overflow:hidden;margin:6px 0}
+.goalbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:60;background:#1d2432;border:1px solid var(--gold);color:var(--txt);border-radius:12px;padding:10px 16px;font-size:13.5px;max-width:90vw;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.small{font-size:12.5px;color:var(--dim);line-height:1.5}
+.modgrp{margin-bottom:16px}
+.lesson{display:flex;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.lesson .dur{color:var(--dim);font-size:12px;flex:none}
+@media(min-width:700px){body{padding-bottom:20px}.tabbar{display:none}.fab{display:none}.desknav{display:flex;gap:8px;overflow-x:auto}}
+.desknav{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="emblem">JG</div>
+  <div><h1>VANTRA Community Hub</h1><div class="sub" id="whoami">The ecosystem, one place</div></div>
+  <div class="spacer"></div>
+  <div class="chip" id="profbtn" onclick="go('profile')">Sign in</div>
+</header>
+<nav class="desknav" style="padding:10px 16px;gap:8px"></nav>
+<main id="view"></main>
+<button class="fab" id="chatfab" onclick="toggleChat()" aria-label="Live chat">💬</button>
+<div class="chatdock hide" id="chatdock">
+  <div class="hd" onclick="toggleChat()"><span>Live Chat</span><span>✕</span></div>
+  <div class="chatmsgs" id="chatmsgs"></div>
+  <div class="chatinput" id="chatform">
+    <input id="chattext" placeholder="Say hi…" maxlength="500" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="btn mini" onclick="sendChat()">→</button>
+  </div>
+</div>
+<nav class="tabbar" id="tabbar"></nav>
+<script>
+const API="https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/communityApi";
+const TOKEN_KEY="vh_token", MEMBER_KEY="vh_member";
+let token=localStorage.getItem(TOKEN_KEY)||"";
+let member=null; try{member=JSON.parse(localStorage.getItem(MEMBER_KEY)||"null")}catch(e){}
+let tab="home", channel="announcements", lastChatId=null, chatOpen=false, unread=0, adminTok=localStorage.getItem("vh_admin")||"";
+const $=id=>document.getElementById(id);
+const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML};
+const fmt=t=>{if(!t)return"";const d=new Date(String(t).replace(" ","T"));return d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" · "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})};
+async function api(op,data={},tok){try{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json",...(tok?{Authorization:"Bearer "+tok}:{})},body:JSON.stringify({op,...data})});const j=await r.json();if(!j.ok&&r.status===401&&tok===token){logout()}return j}catch(e){return{ok:false,error:"Network hiccup. Try again."}}}
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3200)}
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.12,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.start();o.stop(c.currentTime+.2)}catch(e){}}
+function setHeader(){const p=$("profbtn");if(member){p.textContent=member.name.split(" ")[0];$("whoami").textContent=(member.audience||"member")+" · "+(member.points||0)+" pts"}else{p.textContent="Sign in";$("whoami").textContent="The ecosystem, one place"}}
+function logout(){token="";member=null;localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(MEMBER_KEY);setHeader();render()}
+function go(t){tab=t;render();window.scrollTo(0,0)}
+/* ---------- tabs ---------- */
+const TABS=[["home","Home","🏠"],["community","Community","💬"],["courses","Courses","🎓"],["events","Events","📅"],["guide","Guide","🤖"],["board","Ranks","🏆"]];
+function drawTabs(){const bar=$("tabbar");bar.innerHTML=TABS.map(([id,l,ic])=>`<div class="tab ${tab===id?"on":""}" onclick="go('${id}')">${ic}<br>${l}</div>`).join("")+(unread&&!chatOpen&&tab!=="community"?`<div class="dot" style="right:calc(50% - ${0}px)"></div>`:"");
+ const dn=$("desknav");dn.innerHTML=TABS.map(([id,l])=>`<div class="chip ${tab===id?"on":""}" onclick="go('${id}')">${l}</div>`).join("")+`<div class="chip ${tab==="profile"?"on":""}" onclick="go('profile')">Profile</div>`+(member&&(member.role==="admin"||member.role==="owner")||adminTok?`<div class="chip ${tab==="admin"?"on":""}" onclick="go('admin')">Admin</div>`:"")}
+/* ---------- views ---------- */
+async function render(){drawTabs();const v=$("view");
+ if(tab==="home"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("home");
+  v.innerHTML=`
+  <div class="statrow">
+    <div class="stat"><b>${j.stats.members}</b><span>Members</span></div>
+    <div class="stat"><b>${j.stats.posts}</b><span>Posts</span></div>
+    <div class="stat"><b>${j.stats.events}</b><span>Events</span></div>
+    <div class="stat"><b>${j.stats.messages}</b><span>Messages</span></div>
+  </div>
+  ${j.pinned?`<div class="card"><div class="pill">Pinned</div><div class="t" style="font-weight:700;font-size:16px;margin:4px 0">${esc(j.pinned.title)}</div><div class="small" style="color:var(--txt)">${esc(j.pinned.body)}</div></div>`:""}
+  <div class="h2">Upcoming</div>
+  ${(j.upcoming||[]).map(e=>evCard(e)).join("")||'<div class="card"><span class="small">No events scheduled yet.</span></div>'}
+  <div class="h2">Latest activity</div>
+  ${(j.recent||[]).map(p=>`<div class="post"><span class="pill ${p.channel==="wins"?"win":p.channel==="qa"?"qa":""}">${p.channel}</span><div class="t">${esc(p.title)}</div><div class="meta">${esc(p.authorName)} · ${fmt(p.createdAt)}</div></div>`).join("")||'<div class="card"><span class="small">Nothing yet — be the first to post a win.</span></div>'}
+  <p class="small" style="text-align:center;margin-top:6px">Leaderboard &amp; partners are opt-in. The Guide only cites approved sources. Built for the VANTRA ecosystem.</p>`;
+ }
+ else if(tab==="community"){const chans=[["announcements","📣"],["qa","❓"],["wins","🏆"],["ideas","💡"],["help","🆘"]];
+  v.innerHTML=`<div class="row" style="margin-bottom:10px">${chans.map(([c,i])=>`<div class="chip ${channel===c?"on":""}" onclick="setChan('${c}')">${i} ${c==="qa"?"Q&amp;A":c[0].toUpperCase()+c.slice(1)}</div>`).join("")}</div>
+  <div id="composer"></div><div id="postlist"></div>`;
+  drawComposer();loadPosts();
+ }
+ else if(tab==="courses"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("courses");const mods={};(j.courses||[]).forEach(c=>{(mods[c.module]=mods[c.module]||[]).push(c)});
+  v.innerHTML=Object.entries(mods).map(([m,cs])=>`<div class="modgrp"><div class="h2">${esc(m)}</div><div class="card">${cs.map(c=>`<div class="lesson"><div><b>${esc(c.title)}</b><div class="small">${esc(c.description)}</div>
+   <div class="row" style="margin-top:4px">${c.videoUrl?`<a class="btn mini" href="${c.videoUrl}" target="_blank" rel="noopener">${c.videoUrl.includes("youtu")?"Watch":"Open"}</a>`:""}${c.resourceUrl?`<a class="btn mini sec" href="${c.resourceUrl}" target="_blank" rel="noopener">Resource</a>`:""}</div></div><span class="dur">${c.durationMin?c.durationMin+" min":""}</span></div>`).join("")}</div></div>`).join("")||'<div class="card"><span class="small">No courses published yet.</span></div>';
+ }
+ else if(tab==="events"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("events");const now=new Date().toISOString();
+  const up=(j.events||[]).filter(e=>e.startsAt>now),past=(j.events||[]).filter(e=>e.startsAt<=now).slice(-3).reverse();
+  v.innerHTML=`<div class="h2">Upcoming</div>${up.map(e=>evCard(e)).join("")||'<div class="card"><span class="small">Nothing scheduled right now.</span></div>'}`+
+  (past.length?`<div class="h2">Recent</div>${past.map(e=>`<div class="card"><b>${esc(e.title)}</b><div class="small">${fmt(e.startsAt)}</div></div>`).join("")}`:"");
+ }
+ else if(tab==="guide"){v.innerHTML=`<div class="card"><div class="h2">VANTRA Guide</div>
+  <p class="small">Searches only approved sources and cites them. Questions it can’t answer get logged for the team.</p>
+  <input id="gq" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')askGuide()"><button class="btn" onclick="askGuide()">Ask</button></div>
+  <div id="gout"></div>`;
+ }
+ else if(tab==="board"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("leaderboard");
+  v.innerHTML=`<div class="h2">Leaderboard</div><div class="card">${(j.board||[]).length?(j.board||[]).map((m,i)=>`<div class="lbrow"><span class="rank">${i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</span><div><b>${esc(m.name)}</b><div class="small">${esc(m.audience)}</div></div><span class="pts">${m.points}</span></div>`).join(""):'<span class="small">Nobody has opted in yet. Opt in from your Profile.</span>'}</div>
+  <p class="small">${esc(j.note||"")}</p><div class="row" style="margin-top:8px"><button class="btn sec" onclick="go('profile')">Open my Profile</button></div>`;
+ }
+ else if(tab==="partners"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("partners");
+  v.innerHTML=`<div class="h2">Accountability Partners</div><div class="card">${(j.partners||[]).length?(j.partners||[]).map(p=>`<div class="post"><b>${esc(p.name)}</b> <span class="pill">${esc(p.audience)}</span><div class="small" style="margin:4px 0">Focus: ${esc(p.focusArea)||"—"}</div><div class="small">Goal: ${esc(p.partnerGoal)||"—"}</div></div>`).join(""):'<span class="small">No partners listed yet. Opt in from your Profile to be matchable.</span>'}</div>
+  <p class="small">Both fields are voluntary. Say hi in the live chat to pair up.</p><div class="row"><button class="btn sec" onclick="toggleChat(true)">Open live chat</button></div>`;
+ }
+ else if(tab==="profile"){renderProfile()}
+ else if(tab==="admin"){renderAdmin()}
+}
+function evCard(e){const d=new Date(e.startsAt);const gcal=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(e.title)}&dates=${fmtG(d)}/${fmtG(new Date(d.getTime()+(e.durationMin||60)*60000))}&details=${encodeURIComponent(e.description||"")}`;
+ return `<div class="card"><div class="row" style="align-items:flex-start"><div class="evdate"><b>${d.getDate()}</b><span>${d.toLocaleDateString("en-US",{month:"short"})}</span></div>
+ <div style="flex:1"><b>${esc(e.title)}</b><div class="small">${esc(e.description||"")}</div><div class="small" style="margin-top:3px">${fmt(e.startsAt)}${e.host?" · Host: "+esc(e.host):""} · ${e.rsvps||0} going</div></div></div>
+ <div class="row" style="margin-top:10px">${e.joinUrl?`<a class="btn mini" href="${e.joinUrl}" target="_blank" rel="noopener">Join</a>`:'<span class="small">Join link posts before the call</span>'}
+ <button class="btn mini" onclick="rsvp('${e.id}',this)">RSVP</button>
+ <a class="btn mini sec" href="${gcal}" target="_blank" rel="noopener">Google Cal</a>
+ <button class="btn mini sec" onclick="ics('${e.id}')">Apple Cal</button></div></div>`}
+function fmtG(d){return d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z"}
+function ics(id){api("events").then(j=>{const e=j.events.find(x=>x.id===id);if(!e)return;const d=new Date(e.startsAt),de=new Date(d.getTime()+(e.durationMin||60)*60000);const z=x=>x.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+ const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//VANTRA//Hub//EN","BEGIN:VEVENT","UID:"+e.id+"@vantra","DTSTAMP:"+z(new Date()),"DTSTART:"+z(d),"DTEND:"+z(de),"SUMMARY:"+e.title,"DESCRIPTION:"+(e.description||""),"END:VEVENT","END:VCALENDAR"].join("\r\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="vantra-event.ics";a.click()})}
+async function rsvp(id,btn){if(!member)return needLogin();btn.disabled=true;const j=await api("rsvpEvent",{eventId:id},token);if(j.ok){toast("You're in! +5 pts")}else{toast(j.error)}btn.disabled=false}
+/* ---------- community ---------- */
+function setChan(c){channel=c;render()}
+function drawComposer(){$("composer").innerHTML=member
+ ?`<div class="card"><label>Title</label><input id="ptitle" maxlength="200"><label>Post</label><textarea id="pbody" maxlength="20000"></textarea><button class="btn" onclick="submitPost()">Post to ${channel==="qa"?"Q&A":channel}</button></div>`
+ :`<div class="card"><span class="small">Sign in from your Profile to post, comment and chat.</span></div>`}
+async function loadPosts(){const j=await api("posts",{channel});$("postlist").innerHTML=(j.posts||[]).map(p=>postHtml(p)).join("")||'<div class="card"><span class="small">Nothing here yet.</span></div>';
+ (j.posts||[]).forEach(p=>{document.querySelectorAll('[data-load="'+p.id+'"]').forEach(el=>loadComments(p.id,el))})}
+function postHtml(p){return `<div class="post" id="p_${p.id}"><div class="row"><span class="pill ${p.channel==="wins"?"win":p.channel==="qa"?"qa":""}">${p.channel}</span>${p.pinned?'<span class="pill">Pinned</span>':""}${p.resolved?'<span class="pill res">Answered</span>':""}</div>
+ <div class="t">${esc(p.title)}</div><div class="small" style="color:var(--txt);white-space:pre-wrap">${esc(p.body)}</div>
+ <div class="meta">${esc(p.authorName)} · ${fmt(p.createdAt)}</div>
+ <div class="row"><span class="mini-link" onclick="like('${p.id}',this)">▲ ${p.likes||0}</span><span class="mini-link" data-open="${p.id}" onclick="loadComments('${p.id}',null,true)">Comments</span>${(p.channel==="qa"&&!p.resolved&&member)?"<span class='mini-link' onclick='resolve(\""+p.id+"\")'>Mark answered</span>":""}</div>
+ <div data-load="${p.id}" class="hide"></div></div>`}
+async function loadComments(id,el,open){const box=document.querySelector('[data-load="'+id+'"]');if(!box)return;if(open){box.classList.toggle("hide");if(!box.classList.contains("hide")&&!box.innerHTML){const j=await api("post",{id});box.innerHTML=j.comments.map(c=>`<div class="cmt"><span class="who">${esc(c.authorName)}</span><br>${esc(c.body)}</div>`).join("")+(member?`<div class="row" style="margin-top:6px"><input id="ci_${id}" placeholder="Add a comment…" maxlength="5000" style="margin:0;flex:1"><button class="btn mini" onclick="comment('${id}')">→</button></div>`:"")}}}
+async function comment(id){const v=$("ci_"+id).value.trim();if(!v)return;const j=await api("addComment",{postId:id,body:v},token);if(j.ok){$("ci_"+id).value="";const box=document.querySelector('[data-load="'+id+'"]');box.innerHTML="";const o=document.querySelector('[data-open="'+id+'"]');if(o){}const j2=await api("post",{id});box.innerHTML=j2.comments.map(c=>`<div class="cmt"><span class="who">${esc(c.authorName)}</span><br>${esc(c.body)}</div>`).join("")+`<div class="row" style="margin-top:6px"><input id="ci_${id}" placeholder="Add a comment…" maxlength="5000" style="margin:0;flex:1"><button class="btn mini" onclick="comment('${id}')">→</button></div>`;toast("Comment added · +2 pts")}else toast(j.error)}
+async function like(id,el){if(!member)return needLogin();const j=await api("reactPost",{postId:id},token);if(j.ok){el.textContent="▲ "+j.likes}}
+async function resolve(id){const j=await api("markResolved",{postId:id},token);if(j.ok){render()}else toast(j.error)}
+async function submitPost(){const t=$("ptitle").value.trim(),b=$("pbody").value.trim();if(!t||!b)return toast("Title and body, please");const j=await api("createPost",{channel,title:t,body:b},token);if(j.ok){toast("Posted!");render()}else toast(j.error)}
+function needLogin(){toast("Sign in first (Profile)");go("profile")}
+/* ---------- chat ---------- */
+function toggleChat(force){chatOpen=force===true?true:!chatOpen;if(chatOpen){unread=0;drawTabs()}$("chatdock").classList.toggle("hide",!chatOpen);if(chatOpen){pollChat(true);$("chatmsgs").scrollTop=1e6;if(!member){$("chatform").innerHTML='<span class="small" style="padding:6px">Sign in (Profile) to chat.</span>'}else{$("chatform").innerHTML='<input id="chattext" placeholder="Say hi…" maxlength="500" onkeydown="if(event.key===\'Enter\')sendChat()"><button class="btn mini" onclick="sendChat()">→</button>'}}}
+async function pollChat(first){const j=await api("chat");if(!j.ok)return;const ms=j.messages||[];if(!first&&ms.length&&ms[ms.length-1].id!==lastChatId){beep();unread++;drawTabs();if(!chatOpen)toast("New message in live chat")}
+ lastChatId=ms.length?ms[ms.length-1].id:null;$("chatmsgs").innerHTML=ms.map(m=>`<div class="cmsg"><span class="who">${esc(m.authorName)}</span> · <span style="color:var(--dim);font-size:10.5px">${fmt(m.createdAt)}</span><br>${esc(m.body)}</div>`).join("");$("chatmsgs").scrollTop=1e6}
+setInterval(()=>{if(tab==="community")pollChat(false)},8000);
+async function sendChat(){const i=$("chattext");if(!i)return;const v=i.value.trim();if(!v)return;if(!member)return needLogin();const j=await api("sendChat",{body:v},token);if(j.ok){i.value="";pollChat(true)}else toast(j.error)}
+/* ---------- guide ---------- */
+async function askGuide(){const q=$("gq").value.trim();if(!q)return;const out=$("gout");out.innerHTML='<div class="card"><span class="small">Searching approved sources…</span></div>';const j=await api("guide",{q});
+ out.innerHTML=j.answered?(j.results||[]).map(r=>`<div class="card"><div class="pill">Source</div><b>${esc(r.title)}</b> <span class="small">${esc(r.category)}</span><div class="small" style="color:var(--txt);margin:6px 0">…${esc(r.snippet)}…</div>${r.sourceUrl?`<a class="small" href="${r.sourceUrl}" target="_blank" rel="noopener">Open source →</a>`:""}</div>`).join("")+`<p class="small">The Guide searches only approved sources; nothing else.</p>`
+ :`<div class="card"><span class="pill" style="background:rgba(255,107,107,.12);color:var(--red);border-color:rgba(255,107,107,.3)">Not in the library</span><p class="small" style="color:var(--txt);margin-top:6px">${esc(j.note)}</p></div>`}
+/* ---------- profile ---------- */
+async function renderProfile(){const v=$("view");
+ if(!member){v.innerHTML=`<div class="card"><div class="h2">Join the community</div>
+  <label>Name</label><input id="sf_name" maxlength="100" placeholder="Your name">
+  <label>Email</label><input id="sf_email" type="email" maxlength="200" placeholder="you@email.com">
+  <label>I'm mostly here as…</label><select id="sf_aud"><option value="ibo">Partner / IBO</option><option value="client">Client</option><option value="fan">Fan / creative</option><option value="team">Team</option></select>
+  <button class="btn" onclick="doSignup()">Sign up</button>
+  <p class="small" style="margin-top:8px">Already a member? Same form — your email brings you back.</p></div>`;return}
+ const m=member;const prog=Math.round(m.goalProgress||0);
+ v.innerHTML=`<div class="h2">My Profile</div>
+ <div class="card"><div class="row"><b>${esc(m.name)}</b><span class="pill">${esc(m.audience)}</span><span class="pts" style="margin-left:auto;color:var(--gold2);font-weight:700">${m.points} pts</span></div>
+ <div class="small" style="margin-top:6px">Member since ${fmt(m.joinedAt)}</div>
+ <label style="margin-top:10px">Bio</label><textarea id="pr_bio" maxlength="500" placeholder="One line about you">${esc(m.bio||"")}</textarea>
+ <button class="btn mini" onclick="saveProfile()">Save bio</button>
+ <div class="row" style="margin-top:10px"><label style="margin:0"><input type="checkbox" id="pr_lb" ${m.optInLeaderboard?"checked":""} style="width:auto;margin:0 6px 0 0">Show me on the leaderboard</label></div>
+ <div class="row"><label style="margin:0"><input type="checkbox" id="pr_pt" ${m.optInPartners?"checked":""} style="width:auto;margin:0 6px 0 0">List me for accountability partners</label></div>
+ <button class="btn mini" style="margin-top:8px" onclick="saveProfile()">Save choices</button></div>
+ <div class="card"><div class="h2">My Goal</div>
+ <label>What are you going after?</label><input id="pr_goal" maxlength="300" value="${esc(m.goalText||"")}" placeholder="e.g. Close two EC City deals this month">
+ <div class="goalbar"><i style="width:${prog}%"></i></div><span class="small">${prog}% there — move the slider as you make progress</span>
+ <input type="range" id="pr_prog" min="0" max="100" value="${prog}" style="padding:0;margin:8px 0" oninput="$('prog_lbl').textContent=this.value+'%'"><span class="small" id="prog_lbl">${prog}%</span>
+ <button class="btn mini" onclick="saveProfile()">Save goal</button></div>
+ <div class="card"><div class="h2">Partner matching</div>
+ <label>Focus area</label><input id="pr_focus" maxlength="100" value="${esc(m.focusArea||"")}" placeholder="e.g. Beliefs, content, EC City">
+ <label>Partner goal</label><input id="pr_pgoal" maxlength="300" value="${esc(m.partnerGoal||"")}" placeholder="What an accountability partner should push you on">
+ <button class="btn mini" onclick="saveProfile()">Save</button></div>
+ <button class="btn sec" onclick="logout()">Log out</button>`}
+async function saveProfile(){const patch={bio:$("pr_bio").value,goalText:$("pr_goal").value,goalProgress:parseInt($("pr_prog").value),focusArea:$("pr_focus").value,partnerGoal:$("pr_pgoal").value,optInLeaderboard:$("pr_lb").checked,optInPartners:$("pr_pt").checked};
+ const j=await api("setProfile",patch,token);if(j.ok){member=j.member;localStorage.setItem(MEMBER_KEY,JSON.stringify(member));setHeader();toast("Saved")}else toast(j.error)}
+async function doSignup(){const name=$("sf_name").value.trim(),email=$("sf_email").value.trim(),audience=$("sf_aud").value;
+ if(!name||!email)return toast("Name and email, please");const j=await api("signup",{name,email,audience});
+ if(j.ok){token=j.token;member=j.member;localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(MEMBER_KEY,JSON.stringify(member));setHeader();toast(j.note);render()}else toast(j.error)}
+/* ---------- admin ---------- */
+function renderAdmin(){const v=$("view");
+ const st=sessionStorage.getItem("vh_setup");
+ if(st&&!adminTok){v.innerHTML=`<div class="card"><div class="h2">Admin — first-time setup</div><label>Choose your admin PIN (4-8 digits)</label><input id="ad_newpin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"><button class="btn" onclick="adSetup()">Set PIN</button><p class="small" style="margin-top:8px">This one-time link claims the admin seat for the team. It expires 7 days after it was issued.</p></div>`;return}
+ if(!adminTok){v.innerHTML=`<div class="card"><div class="h2">Admin</div><label>PIN</label><input id="ad_pin" type="password" inputmode="numeric" maxlength="12" placeholder="••••"><button class="btn" onclick="adLogin()">Log in</button><p class="small" style="margin-top:8px">Team only: publishing courses, events and knowledge sources.</p></div>`;return}
+ v.innerHTML=`<div class="h2">Admin Console</div>
+ <div class="card"><div class="h2" style="margin-top:0">Publish a course</div>
+ <label>Module</label><input id="ac_mod" placeholder="e.g. LTD / Amway"><label>Title</label><input id="ac_title"><label>Description</label><input id="ac_desc"><label>Video URL (https)</label><input id="ac_vid" placeholder="https://…"><label>Resource URL (https)</label><input id="ac_res" placeholder="https://…"><label>Minutes</label><input id="ac_min" type="number" value="20"><button class="btn mini" onclick="adDo('createCourse',{module:$('ac_mod').value,title:$('ac_title').value,description:$('ac_desc').value,videoUrl:$('ac_vid').value,resourceUrl:$('ac_res').value,durationMin:parseInt($('ac_min').value)},'Course published')">Publish</button></div>
+ <div class="card"><div class="h2" style="margin-top:0">Create an event</div>
+ <label>Title</label><input id="ae_title"><label>Starts (your time)</label><input id="ae_start" type="datetime-local"><label>Join URL (https)</label><input id="ae_url" placeholder="Leave empty to post link later"><label>Host</label><input id="ae_host"><button class="btn mini" onclick="adDo('createEvent',{title:$('ae_title').value,startsAt:new Date($('ae_start').value).toISOString(),joinUrl:$('ae_url').value,host:$('ae_host').value},'Event created')">Create</button></div>
+ <div class="card"><div class="h2" style="margin-top:0">Add knowledge source</div><label>Title</label><input id="ak_title"><label>Category</label><input id="ak_cat" placeholder="e.g. Community Hub"><label>Body</label><textarea id="ak_body"></textarea><label>Source URL (https, optional)</label><input id="ak_url"><button class="btn mini" onclick="adDo('addKnowledge',{title:$('ak_title').value,category:$('ak_cat').value,body:$('ak_body').value,sourceUrl:$('ak_url').value},'Added to approved library')">Add</button></div>
+ <div class="card"><div class="h2" style="margin-top:0">Stats</div><span class="small" id="ad_stats">Loading…</span></div>
+ <button class="btn sec" onclick="adminTok='';localStorage.removeItem('vh_admin');render()">Log out of admin</button>`;
+ api("adminStats",{},adminTok).then(j=>{if(!j.ok){adminTok="";localStorage.removeItem("vh_admin");toast(j.error);render();return}$("ad_stats").textContent=Object.entries(j.stats).map(([k,v])=>k+": "+v).join(" · ")})}
+async function adSetup(){const pin=$("ad_newpin").value.trim();const st=sessionStorage.getItem("vh_setup");const j=await api("adminSetup",{setupToken:st,pin});if(j.ok){sessionStorage.removeItem("vh_setup");toast("PIN set. Log in with it.");render()}else toast(j.error)}
+async function adLogin(){const pin=$("ad_pin").value.trim();const j=await api("adminLogin",{pin,deviceLabel:navigator.userAgent.slice(0,40)});if(j.ok){adminTok=j.token;localStorage.setItem("vh_admin",adminTok);toast("Admin ready");render()}else toast(j.error)}
+async function adDo(op,data,msg){const j=await api(op,data,adminTok);if(j.ok){toast(msg)}else{toast(j.error);if(j.error&&j.error.includes("Admin session")){adminTok="";localStorage.removeItem("vh_admin")}}}
+/* ---------- boot ---------- */
+const qs=new URLSearchParams(location.search);
+if(qs.get("setup")&&!localStorage.getItem("vh_admin")){tab="admin";sessionStorage.setItem("vh_setup",qs.get("setup"))}
+setHeader();render();
+
+</script>
+</body>
+</html>
