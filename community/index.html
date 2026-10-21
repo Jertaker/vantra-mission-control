@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0e14">
-<title>VANTRA Community Hub</title>
+<title>Jertaker Ecosystem</title>
 <link rel="icon" href="../favicon.png">
 <style>
 :root{
@@ -84,7 +84,7 @@ label{font-size:12px;color:var(--dim);display:block;margin:4px 0 4px}
 <body>
 <header>
   <div class="emblem">JG</div>
-  <div><h1>VANTRA Community Hub</h1><div class="sub" id="whoami">The ecosystem, one place</div></div>
+  <div><h1>Jertaker Ecosystem</h1><div class="sub" id="whoami">One place for everything</div></div>
   <div class="spacer"></div>
   <div class="chip" id="profbtn" onclick="go('profile')">Sign in</div>
 </header>
@@ -139,7 +139,7 @@ async function render(){drawTabs();const v=$("view");
  }
  else if(tab==="events"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("events");const now=new Date().toISOString();
   const up=(j.events||[]).filter(e=>e.startsAt>now),past=(j.events||[]).filter(e=>e.startsAt<=now).slice(-3).reverse();
-  v.innerHTML=`<div class="h2">Upcoming</div>${up.map(e=>evCard(e)).join("")||'<div class="card"><span class="small">Nothing scheduled right now.</span></div>'}`+
+  v.innerHTML=`<div class="h2">Upcoming</div>${up.map(e=>evCard(e)).join("")||'<div class="card"><span class="small">No events yet.</span></div>'}`+
   (past.length?`<div class="h2">Recent</div>${past.map(e=>`<div class="card"><b>${esc(e.title)}</b><div class="small">${fmt(e.startsAt)}</div></div>`).join("")}`:"");
  }
  else if(tab==="guide"){v.innerHTML=`<div class="card"><div class="h2">VANTRA Guide</div>
@@ -161,8 +161,9 @@ function paintHome(j){
  const v=$("view");if(!j||!j.stats){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';return}
  v.innerHTML=`
  <div class="card" style="text-align:center;padding:20px 14px">
-   <div style="width:74px;height:74px;margin:0 auto 10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7e28b,var(--gold) 55%,#8a6d1f);display:flex;align-items:center;justify-content:center;font-weight:800;color:#14100a;font-size:26px;box-shadow:0 0 24px rgba(212,175,55,.45)">JG</div>
-   <b style="font-size:17px">Welcome to the community</b>
+   <div style="width:64px;height:64px;margin:0 auto 6px;border-radius:50%;background:#d4af37;color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;border:2px solid #f5d88c;box-shadow:0 0 14px rgba(212,175,55,.85),0 0 30px rgba(138,43,226,.7)">JG</div>
+   <div style="font-size:9px;letter-spacing:3px;color:#f5d88c;margin-bottom:6px;text-shadow:0 0 6px #000">JERTAKER ECOSYSTEM</div>
+   <b style="font-size:17px">Welcome to the Jertaker Ecosystem</b>
    <div class="small" style="margin-top:4px">Updates, courses, events and people — one place. Say hi in the live chat.</div>
  </div>
  <div class="statrow">
@@ -173,7 +174,7 @@ function paintHome(j){
  </div>
  ${j.pinned?`<div class="card"><div class="pill">Pinned</div><div class="t" style="font-weight:700;font-size:16px;margin:4px 0">${esc(j.pinned.title)}</div><div class="small" style="color:var(--txt);white-space:pre-wrap">${esc(j.pinned.body)}</div><div class="meta" style="font-size:11.5px;color:var(--dim);margin-top:6px">${esc(j.pinned.authorName)} · ${fmt(j.pinned.createdAt)}</div></div>`:""}
  <div class="h2">Upcoming</div>
- ${(j.upcoming||[]).map(e=>evCard(e)).join("")||'<div class="card"><span class="small">No events scheduled yet.</span></div>'}
+ ${(j.upcoming||[]).map(e=>evCard(e)).join("")||'<div class="card"><span class="small">No events yet.</span></div>'}
  <div class="h2">Latest activity</div>
  ${(j.recent||[]).map(p=>`<div class="post"><span class="pill ${p.channel==="wins"?"win":p.channel==="qa"?"qa":""}">${p.channel}</span><div class="t">${esc(p.title)}</div><div class="meta" style="font-size:11.5px;color:var(--dim)">${esc(p.authorName)} · ${fmt(p.createdAt)}</div></div>`).join("")||'<div class="card"><span class="small">Nothing yet — be the first to post a win.</span></div>'}
  <div class="h2">More</div>
