@@ -116,33 +116,25 @@ function setHeader(){const p=$("profbtn");if(member){p.textContent=member.name.s
 function logout(){token="";member=null;localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(MEMBER_KEY);setHeader();render()}
 function go(t){tab=t;render();window.scrollTo(0,0)}
 /* ---------- tabs ---------- */
-const TABS=[["home","Home","🏠"],["community","Community","💬"],["courses","Courses","🎓"],["events","Events","📅"],["guide","Guide","🤖"],["board","Ranks","🏆"]];
+const TABS=[["home","Home","🏠"],["chub","Customer","⭐"],["community","Community","💬"],["courses","Courses","🎓"],["events","Events","📅"],["guide","Guide","🤖"]];
 function drawTabs(){const bar=$("tabbar");bar.innerHTML=TABS.map(([id,l,ic])=>`<div class="tab ${tab===id?"on":""}" onclick="go('${id}')">${ic}<br>${l}</div>`).join("")+(unread&&!chatOpen&&tab!=="community"?`<div class="dot" style="right:calc(50% - ${0}px)"></div>`:"");
  const dn=$("desknav");dn.innerHTML=TABS.map(([id,l])=>`<div class="chip ${tab===id?"on":""}" onclick="go('${id}')">${l}</div>`).join("")+`<div class="chip ${tab==="profile"?"on":""}" onclick="go('profile')">Profile</div>`}
 /* ---------- views ---------- */
 async function render(){drawTabs();const v=$("view");
- if(tab==="home"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("home");
-  v.innerHTML=`
-  <div class="statrow">
-    <div class="stat"><b>${j.stats.members}</b><span>Members</span></div>
-    <div class="stat"><b>${j.stats.posts}</b><span>Posts</span></div>
-    <div class="stat"><b>${j.stats.events}</b><span>Events</span></div>
-    <div class="stat"><b>${j.stats.messages}</b><span>Messages</span></div>
-  </div>
-  ${j.pinned?`<div class="card"><div class="pill">Pinned</div><div class="t" style="font-weight:700;font-size:16px;margin:4px 0">${esc(j.pinned.title)}</div><div class="small" style="color:var(--txt)">${esc(j.pinned.body)}</div></div>`:""}
-  <div class="h2">Upcoming</div>
-  ${(j.upcoming||[]).map(e=>evCard(e)).join("")||'<div class="card"><span class="small">No events scheduled yet.</span></div>'}
-  <div class="h2">Latest activity</div>
-  ${(j.recent||[]).map(p=>`<div class="post"><span class="pill ${p.channel==="wins"?"win":p.channel==="qa"?"qa":""}">${p.channel}</span><div class="t">${esc(p.title)}</div><div class="meta">${esc(p.authorName)} · ${fmt(p.createdAt)}</div></div>`).join("")||'<div class="card"><span class="small">Nothing yet — be the first to post a win.</span></div>'}
-  <p class="small" style="text-align:center;margin-top:6px">Leaderboard &amp; partners are opt-in. The Guide only cites approved sources. Built for the VANTRA ecosystem.</p>`;
+ if(tab==="home"){
+  let cached=null; try{cached=JSON.parse(localStorage.getItem("vh_home")||"null")}catch(e){}
+  if(cached&&cached.stats){paintHome(cached)}else{v.innerHTML='<div class="card"><span class="small">Loading…</span></div>'}
+  const j=await api("home");
+  if(j&&j.stats){try{localStorage.setItem("vh_home",JSON.stringify(j))}catch(e){};paintHome(j)}
  }
+ else if(tab==="chub"){await renderChub(v)}
  else if(tab==="community"){const chans=[["announcements","📣"],["qa","❓"],["wins","🏆"],["ideas","💡"],["help","🆘"]];
   v.innerHTML=`<div class="row" style="margin-bottom:10px">${chans.map(([c,i])=>`<div class="chip ${channel===c?"on":""}" onclick="setChan('${c}')">${i} ${c==="qa"?"Q&amp;A":c[0].toUpperCase()+c.slice(1)}</div>`).join("")}</div>
   <div id="composer"></div><div id="postlist"></div>`;
   drawComposer();loadPosts();
  }
- else if(tab==="courses"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("courses");const mods={};(j.courses||[]).forEach(c=>{(mods[c.module]=mods[c.module]||[]).push(c)});
-  v.innerHTML=Object.entries(mods).map(([m,cs])=>`<div class="modgrp"><div class="h2">${esc(m)}</div><div class="card">${cs.map(c=>`<div class="lesson"><div><b>${esc(c.title)}</b><div class="small">${esc(c.description)}</div>
+ else if(tab==="courses"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("courses",{},token);const mods={};(j.courses||[]).forEach(c=>{(mods[c.module]=mods[c.module]||[]).push(c)});
+  v.innerHTML=Object.entries(mods).map(([m,cs])=>`<div class="modgrp"><div class="h2">${esc(m)}</div><div class="card">${cs.map(c=>`<div class="lesson"><div><b>${esc(c.title)}</b>${c.audience==="customer"?' <span class="pill">Customer</span>':""}<div class="small">${esc(c.description)}</div>
    <div class="row" style="margin-top:4px">${c.videoUrl?`<a class="btn mini" href="${c.videoUrl}" target="_blank" rel="noopener">${c.videoUrl.includes("youtu")?"Watch":"Open"}</a>`:""}${c.resourceUrl?`<a class="btn mini sec" href="${c.resourceUrl}" target="_blank" rel="noopener">Resource</a>`:""}</div></div><span class="dur">${c.durationMin?c.durationMin+" min":""}</span></div>`).join("")}</div></div>`).join("")||'<div class="card"><span class="small">No courses published yet.</span></div>';
  }
  else if(tab==="events"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("events");const now=new Date().toISOString();
@@ -165,6 +157,61 @@ async function render(){drawTabs();const v=$("view");
  }
  else if(tab==="profile"){renderProfile()}
 }
+function paintHome(j){
+ const v=$("view");if(!j||!j.stats){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';return}
+ v.innerHTML=`
+ <div class="card" style="text-align:center;padding:20px 14px">
+   <div style="width:74px;height:74px;margin:0 auto 10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7e28b,var(--gold) 55%,#8a6d1f);display:flex;align-items:center;justify-content:center;font-weight:800;color:#14100a;font-size:26px;box-shadow:0 0 24px rgba(212,175,55,.45)">JG</div>
+   <b style="font-size:17px">Welcome to the community</b>
+   <div class="small" style="margin-top:4px">Updates, courses, events and people — one place. Say hi in the live chat.</div>
+ </div>
+ <div class="statrow">
+   <div class="stat"><b>${j.stats.members}</b><span>Members</span></div>
+   <div class="stat"><b>${j.stats.posts}</b><span>Posts</span></div>
+   <div class="stat"><b>${j.stats.events}</b><span>Events</span></div>
+   <div class="stat"><b>${j.stats.messages}</b><span>Messages</span></div>
+ </div>
+ ${j.pinned?`<div class="card"><div class="pill">Pinned</div><div class="t" style="font-weight:700;font-size:16px;margin:4px 0">${esc(j.pinned.title)}</div><div class="small" style="color:var(--txt);white-space:pre-wrap">${esc(j.pinned.body)}</div><div class="meta" style="font-size:11.5px;color:var(--dim);margin-top:6px">${esc(j.pinned.authorName)} · ${fmt(j.pinned.createdAt)}</div></div>`:""}
+ <div class="h2">Upcoming</div>
+ ${(j.upcoming||[]).map(e=>evCard(e)).join("")||'<div class="card"><span class="small">No events scheduled yet.</span></div>'}
+ <div class="h2">Latest activity</div>
+ ${(j.recent||[]).map(p=>`<div class="post"><span class="pill ${p.channel==="wins"?"win":p.channel==="qa"?"qa":""}">${p.channel}</span><div class="t">${esc(p.title)}</div><div class="meta" style="font-size:11.5px;color:var(--dim)">${esc(p.authorName)} · ${fmt(p.createdAt)}</div></div>`).join("")||'<div class="card"><span class="small">Nothing yet — be the first to post a win.</span></div>'}
+ <div class="h2">More</div>
+ <div class="row"><div class="chip" onclick="go('board')">🏆 Leaderboard</div><div class="chip" onclick="go('partners')">🤝 Partners</div><div class="chip" onclick="go('profile')">👤 ${member?esc(member.name.split(" ")[0]):"Sign in / join"}</div></div>
+ <div class="h2">Coming soon</div>
+ <div class="card"><b>🎟 Fan Hub</b><div class="small" style="margin-top:3px">A dedicated space for fans — content, drops and community moments. In the works.</div></div>
+ <div class="card"><b>🚀 Transformation Hub</b><div class="small" style="margin-top:3px">The next level of the journey — training and resources for people ready to go further. In the works.</div></div>
+ <p class="small" style="text-align:center;margin-top:6px">Leaderboard &amp; partners are opt-in. The Guide only cites approved sources.</p>`;
+}
+async function renderChub(v){
+ const isCust=member&&(member.audience==="customer"||member.audience==="team"||member.role==="admin"||member.role==="owner"||member.role==="moderator");
+ if(!isCust){
+  v.innerHTML=`
+  <div class="card" style="text-align:center;padding:24px 16px">
+    <div class="pill" style="margin-bottom:8px;display:inline-block">Customer Hub</div>
+    <b style="font-size:17px">A dedicated section for customers</b>
+    <div class="small" style="margin-top:6px">Customer updates, videos, resources and success stories live here. Access comes with being a customer — if that's you, sign in with the email your invite went to, or ask the team.</div>
+    ${member?"":'<div class="row" style="margin-top:12px"><button class="btn mini" onclick="go(\'profile\')">Sign in</button></div>'}
+  </div>
+  <p class="small" style="text-align:center">Fan Hub and Transformation Hub are coming soon.</p>`;
+  return;
+ }
+ v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';
+ const [up, st, cj]=await Promise.all([api("posts",{channel:"customers"},token),api("posts",{channel:"success"},token),api("courses",{},token)]);
+ const vids=(cj.courses||[]).filter(c=>c.audience==="customer");
+ v.innerHTML=`
+ <div class="h2">Customer Hub</div>
+ <div class="card"><b>Customer Updates</b><div class="small" style="margin-top:3px">What's new, straight from the team.</div></div>
+ ${(up.posts||[]).map(p=>`<div class="post"><div class="t">${esc(p.title)}</div><div class="small" style="color:var(--txt);white-space:pre-wrap">${esc(p.body)}</div><div class="meta" style="font-size:11.5px;color:var(--dim);margin-top:6px">${esc(p.authorName)} · ${fmt(p.createdAt)}</div></div>`).join("")||'<div class="card"><span class="small">No updates yet.</span></div>'}
+ <div class="h2">Videos &amp; Content</div>
+ ${vids.length?`<div class="card">${vids.map(c=>`<div class="lesson"><div><b>${esc(c.title)}</b>${c.audience==="customer"?' <span class="pill">Customer</span>':""}<div class="small">${esc(c.description)}</div><div class="row" style="margin-top:4px">${c.videoUrl?`<a class="btn mini" href="${c.videoUrl}" target="_blank" rel="noopener">Watch</a>`:""}${c.resourceUrl?`<a class="btn mini sec" href="${c.resourceUrl}" target="_blank" rel="noopener">Resource</a>`:""}</div></div><span class="dur">${c.durationMin?c.durationMin+" min":""}</span></div>`).join("")}</div>`:'<div class="card"><span class="small">Customer videos land here as the team adds them.</span></div>'}
+ <div class="h2">Success Stories</div>
+ ${(st.posts||[]).map(p=>`<div class="post"><span class="pill win">Success</span><div class="t">${esc(p.title)}</div><div class="small" style="color:var(--txt);white-space:pre-wrap">${esc(p.body)}</div><div class="meta" style="font-size:11.5px;color:var(--dim);margin-top:6px">${esc(p.authorName)} · ${fmt(p.createdAt)}</div></div>`).join("")||'<div class="card"><span class="small">Be the first — share a result you are proud of.</span><div class="row" style="margin-top:8px"><button class="btn mini" onclick="scToggle()">Share a result</button></div><div id="scwrap" class="hide" style="margin-top:8px"><label>Title</label><input id="sc_title" maxlength="200"><label>Your result</label><textarea id="sc_body" maxlength="5000"></textarea><button class="btn mini" onclick="submitSuccess()">Post</button></div></div>'}
+ <div class="h2">Community</div>
+ <div class="card"><div class="small">Ask questions, share wins, talk to other members.</div><div class="row" style="margin-top:8px"><button class="btn mini" onclick="go('community')">Open Community</button><button class="btn mini sec" onclick="toggleChat(true)">Live chat</button></div></div>`;
+}
+function scToggle(){$("scwrap").classList.toggle("hide")}
+async function submitSuccess(){const t=$("sc_title").value.trim(),b=$("sc_body").value.trim();if(!t||!b)return toast("Title and story, please");const j=await api("createPost",{channel:"success",title:t,body:b},token);if(j.ok){toast("Shared! Thank you.");render()}else toast(j.error)}
 function evCard(e){const d=new Date(e.startsAt);const gcal=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(e.title)}&dates=${fmtG(d)}/${fmtG(new Date(d.getTime()+(e.durationMin||60)*60000))}&details=${encodeURIComponent(e.description||"")}`;
  return `<div class="card"><div class="row" style="align-items:flex-start"><div class="evdate"><b>${d.getDate()}</b><span>${d.toLocaleDateString("en-US",{month:"short"})}</span></div>
  <div style="flex:1"><b>${esc(e.title)}</b><div class="small">${esc(e.description||"")}</div><div class="small" style="margin-top:3px">${fmt(e.startsAt)}${e.host?" · Host: "+esc(e.host):""} · ${e.rsvps||0} going</div></div></div>
@@ -175,7 +222,7 @@ function evCard(e){const d=new Date(e.startsAt);const gcal=`https://calendar.goo
 function fmtG(d){return d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z"}
 function ics(id){api("events").then(j=>{const e=j.events.find(x=>x.id===id);if(!e)return;const d=new Date(e.startsAt),de=new Date(d.getTime()+(e.durationMin||60)*60000);const z=x=>x.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//VANTRA//Hub//EN","BEGIN:VEVENT","UID:"+e.id+"@vantra","DTSTAMP:"+z(new Date()),"DTSTART:"+z(d),"DTEND:"+z(de),"SUMMARY:"+e.title,"DESCRIPTION:"+(e.description||""),"END:VEVENT","END:VCALENDAR"].join("\r\n");
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="vantra-event.ics";a.click()})}
+ const a=document.createElement("a");a.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);a.download="vantra-event.ics";document.body.appendChild(a);a.click();a.remove()})}
 async function rsvp(id,btn){if(!member)return needLogin();btn.disabled=true;const j=await api("rsvpEvent",{eventId:id},token);if(j.ok){toast("You're in! +5 pts")}else{toast(j.error)}btn.disabled=false}
 /* ---------- community ---------- */
 function setChan(c){channel=c;render()}
@@ -210,7 +257,7 @@ async function renderProfile(){const v=$("view");
  if(!member){v.innerHTML=`<div class="card"><div class="h2">Join the community</div>
   <label>Name</label><input id="sf_name" maxlength="100" placeholder="Your name">
   <label>Email</label><input id="sf_email" type="email" maxlength="200" placeholder="you@email.com">
-  <label>I'm mostly here as…</label><select id="sf_aud"><option value="ibo">Partner / IBO</option><option value="client">Client</option><option value="fan">Fan / creative</option><option value="team">Team</option></select>
+  <label>I'm mostly here as…</label><select id="sf_aud"><option value="customer">Customer</option><option value="student">Student / Mentee</option><option value="friend">Friend / Supporter</option><option value="team">Team</option></select>
   <button class="btn" onclick="doSignup()">Sign up</button>
   <p class="small" style="margin-top:8px">Already a member? Same form — your email brings you back.</p></div>`;return}
  const m=member;const prog=Math.round(m.goalProgress||0);
@@ -236,7 +283,7 @@ async function saveProfile(){const patch={bio:$("pr_bio").value,goalText:$("pr_g
  const j=await api("setProfile",patch,token);if(j.ok){member=j.member;localStorage.setItem(MEMBER_KEY,JSON.stringify(member));setHeader();toast("Saved")}else toast(j.error)}
 async function doSignup(){const name=$("sf_name").value.trim(),email=$("sf_email").value.trim(),audience=$("sf_aud").value;
  if(!name||!email)return toast("Name and email, please");const j=await api("signup",{name,email,audience});
- if(j.ok){token=j.token;member=j.member;localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(MEMBER_KEY,JSON.stringify(member));setHeader();toast(j.note);render()}else toast(j.error)}
+ if(j.ok){token=j.token;member=j.member;localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(MEMBER_KEY,JSON.stringify(member));setHeader();toast(j.note);tab=member.audience==="customer"?"chub":"home";render()}else toast(j.error)}
 /* ---------- boot ---------- */
 setHeader();render();
 
