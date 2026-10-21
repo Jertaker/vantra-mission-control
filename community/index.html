@@ -105,7 +105,7 @@ const API="https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/commun
 const TOKEN_KEY="vh_token", MEMBER_KEY="vh_member";
 let token=localStorage.getItem(TOKEN_KEY)||"";
 let member=null; try{member=JSON.parse(localStorage.getItem(MEMBER_KEY)||"null")}catch(e){}
-let tab="home", channel="announcements", lastChatId=null, chatOpen=false, unread=0, adminTok=localStorage.getItem("vh_admin")||"";
+let tab="home", channel="announcements", lastChatId=null, chatOpen=false, unread=0;
 const $=id=>document.getElementById(id);
 const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML};
 const fmt=t=>{if(!t)return"";const d=new Date(String(t).replace(" ","T"));return d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" · "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})};
@@ -118,7 +118,7 @@ function go(t){tab=t;render();window.scrollTo(0,0)}
 /* ---------- tabs ---------- */
 const TABS=[["home","Home","🏠"],["community","Community","💬"],["courses","Courses","🎓"],["events","Events","📅"],["guide","Guide","🤖"],["board","Ranks","🏆"]];
 function drawTabs(){const bar=$("tabbar");bar.innerHTML=TABS.map(([id,l,ic])=>`<div class="tab ${tab===id?"on":""}" onclick="go('${id}')">${ic}<br>${l}</div>`).join("")+(unread&&!chatOpen&&tab!=="community"?`<div class="dot" style="right:calc(50% - ${0}px)"></div>`:"");
- const dn=$("desknav");dn.innerHTML=TABS.map(([id,l])=>`<div class="chip ${tab===id?"on":""}" onclick="go('${id}')">${l}</div>`).join("")+`<div class="chip ${tab==="profile"?"on":""}" onclick="go('profile')">Profile</div>`+(member&&(member.role==="admin"||member.role==="owner")||adminTok?`<div class="chip ${tab==="admin"?"on":""}" onclick="go('admin')">Admin</div>`:"")}
+ const dn=$("desknav");dn.innerHTML=TABS.map(([id,l])=>`<div class="chip ${tab===id?"on":""}" onclick="go('${id}')">${l}</div>`).join("")+`<div class="chip ${tab==="profile"?"on":""}" onclick="go('profile')">Profile</div>`}
 /* ---------- views ---------- */
 async function render(){drawTabs();const v=$("view");
  if(tab==="home"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("home");
@@ -164,7 +164,6 @@ async function render(){drawTabs();const v=$("view");
   <p class="small">Both fields are voluntary. Say hi in the live chat to pair up.</p><div class="row"><button class="btn sec" onclick="toggleChat(true)">Open live chat</button></div>`;
  }
  else if(tab==="profile"){renderProfile()}
- else if(tab==="admin"){renderAdmin()}
 }
 function evCard(e){const d=new Date(e.startsAt);const gcal=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(e.title)}&dates=${fmtG(d)}/${fmtG(new Date(d.getTime()+(e.durationMin||60)*60000))}&details=${encodeURIComponent(e.description||"")}`;
  return `<div class="card"><div class="row" style="align-items:flex-start"><div class="evdate"><b>${d.getDate()}</b><span>${d.toLocaleDateString("en-US",{month:"short"})}</span></div>
@@ -238,26 +237,7 @@ async function saveProfile(){const patch={bio:$("pr_bio").value,goalText:$("pr_g
 async function doSignup(){const name=$("sf_name").value.trim(),email=$("sf_email").value.trim(),audience=$("sf_aud").value;
  if(!name||!email)return toast("Name and email, please");const j=await api("signup",{name,email,audience});
  if(j.ok){token=j.token;member=j.member;localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(MEMBER_KEY,JSON.stringify(member));setHeader();toast(j.note);render()}else toast(j.error)}
-/* ---------- admin ---------- */
-function renderAdmin(){const v=$("view");
- const st=sessionStorage.getItem("vh_setup");
- if(st&&!adminTok){v.innerHTML=`<div class="card"><div class="h2">Admin — first-time setup</div><label>Choose your admin PIN (4-8 digits)</label><input id="ad_newpin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"><button class="btn" onclick="adSetup()">Set PIN</button><p class="small" style="margin-top:8px">This one-time link claims the admin seat for the team. It expires 7 days after it was issued.</p></div>`;return}
- if(!adminTok){v.innerHTML=`<div class="card"><div class="h2">Admin</div><label>PIN</label><input id="ad_pin" type="password" inputmode="numeric" maxlength="12" placeholder="••••"><button class="btn" onclick="adLogin()">Log in</button><p class="small" style="margin-top:8px">Team only: publishing courses, events and knowledge sources.</p></div>`;return}
- v.innerHTML=`<div class="h2">Admin Console</div>
- <div class="card"><div class="h2" style="margin-top:0">Publish a course</div>
- <label>Module</label><input id="ac_mod" placeholder="e.g. LTD / Amway"><label>Title</label><input id="ac_title"><label>Description</label><input id="ac_desc"><label>Video URL (https)</label><input id="ac_vid" placeholder="https://…"><label>Resource URL (https)</label><input id="ac_res" placeholder="https://…"><label>Minutes</label><input id="ac_min" type="number" value="20"><button class="btn mini" onclick="adDo('createCourse',{module:$('ac_mod').value,title:$('ac_title').value,description:$('ac_desc').value,videoUrl:$('ac_vid').value,resourceUrl:$('ac_res').value,durationMin:parseInt($('ac_min').value)},'Course published')">Publish</button></div>
- <div class="card"><div class="h2" style="margin-top:0">Create an event</div>
- <label>Title</label><input id="ae_title"><label>Starts (your time)</label><input id="ae_start" type="datetime-local"><label>Join URL (https)</label><input id="ae_url" placeholder="Leave empty to post link later"><label>Host</label><input id="ae_host"><button class="btn mini" onclick="adDo('createEvent',{title:$('ae_title').value,startsAt:new Date($('ae_start').value).toISOString(),joinUrl:$('ae_url').value,host:$('ae_host').value},'Event created')">Create</button></div>
- <div class="card"><div class="h2" style="margin-top:0">Add knowledge source</div><label>Title</label><input id="ak_title"><label>Category</label><input id="ak_cat" placeholder="e.g. Community Hub"><label>Body</label><textarea id="ak_body"></textarea><label>Source URL (https, optional)</label><input id="ak_url"><button class="btn mini" onclick="adDo('addKnowledge',{title:$('ak_title').value,category:$('ak_cat').value,body:$('ak_body').value,sourceUrl:$('ak_url').value},'Added to approved library')">Add</button></div>
- <div class="card"><div class="h2" style="margin-top:0">Stats</div><span class="small" id="ad_stats">Loading…</span></div>
- <button class="btn sec" onclick="adminTok='';localStorage.removeItem('vh_admin');render()">Log out of admin</button>`;
- api("adminStats",{},adminTok).then(j=>{if(!j.ok){adminTok="";localStorage.removeItem("vh_admin");toast(j.error);render();return}$("ad_stats").textContent=Object.entries(j.stats).map(([k,v])=>k+": "+v).join(" · ")})}
-async function adSetup(){const pin=$("ad_newpin").value.trim();const st=sessionStorage.getItem("vh_setup");const j=await api("adminSetup",{setupToken:st,pin});if(j.ok){sessionStorage.removeItem("vh_setup");toast("PIN set. Log in with it.");render()}else toast(j.error)}
-async function adLogin(){const pin=$("ad_pin").value.trim();const j=await api("adminLogin",{pin,deviceLabel:navigator.userAgent.slice(0,40)});if(j.ok){adminTok=j.token;localStorage.setItem("vh_admin",adminTok);toast("Admin ready");render()}else toast(j.error)}
-async function adDo(op,data,msg){const j=await api(op,data,adminTok);if(j.ok){toast(msg)}else{toast(j.error);if(j.error&&j.error.includes("Admin session")){adminTok="";localStorage.removeItem("vh_admin")}}}
 /* ---------- boot ---------- */
-const qs=new URLSearchParams(location.search);
-if(qs.get("setup")&&!localStorage.getItem("vh_admin")){tab="admin";sessionStorage.setItem("vh_setup",qs.get("setup"))}
 setHeader();render();
 
 </script>
