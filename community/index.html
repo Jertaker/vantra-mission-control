@@ -18,7 +18,7 @@ a{color:var(--blue);text-decoration:none}
 .hide{display:none!important}
 /* header */
 header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0b0e14 70%,rgba(11,14,20,.92));border-bottom:1px solid var(--line);padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
-.emblem{width:34px;height:34px;flex:none;border-radius:8px;background:radial-gradient(circle at 35% 30%,#f7e28b,var(--gold) 55%,#8a6d1f);display:flex;align-items:center;justify-content:center;font-weight:800;color:#14100a;font-size:13px;letter-spacing:-.5px;box-shadow:0 0 14px rgba(212,175,55,.45)}
+.emblem{width:34px;height:34px;flex:none;border-radius:50%;object-fit:cover;box-shadow:0 0 14px rgba(212,175,55,.45)}
 header h1{font-size:17px;font-weight:700;letter-spacing:.3px}
 header .sub{font-size:11px;color:var(--dim);margin-top:1px}
 .spacer{flex:1}
@@ -83,7 +83,7 @@ label{font-size:12px;color:var(--dim);display:block;margin:4px 0 4px}
 </head>
 <body>
 <header>
-  <div class="emblem">JG</div>
+  <img class="emblem" src="jg_emblem.png" alt="JG emblem">
   <div><h1>Jertaker Ecosystem</h1><div class="sub" id="whoami">One place for everything</div></div>
   <div class="spacer"></div>
   <div class="chip" id="profbtn" onclick="go('profile')">Sign in</div>
