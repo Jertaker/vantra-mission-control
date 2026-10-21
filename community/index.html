@@ -177,12 +177,10 @@ function paintHome(j){
  ${(j.upcoming||[]).map(e=>evCard(e)).join("")||'<div class="card"><span class="small">No events yet.</span></div>'}
  <div class="h2">Latest activity</div>
  ${(j.recent||[]).map(p=>`<div class="post"><span class="pill ${p.channel==="wins"?"win":p.channel==="qa"?"qa":""}">${p.channel}</span><div class="t">${esc(p.title)}</div><div class="meta" style="font-size:11.5px;color:var(--dim)">${esc(p.authorName)} · ${fmt(p.createdAt)}</div></div>`).join("")||'<div class="card"><span class="small">Nothing yet — be the first to post a win.</span></div>'}
- <div class="h2">More</div>
- <div class="row"><div class="chip" onclick="go('board')">🏆 Leaderboard</div><div class="chip" onclick="go('partners')">🤝 Partners</div><div class="chip" onclick="go('profile')">👤 ${member?esc(member.name.split(" ")[0]):"Sign in / join"}</div></div>
  <div class="h2">Coming soon</div>
- <div class="card"><b>🎟 Fan Hub</b><div class="small" style="margin-top:3px">A dedicated space for fans — content, drops and community moments. In the works.</div></div>
+ <div class="card"><b>🎟 Jertaker Community</b><div class="small" style="margin-top:3px">A dedicated space for the community — content, drops and shared moments. In the works.</div></div>
  <div class="card"><b>🚀 Transformation Hub</b><div class="small" style="margin-top:3px">The next level of the journey — training and resources for people ready to go further. In the works.</div></div>
- <p class="small" style="text-align:center;margin-top:6px">Leaderboard &amp; partners are opt-in. The Guide only cites approved sources.</p>`;
+ <p class="small" style="text-align:center;margin-top:6px">The Guide only cites approved sources.</p>`;
 }
 async function renderChub(v){
  const isCust=member&&(member.audience==="customer"||member.audience==="team"||member.role==="admin"||member.role==="owner"||member.role==="moderator");
@@ -194,7 +192,7 @@ async function renderChub(v){
     <div class="small" style="margin-top:6px">Customer updates, videos, resources and success stories live here. Access comes with being a customer — if that's you, sign in with the email your invite went to, or ask the team.</div>
     ${member?"":'<div class="row" style="margin-top:12px"><button class="btn mini" onclick="go(\'profile\')">Sign in</button></div>'}
   </div>
-  <p class="small" style="text-align:center">Fan Hub and Transformation Hub are coming soon.</p>`;
+  <p class="small" style="text-align:center">Jertaker Community and Transformation Hub are coming soon.</p>`;
   return;
  }
  v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';
@@ -270,6 +268,9 @@ async function renderProfile(){const v=$("view");
  <div class="row" style="margin-top:10px"><label style="margin:0"><input type="checkbox" id="pr_lb" ${m.optInLeaderboard?"checked":""} style="width:auto;margin:0 6px 0 0">Show me on the leaderboard</label></div>
  <div class="row"><label style="margin:0"><input type="checkbox" id="pr_pt" ${m.optInPartners?"checked":""} style="width:auto;margin:0 6px 0 0">List me for accountability partners</label></div>
  <button class="btn mini" style="margin-top:8px" onclick="saveProfile()">Save choices</button></div>
+ <div class="card"><div class="h2">Members area</div>
+ <div class="row"><div class="chip" onclick="go('board')">🏆 Leaderboard</div><div class="chip" onclick="go('partners')">🤝 Partners</div></div>
+ <div class="small" style="margin-top:6px">Members only — never shown to the public home page.</div></div>
  <div class="card"><div class="h2">My Goal</div>
  <label>What are you going after?</label><input id="pr_goal" maxlength="300" value="${esc(m.goalText||"")}" placeholder="e.g. Close two EC City deals this month">
  <div class="goalbar"><i style="width:${prog}%"></i></div><span class="small">${prog}% there — move the slider as you make progress</span>
