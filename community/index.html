@@ -133,7 +133,9 @@ async function render(){drawTabs();const v=$("view");
   <div id="composer"></div><div id="postlist"></div>`;
   drawComposer();loadPosts();
  }
- else if(tab==="courses"){v.innerHTML=`
+ else if(tab==="courses"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("courses",{},token);const cs=j.courses||[];
+  v.innerHTML=(cs.length?Object.entries(cs.reduce((a,c)=>{(a[c.module]=a[c.module]||[]).push(c);return a},{})).map(([m,lst])=>`<div class="modgrp"><div class="h2">${esc(m)}</div><div class="card">${lst.map(c=>`<div class="lesson"><div><b>${esc(c.title)}</b><div class="small">${esc(c.description)}</div>
+   <div class="row" style="margin-top:4px">${c.videoUrl?`<a class="btn mini" href="${c.videoUrl}" target="_blank" rel="noopener">Watch</a>`:""}${c.resourceUrl?`<a class="btn mini sec" href="${c.resourceUrl}" target="_blank" rel="noopener">Resource</a>`:""}</div></div><span class="dur">${c.durationMin?c.durationMin+" min":""}</span></div>`).join("")}</div></div>`).join(""):"")+`
   <div class="card" style="text-align:center;padding:26px 16px">
     <div class="pill" style="margin-bottom:8px;display:inline-block">Coming soon</div>
     <b style="font-size:17px">Transformation Hub</b>
