@@ -54,7 +54,8 @@ function render(){const v=$("view");
   <label>Video URL (https)</label><input id="ac_vid" placeholder="https://…">
   <label>Resource URL (https)</label><input id="ac_res" placeholder="https://…">
   <label>Minutes</label><input id="ac_min" type="number" value="20">
-  <button class="btn" onclick="adDo('createCourse',{module:$('ac_mod').value,title:$('ac_title').value,description:$('ac_desc').value,videoUrl:$('ac_vid').value,resourceUrl:$('ac_res').value,durationMin:parseInt($('ac_min').value)},'Course published')">Publish</button></div>
+  <label>Who sees it</label><select id="ac_aud"><option value="">Everyone</option><option value="customer">Customers only</option><option value="team">Team only</option></select>
+  <button class="btn" onclick="adDo('createCourse',{module:$('ac_mod').value,title:$('ac_title').value,description:$('ac_desc').value,videoUrl:$('ac_vid').value,resourceUrl:$('ac_res').value,durationMin:parseInt($('ac_min').value),audience:$('ac_aud').value},'Course published')">Publish</button></div>
  <div class="card"><div class="h2">Create an event</div>
   <label>Title</label><input id="ae_title">
   <label>Starts (your time)</label><input id="ae_start" type="datetime-local">
