@@ -116,7 +116,7 @@ function setHeader(){const p=$("profbtn");if(member){p.textContent=member.name.s
 function logout(){token="";member=null;localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(MEMBER_KEY);setHeader();render()}
 function go(t){tab=t;render();window.scrollTo(0,0)}
 /* ---------- tabs ---------- */
-const TABS=[["home","Home","🏠"],["chub","Customer","⭐"],["community","Community","💬"],["courses","Courses","🎓"],["events","Events","📅"],["guide","Guide","🤖"]];
+const TABS=[["home","Home","🏠"],["chub","Customer","⭐"],["community","Community","💬"],["courses","Transformation Hub","🚀"],["events","Events","📅"],["guide","Guide","🤖"]];
 function drawTabs(){const bar=$("tabbar");bar.innerHTML=TABS.map(([id,l,ic])=>`<div class="tab ${tab===id?"on":""}" onclick="go('${id}')">${ic}<br>${l}</div>`).join("")+(unread&&!chatOpen&&tab!=="community"?`<div class="dot" style="right:calc(50% - ${0}px)"></div>`:"");
  const dn=$("desknav");dn.innerHTML=TABS.map(([id,l])=>`<div class="chip ${tab===id?"on":""}" onclick="go('${id}')">${l}</div>`).join("")+`<div class="chip ${tab==="profile"?"on":""}" onclick="go('profile')">Profile</div>`}
 /* ---------- views ---------- */
@@ -133,9 +133,12 @@ async function render(){drawTabs();const v=$("view");
   <div id="composer"></div><div id="postlist"></div>`;
   drawComposer();loadPosts();
  }
- else if(tab==="courses"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("courses",{},token);const mods={};(j.courses||[]).forEach(c=>{(mods[c.module]=mods[c.module]||[]).push(c)});
-  v.innerHTML=Object.entries(mods).map(([m,cs])=>`<div class="modgrp"><div class="h2">${esc(m)}</div><div class="card">${cs.map(c=>`<div class="lesson"><div><b>${esc(c.title)}</b>${c.audience==="customer"?' <span class="pill">Customer</span>':""}<div class="small">${esc(c.description)}</div>
-   <div class="row" style="margin-top:4px">${c.videoUrl?`<a class="btn mini" href="${c.videoUrl}" target="_blank" rel="noopener">${c.videoUrl.includes("youtu")?"Watch":"Open"}</a>`:""}${c.resourceUrl?`<a class="btn mini sec" href="${c.resourceUrl}" target="_blank" rel="noopener">Resource</a>`:""}</div></div><span class="dur">${c.durationMin?c.durationMin+" min":""}</span></div>`).join("")}</div></div>`).join("")||'<div class="card"><span class="small">No courses published yet.</span></div>';
+ else if(tab==="courses"){v.innerHTML=`
+  <div class="card" style="text-align:center;padding:26px 16px">
+    <div class="pill" style="margin-bottom:8px;display:inline-block">Coming soon</div>
+    <b style="font-size:17px">Transformation Hub</b>
+    <div class="small" style="margin-top:6px">The next level of the journey — training and resources for people ready to go further. Content lands here as it's released.</div>
+  </div>`;
  }
  else if(tab==="events"){v.innerHTML='<div class="card"><span class="small">Loading…</span></div>';const j=await api("events");const now=new Date().toISOString();
   const up=(j.events||[]).filter(e=>e.startsAt>now),past=(j.events||[]).filter(e=>e.startsAt<=now).slice(-3).reverse();
@@ -164,7 +167,7 @@ function paintHome(j){
    <img src="jg_emblem.png" alt="Jertaker Ecosystem emblem" width="88" height="88" style="display:block;margin:0 auto 14px">
    <div style="font-size:9px;letter-spacing:3px;color:#f5d88c;margin-bottom:8px;text-shadow:0 0 6px #000">JERTAKER ECOSYSTEM</div>
    <b style="font-size:17px">Welcome to the Jertaker Ecosystem</b>
-   <div class="small" style="margin-top:4px">Updates, courses, events and people — one place. Say hi in the live chat.</div>
+   <div class="small" style="margin-top:4px">Updates, events and people — one place. Say hi in the live chat.</div>
  </div>
  <div class="statrow">
    <div class="stat"><b>${j.stats.members}</b><span>Members</span></div>
