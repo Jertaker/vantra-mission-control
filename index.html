@@ -455,7 +455,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
         <div style="font-size:10.5px;color:var(--dim);margin-top:5px">Changes the Mission Control PIN everywhere. You stay logged in on this device.</div></div>
       <div class="st-row"><div class="st-lab">ACTIVE SESSIONS</div><div id="setSessions" style="margin-top:6px"></div></div>
       <div class="st-row"><div class="st-lab">ABOUT</div>
-        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.18<br>Sessions last 24 hours. Log out ends yours early.</div></div>
+        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.19<br>Sessions last 24 hours. Log out ends yours early.</div></div>
     </div>
   </div>
   <div id="habitsView" class="hidden">
@@ -479,6 +479,7 @@ const COMMSURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions
 const CONTENTURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcContent";
 const TODOURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcTodos";
 const HVURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHabitValue";
+const BACKLOGURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHabitBacklog";
 let token = localStorage.getItem('mc_token') || '';
 let board = null; let view='home'; let filter='all', projFilter=''; let selected=null; let q='';
 let loginBusy=false; let capBusy=false;
@@ -1573,7 +1574,7 @@ function hRow(label,val,col,detail){
   return '<div class="h-row"><div class="l"><span class="hd-dot" style="background:'+(col||'#22c55e')+'"></span> '+label+(detail?'<div style="font-size:11px;color:var(--dim);margin:2px 0 0 15px">'+detail+'</div>':'')+'</div><div class="v">'+val+'</div></div>';
 }
 function hChip(name,col){ return '<span class="h-chip" style="border-color:'+col+'30"><span class="hd-dot" style="background:'+col+';margin-top:0"></span>'+name+'</span>'; }
-const APP_VERSION="v9.18";
+const APP_VERSION="v9.19";
 function renderHealthPhase1(sn){
   const G='#22c55e',Y='#eab308',R='#e05555';
   if(!sn){ $('hlStrip').innerHTML=''; $('hlPhase1').innerHTML='<div class="cp-empty">No health snapshot yet — the first refresh is running.</div>'; return; }
@@ -1752,6 +1753,7 @@ $('vSettings').addEventListener('click',()=>setView('settings'));
 // analysis table, mood + sleep wellness. Real data only — check-ins live in
 // the HabitCheckIn entity; the grid fills as Boss actually checks in.
 let habitsData=null, habitsMonth=null, habitsBusy=false;
+let backlogOpen=false, backlogText='', backlogBusy=false;
 function etToday(){ // yyyy-mm-dd in Boss's timezone (ET)
   const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
   const g=t=>p.find(x=>x.type===t).value; return g('year')+'-'+g('month')+'-'+g('day');
@@ -1938,6 +1940,16 @@ const defs='<defs><linearGradient id="g4ade807" x1="0" y1="0" x2="0" y2="1"><sto
       +'</div></div></div>';
   }
 
+  // ---- BACKLOG: paste-in catch-up for missed days (Boss, Oct 22) ----
+  html+='<div class="hb-today" style="border-color:rgba(212,175,55,.35)"><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:4px">MISSED DAYS? PASTE THEM IN</div>'
+   +'<div style="font-size:11px;color:var(--dim);line-height:1.45;margin-bottom:6px">Forgot to log a few days? Paste your notes — one day per line, say the day then what you did. E.g. <i>yesterday: gym, 2 audios, mood 4, slept 6.5</i> or <i>Mon: workout, 3 chapters, posted</i>. Habit names, mood 1-5 and sleep hours are all understood. You preview before anything saves.</div>'
+   +(backlogOpen
+     ? '<textarea id="hbBacklogIn" rows="6" autocapitalize="sentences" style="width:100%;background:rgba(8,8,20,.95);border:1px solid rgba(138,43,226,.45);border-radius:8px;color:var(--text);font-size:13px;padding:8px;box-sizing:border-box" placeholder="Mon: gym, 2 audios, mood 4, slept 6.5&#10;Tue: workout, 3 chapters, posted content"></textarea>'
+       +'<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="hb-wbtn" id="hbBacklogPrevBtn">PREVIEW</button><button class="hb-wbtn" id="hbBacklogCancel" style="opacity:.65">Close</button></div>'
+       +'<div id="hbBacklogOut" style="margin-top:8px"></div>'
+     : '<button class="hb-wbtn" id="hbBacklogBtn">+ Paste missed days</button>')
+   +'</div>';
+
   // ---- month grid ----
   html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">THIS WEEK</h3><div class="hb-gridwrap"><table class="hb-grid"><thead>';
   let hNum='<tr><th class="hname">Habit</th>';
@@ -1993,10 +2005,68 @@ const defs='<defs><linearGradient id="g4ade807" x1="0" y1="0" x2="0" y2="1"><sto
   body.innerHTML=html;
 }
 
+// backlog preview/apply (Boss, Oct 22): parse first, Boss confirms, then it writes
+async function backlogApi(extra){
+  const res=await fetch(BACKLOGURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({op:'backlog'},extra||{}))});
+  let d=null; try{ d=await res.json(); }catch(e){}
+  if(!d||!d.ok){
+    if(res.status===401){ localStorage.removeItem('mc_token'); token=''; showLogin(); throw new Error('auth'); }
+    throw new Error((d&&d.error)||('backlog failed ('+res.status+')'));
+  }
+  return d;
+}
+function fmtDayLabel(iso){ const d=new Date(iso+'T12:00:00'); return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+async function backlogPreview(){
+  const ta=$('hbBacklogIn');
+  const txt=ta?ta.value:'';
+  if(!txt.trim()){ toast('Paste your missed days first'); return; }
+  const out=$('hbBacklogOut');
+  if(!out) return;
+  out.innerHTML='<div style="color:var(--dim);font-size:12px;padding:4px 0">Parsing…</div>';
+  if(habitsBusy||backlogBusy) return; backlogBusy=true;
+  try{
+    const d=await backlogApi({text:txt});
+    backlogBusy=false; backlogText=txt;
+    const days=d.days||[];
+    let h='';
+    (d.badDates||[]).forEach(b=>{ h+='<div style="color:#ff9d9d;font-size:12px;padding:2px 0">✗ '+esc(b)+'</div>'; });
+    days.forEach(day=>{
+      h+='<div style="border-top:1px solid rgba(255,255,255,.08);padding:6px 0 2px">'
+       +'<div style="font-size:12px;font-weight:800;color:var(--gold)">'+fmtDayLabel(day.date)+'<span style="color:var(--dim);font-weight:400;font-size:10.5px"> ('+day.date+')</span>'
+       +(day.assumed?' <span style="color:#ffb84d;font-weight:700;font-size:10.5px">NO DATE GIVEN — assumed yesterday, check it</span>':'')
+       +(day.old?' <span style="color:#ffb84d;font-weight:700;font-size:10.5px">more than 90 days ago</span>':'')
+       +'</div>';
+      (day.entries||[]).forEach(e=>{ h+='<div style="font-size:12px;padding:1px 0 1px 10px">✓ '+esc(e.name)+(e.value?' — '+esc(String(e.value)):'')+'</div>'; });
+      if(day.wellness&&(day.wellness.mood||day.wellness.hoursOfSleep)) h+='<div style="font-size:12px;padding:1px 0 1px 10px;color:var(--text)">♥ '+(day.wellness.mood?'mood '+day.wellness.mood:'')+(day.wellness.mood&&day.wellness.hoursOfSleep?' · ':'')+(day.wellness.hoursOfSleep?day.wellness.hoursOfSleep+' hrs sleep':'')+'</div>';
+      (d.skipped||[]).filter(x=>x.date===day.date).forEach(x=>{ h+='<div style="font-size:11.5px;color:#ffb84d;padding:1px 0 1px 10px">⚠ skipped: "'+esc(x.text)+'" ('+esc(x.reason)+')</div>'; });
+      (d.unrecognized||[]).filter(x=>x.date===day.date).forEach(x=>{ h+='<div style="font-size:11.5px;color:var(--dim);padding:1px 0 1px 10px">? not recognized: "'+esc(x.text)+'"</div>'; });
+      h+='</div>';
+    });
+    const n=days.reduce((a,x)=>a+(x.entries||[]).length,0), nw=days.filter(x=>x.wellness&&(x.wellness.mood||x.wellness.hoursOfSleep)).length;
+    if(!n&&!nw&&!h.length) h='<div style="color:var(--dim);font-size:12px;padding:4px 0">Nothing recognized — try naming the day and the habits.</div>';
+    h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+     +((n||nw)?'<button class="hb-wbtn" id="hbBacklogGo">CONFIRM — SAVE '+n+' HABIT'+(n===1?'':'S')+(nw?' + WELLNESS':'')+'</button>':'')
+     +'<button class="hb-wbtn" id="hbBacklogPrevBtn2" style="opacity:.65">Re-preview</button></div>';
+    out.innerHTML=h;
+  }catch(e){ backlogBusy=false; out.innerHTML='<div style="color:#ff8a8a;font-size:12px;padding:2px 0">'+esc(e.message==='auth'?'Logged out — unlock again':e.message)+'</div>'; }
+}
+async function backlogApply(){
+  if(habitsBusy||backlogBusy) return; backlogBusy=true;
+  try{
+    const d=await backlogApi({text:backlogText,apply:true});
+    backlogBusy=false;
+    toast('Saved '+d.applied+' habit'+(d.applied===1?'':'s')+(d.wellness?' + wellness':'')+' across '+d.days+' day'+(d.days===1?'':'s'));
+    backlogOpen=false; renderHabits();
+  }catch(e){ backlogBusy=false; toast(e.message==='auth'?'Logged out — unlock again':e.message); }
+}
 // tap handling: checkbox toggles (double-tap safe), mood, sleep, month tabs
 document.addEventListener('click', async el => {
   const t=el.target;
   if(!t||!t.getAttribute) return;
+  if(t.id==='hbBacklogBtn'){ backlogOpen=true; renderHabits(); const ta=$('hbBacklogIn'); if(ta) ta.focus(); return; }
+  if(t.id==='hbBacklogCancel'){ backlogOpen=false; renderHabits(); return; }
+  if(t.id==='hbBacklogPrevBtn'||t.id==='hbBacklogPrevBtn2'){ backlogPreview(); return; }
+  if(t.id==='hbBacklogGo'){ backlogApply(); return; }
   const mb=t.getAttribute('data-hbm');
   if(mb!==null&&mb!==''&&t.classList.contains('hb-month')){ renderHabits(mb); return; }
   if(t.id==='hbSleepGo'){
