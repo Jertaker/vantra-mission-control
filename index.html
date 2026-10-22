@@ -455,7 +455,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border
         <div style="font-size:10.5px;color:var(--dim);margin-top:5px">Changes the Mission Control PIN everywhere. You stay logged in on this device.</div></div>
       <div class="st-row"><div class="st-lab">ACTIVE SESSIONS</div><div id="setSessions" style="margin-top:6px"></div></div>
       <div class="st-row"><div class="st-lab">ABOUT</div>
-        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.19<br>Sessions last 24 hours. Log out ends yours early.</div></div>
+        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.20<br>Sessions last 24 hours. Log out ends yours early.</div></div>
     </div>
   </div>
   <div id="habitsView" class="hidden">
@@ -1574,7 +1574,7 @@ function hRow(label,val,col,detail){
   return '<div class="h-row"><div class="l"><span class="hd-dot" style="background:'+(col||'#22c55e')+'"></span> '+label+(detail?'<div style="font-size:11px;color:var(--dim);margin:2px 0 0 15px">'+detail+'</div>':'')+'</div><div class="v">'+val+'</div></div>';
 }
 function hChip(name,col){ return '<span class="h-chip" style="border-color:'+col+'30"><span class="hd-dot" style="background:'+col+';margin-top:0"></span>'+name+'</span>'; }
-const APP_VERSION="v9.19";
+const APP_VERSION="v9.20";
 function renderHealthPhase1(sn){
   const G='#22c55e',Y='#eab308',R='#e05555';
   if(!sn){ $('hlStrip').innerHTML=''; $('hlPhase1').innerHTML='<div class="cp-empty">No health snapshot yet — the first refresh is running.</div>'; return; }
@@ -1857,7 +1857,10 @@ const defs='<defs><linearGradient id="g4ade807" x1="0" y1="0" x2="0" y2="1"><sto
     if(loggedDays<3){
       sub='<span style="color:var(--gold)">&#9670; TOO EARLY TO CALL</span> <span style="color:var(--dim)">('+loggedDays+' of 3 days logged)</span>';
     } else {
-      const el=known; let recent,prior;
+      // Boss, Oct 22: only days since tracking STARTED count (leading empty days made any activity read as an upward spiral
+      // while the line was clearly falling). Compare the latest half of tracked days to the half before it.
+      const fi=pts.findIndex(p=>!p.fut&&(p.pct>0||p.mood||p.sleep));
+      const el=(fi<0?[]:pts.slice(fi).filter(p=>!p.fut&&p.pct!=null).map(p=>p.pct)); let recent,prior;
       if(el.length>=14){ recent=avg(el.slice(-7)); prior=avg(el.slice(-14,-7)); }
       else { const mid=Math.floor(el.length/2); prior=avg(el.slice(0,mid)); recent=avg(el.slice(mid)); }
       const diff=Math.round(recent-prior);
