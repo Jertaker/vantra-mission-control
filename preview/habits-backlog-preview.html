@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="favicon.png">
+<title>VANTRA Mission Control</title>
+<style>
+:root{
+  --bg:#070714; --surface:#0e0e20; --surface2:#151530; --border:rgba(150,120,255,.14);
+  --purple:#9d7cff; --purple-deep:#5b3df5; --gold:#d4af37; --gold-soft:#f0d88c;
+  --green:#4ade80; --red:#f87171; --amber:#fbbf24; --text:#f2f0fa; --dim:#8a86a8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+/* iOS zoom guard + safe areas (P2-7) */
+input,select,textarea{font-size:16px}
+/* LOGIN */
+#login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 0%,#151538 0%,var(--bg) 60%);z-index:99;padding:0 20px}
+.logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--purple-deep),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;color:#fff;box-shadow:0 0 30px rgba(157,124,255,.4)}
+#login h1{font-size:19px;font-weight:700;letter-spacing:.5px;text-align:center}
+#login h1 span{color:var(--gold)}
+#login p{font-size:12px;color:var(--dim);letter-spacing:2px;text-transform:uppercase}
+#pin{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-size:18px;width:250px;text-align:center;outline:none;letter-spacing:6px}
+#pin:focus{border-color:var(--purple)}
+#loginBtn{background:linear-gradient(135deg,var(--purple-deep),var(--purple));border:none;border-radius:12px;color:#fff;font-weight:700;font-size:15px;padding:13px 0;width:250px;cursor:pointer}
+#loginBtn:disabled{opacity:.6}
+#loginErr{color:var(--red);font-size:13px;min-height:18px;text-align:center;max-width:300px;line-height:1.45}
+#loginErr .abtn{margin-left:4px}
+/* SHELL */
+header{position:sticky;top:0;z-index:10;background:rgba(7,7,20,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:15px;letter-spacing:.5px}.brand em{color:var(--gold);font-style:normal}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:7px 11px;font-size:12px;cursor:pointer}
+.hbtn.on{border-color:var(--purple);color:var(--purple)}
+.hbtn.warn{border-color:rgba(248,113,113,.4);color:var(--red)}
+nav.tabs{display:flex;gap:6px;padding:10px 16px 2px;overflow-x:auto}
+.tab{background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.tab.on{border-color:var(--purple);color:var(--purple);background:rgba(157,124,255,.08)}
+main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
+/* QUICK CAPTURE */
+#capture{display:flex;gap:8px;margin:10px 0 14px}
+#capIn{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--text);font-size:16px;outline:none}
+#capIn:focus{border-color:var(--purple)}
+#capBtn{background:linear-gradient(135deg,var(--gold),var(--gold-soft));border:none;border-radius:12px;color:#1a1500;font-weight:800;font-size:14px;padding:0 20px;cursor:pointer}
+#capBtn:disabled{opacity:.6}
+.capExtra{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 14px}
+.capExtra select,.capExtra input{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px;font-size:16px;outline:none}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.stat.s-approval b{color:var(--gold)}.stat.s-blocked b{color:var(--red)}.stat.s-active b{color:var(--green)}.stat.s-review b{color:var(--amber)}
+/* SECTIONS */
+.sec{margin-bottom:16px}
+.sec h2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin:0 0 8px 4px}
+.card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.card .t{font-size:14.5px;font-weight:600;line-height:1.35}
+.card .m{margin-top:6px;font-size:11px;color:var(--dim);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+.p-urgent{border-color:var(--red);color:var(--red)}.p-high{border-color:var(--amber);color:var(--amber)}
+.p-app{border-color:var(--gold);color:var(--gold)}
+.errline{color:var(--red);font-size:13px;padding:10px 4px;line-height:1.5}
+/* BOARD */
+.board{display:flex;flex-wrap:wrap;gap:10px;padding-bottom:8px}
+.h-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--border);margin:0 6px 6px 0;background:rgba(8,8,20,.85)}
+.h-sec{margin:10px 0 2px;font-size:12px;letter-spacing:1.6px;color:var(--dim);font-weight:800}
+.h-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:7px 2px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}
+.h-row .l{color:var(--text);min-width:0}
+.h-row .v{color:var(--dim);text-align:right;white-space:nowrap}
+.hd-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px;box-shadow:0 0 6px currentColor}
+.h-gate{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;margin:0 4px 4px 0;border:1px solid}
+.board .col{flex:1 1 100%}
+@media(min-width:520px){.board .col{flex:1 1 calc(33.33% - 7px)}}
+@media(min-width:1024px){.board .col{flex:1 1 calc(25% - 8px)}}
+.col{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;min-height:120px}
+.col h3{font-size:11px;color:var(--dim);letter-spacing:1.5px;margin-bottom:8px;display:flex;justify-content:space-between}
+.col h3 i{font-style:normal;color:var(--purple);font-weight:700}
+/* APPROVALS / AGENTS */
+.apcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.apcard .acts{margin-top:10px}
+.agent{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px}
+.agent .n{font-weight:700;font-size:13.5px}
+.agent .s{font-size:11px;color:var(--dim);margin-top:2px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.rcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.rcard .rn{font-weight:800;font-size:16px;line-height:1.25;color:#fff;word-break:break-word}
+.rcard .rt{font-size:15px;line-height:1.35;color:#e6e0ff;margin-top:4px;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;cursor:pointer;padding:4px 0;min-height:22px}
+.rcard .rt.empty{color:#b9a8ff;font-style:italic}
+.rcard .rt .pen{font-size:13px;opacity:.85;margin-left:6px}
+.rcard .tag{display:inline-block;font-size:12px;font-weight:700;color:#d8ccff;background:rgba(124,92,255,.22);border:1px solid rgba(124,92,255,.5);border-radius:999px;padding:3px 10px;margin-top:6px}
+.rcard .tag.grokbot{color:#c9f7da;background:rgba(40,200,120,.18);border-color:rgba(40,200,120,.5)}
+.rcard .why{font-size:12.5px;color:#cfc8e8;margin-top:8px;line-height:1.4;word-break:break-word}
+.rcard .editrow{display:flex;gap:8px;margin-top:6px}
+.rcard .editrow input{flex:1;min-width:0;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0e0b1c;color:#fff}
+.rcard .editrow button{font-size:14px;font-weight:700;border:0;border-radius:10px;padding:10px 14px;background:#7c5cff;color:#fff}
+.rcard .editrow button.cancel{background:#2a2540;color:#d8ccff}
+.v-ok{color:var(--green);font-weight:700;font-size:11px;text-align:right}.v-no{color:var(--amber);font-weight:700;font-size:11px;text-align:right}
+/* ---------- LIVE OFFICE (animated walking workers, Oct 14 v6) ---------- */
+.floor-head{display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px}
+.floor-head span{font-size:11px;color:#00ffff;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(0,255,255,.45)}
+.floor-legend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px;font-size:10px;color:#b9b3d0}
+.floor-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.lo{position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;border:1px solid rgba(138,43,226,.6);box-shadow:0 0 22px rgba(138,43,226,.35);background:#05050a url('office_bg.jpg?v=92') center/cover no-repeat;touch-action:manipulation}
+.lo::before{content:'';position:absolute;inset:0;background:rgba(5,5,12,.30);pointer-events:none}
+.lo-room{position:absolute;z-index:1;font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(235,255,255,.95);text-transform:uppercase;text-shadow:0 0 6px #000,0 1px 2px #000;background:rgba(5,5,12,.62);border:1px solid rgba(0,255,255,.35);border-radius:5px;padding:1px 6px;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
+.w{position:absolute;z-index:5;width:0;height:0;cursor:pointer;transition:left 2.6s linear,top 2.6s linear}
+.w-body{position:absolute;left:-15px;top:-34px;width:30px;display:flex;flex-direction:column;align-items:center}
+.w-head{width:26px;height:21px;border-radius:12px 12px 8px 8px;background:radial-gradient(circle at 35% 25%,#3a3a52,#0a0a14 70%);border:1.5px solid var(--ac,#9d7cff);position:relative;box-shadow:0 0 9px var(--ac,#9d7cff),inset 0 0 4px rgba(255,255,255,.12);overflow:visible}
+.w-head::before{content:'';position:absolute;top:-3px;left:50%;width:5px;height:3px;margin-left:-2.5px;border-radius:2px 2px 0 0;background:var(--em,var(--ac,#9d7cff));box-shadow:0 0 6px var(--em,var(--ac,#9d7cff))}
+.w-eyes{position:absolute;top:7px;left:0;right:0;display:flex;justify-content:center;gap:4px}
+.w-eye{display:block;width:7px;height:8px;border-radius:50%;background:var(--eye,#7fe9ff);box-shadow:0 0 6px var(--eye,#7fe9ff),0 0 2px #fff inset;transform-origin:center;animation:blink 4.6s infinite;animation-delay:var(--bd,0s)}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}97%{transform:scaleY(1)}}
+.w[data-st="idle"]:not(.walk) .w-eyes{animation:drift 7s ease-in-out infinite;animation-delay:var(--bd,0s)}
+@keyframes drift{0%,40%,100%{transform:translateX(0)}50%,70%{transform:translateX(-2px)}80%,90%{transform:translateX(2px)}}
+.w[data-st="down"] .w-eye{animation:none;opacity:.25;transform:scaleY(.2)}
+.w-torso{width:18px;height:11px;border-radius:5px 5px 3px 3px;margin-top:-1px;background:linear-gradient(180deg,#1b1b2c,#07070d);border:1.5px solid var(--ac,#9d7cff);position:relative;box-shadow:0 0 6px var(--ac,#9d7cff)}
+.w-torso::after{content:'';position:absolute;left:50%;top:2px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--core,var(--ac,#9d7cff));box-shadow:0 0 6px var(--core,var(--ac,#9d7cff));animation:corepulse 2.4s ease-in-out infinite}
+@keyframes corepulse{0%,100%{opacity:.75}50%{opacity:1}}
+.w-arms{position:absolute;top:22px;left:-3px;right:-3px;height:8px;pointer-events:none}
+.w-arms i{position:absolute;top:0;width:4px;height:9px;border-radius:2px;background:#0c0c18;border:1px solid var(--ac,#9d7cff)}
+.w-arms i:first-child{left:0}.w-arms i:last-child{right:0}
+.w-legs{display:flex;gap:3px}
+.w-legs i{display:block;width:5px;height:6px;border-radius:0 0 2px 2px;background:#0c0c18;border:1px solid var(--ac,#9d7cff);border-top:none}
+.w.walk .w-legs i:nth-child(1){animation:step .32s ease-in-out infinite}
+.w.walk .w-legs i:nth-child(2){animation:step .32s ease-in-out infinite .16s}
+.w.walk .w-body{animation:bob .32s ease-in-out infinite}
+@keyframes step{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+.w.work .w-arms i:first-child{animation:tapL .42s ease-in-out infinite}
+.w.work .w-arms i:last-child{animation:tapR .42s ease-in-out infinite .21s}
+@keyframes tapL{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+@keyframes tapR{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+.w.wings .w-body::before,.w.wings .w-body::after{content:'';position:absolute;top:8px;width:12px;height:16px;background:linear-gradient(135deg,#22ff7a,#047a3a);opacity:.85;box-shadow:0 0 9px #22ff7a;z-index:-1}
+.w.wings .w-body::before{left:-11px;border-radius:12px 2px 12px 2px;transform:rotate(-12deg)}
+.w.wings .w-body::after{right:-11px;border-radius:2px 12px 2px 12px;transform:rotate(12deg)}
+.w.cloak .w-torso{width:22px;border-radius:3px 3px 7px 7px;margin-top:-1px}
+.w.og .w-head::before{background:#d4af37;box-shadow:0 0 6px #d4af37;width:7px;margin-left:-3.5px}
+.w-dot{position:absolute;left:10px;top:-38px;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);background:#8a86a8}
+.w[data-st="working"] .w-dot{background:#4ade80;box-shadow:0 0 9px #4ade80}
+.w[data-st="waiting"] .w-dot{background:#f0d88c;box-shadow:0 0 9px #f0d88c}
+.w[data-st="down"] .w-dot{background:#f87171;box-shadow:0 0 9px #f87171}
+.w[data-st="down"] .w-body{opacity:.45;filter:grayscale(.7)}
+.w-name{position:absolute;left:0;top:4px;transform:translateX(-50%);font-size:7px;font-weight:700;color:#fff;background:rgba(5,5,12,.78);border:1px solid rgba(0,255,255,.35);border-radius:5px;padding:1px 4px;white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
+.w-say{position:absolute;left:0;bottom:36px;transform:translateX(-50%);z-index:9;font-size:7.5px;color:#0b0b16;background:#e6fbff;border-radius:8px;padding:2px 6px;white-space:nowrap;box-shadow:0 0 8px rgba(0,255,255,.6);display:none;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.w.talk .w-say{display:block;animation:pop .35s ease-out}
+@keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.lo-note{font-size:9px;color:#8a86a8;margin:6px 2px 0;line-height:1.35}
+.lo-feed{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.lo-feed div{font-size:11px;color:#cfc8e8;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.35);border-radius:8px;padding:5px 8px}
+.d-dell{display:inline-block;font-size:9.5px;border:1px solid #8a86a8;color:#b9b3d0;border-radius:999px;padding:2px 7px;margin-top:5px}
+/* ---------- v9.1: stale light, partner styling, gold approval console, phone layout ---------- */
+.w[data-st="stale"] .w-dot{background:#fb923c;box-shadow:0 0 9px #fb923c}
+.w[data-st="stale"] .w-body{opacity:.85}
+.d-light.stale{background:#fb923c;box-shadow:0 0 9px #fb923c}
+.w.partner .w-head{border-color:#d4af37;box-shadow:0 0 11px rgba(212,175,55,.9)}
+.w.partner .w-name{border-color:rgba(212,175,55,.85);color:#f5d88c}
+.lo-console{position:absolute;z-index:3;transform:translate(-50%,-50%);width:30px;height:22px;cursor:pointer;background:linear-gradient(180deg,#1c1608,#0a0805);border:1.5px solid #d4af37;border-radius:4px;box-shadow:0 0 10px rgba(212,175,55,.45)}
+.lo-console::after{content:'';position:absolute;left:3px;right:3px;top:5px;height:4px;border-radius:2px;background:#d4af37;opacity:.9;box-shadow:0 0 6px #d4af37}
+.lo-console.pend{animation:goldpulse 1.5s ease-in-out infinite}
+@keyframes goldpulse{0%,100%{box-shadow:0 0 6px rgba(212,175,55,.4)}50%{box-shadow:0 0 20px rgba(212,175,55,.95)}}
+.ov-alerts{margin:2px 0 8px}
+.ov-alert{background:rgba(8,8,20,.85);border:1px solid rgba(212,175,55,.55);border-radius:10px;padding:8px 10px;margin-bottom:5px;cursor:pointer;font-size:12.5px;color:#f5d88c}
+.ov-alert .s{color:#cfc8e8;font-size:11.5px}
+.ov-team{display:none;flex-direction:column;gap:6px;margin:0 0 10px}
+.ov-team .trow{display:flex;align-items:center;gap:9px;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.3);border-radius:10px;padding:7px 10px;cursor:pointer}
+.ov-team .trow .tn{font-size:12.5px;color:var(--text);font-weight:600;flex:none}
+.ov-team .trow .tt{font-size:11.5px;color:var(--dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.asof{font-size:11.5px;color:#8a86a8;margin:2px 0 8px}
+@media(max-width:430px){
+  .ov-team{display:flex}
+  .lo-room{font-size:13px;letter-spacing:1.2px}
+  .w-name{font-size:11px}
+  .floor-legend{font-size:11px;gap:8px;flex-wrap:wrap}
+  .lo-note{font-size:11px}
+  .lo-feed div{font-size:11px}
+}
+/* HABIT TRACKER (v9.4) */
+.hb-month{background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer}
+.hb-month.on{border-color:var(--purple);color:var(--text);font-weight:700}
+.hb-today{background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.hb-trow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.hb-trow:last-child{border-bottom:none}
+.hb-chk{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--purple);flex:none;cursor:pointer;background:transparent;color:var(--purple);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
+.hb-chk.done{background:var(--green);border-color:var(--green);color:#06250f}
+.hb-tn{font-size:13.5px;font-weight:600;color:var(--text)}
+.hb-why{font-size:11px;color:var(--dim)}
+.hb-stats{display:flex;align-items:center;gap:14px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:12px;margin-bottom:12px;flex-wrap:wrap}
+.cp-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 12px}
+.cp-tile{background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:10px 12px}
+.cp-tile b{display:block;font-size:26px;color:var(--text)}
+.cp-tile span{font-size:10.5px;letter-spacing:1.5px;color:var(--dim)}
+.cp-board{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.cp-col{flex:none;width:240px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;scroll-snap-align:start}
+.cp-colh{display:flex;justify-content:space-between;padding:9px 12px;font-size:11px;letter-spacing:1.5px;color:var(--dim);border-bottom:1px solid rgba(138,43,226,.25);background:linear-gradient(135deg,rgba(124,92,255,.18),transparent);border-radius:12px 12px 0 0}
+.cp-colh b{color:var(--gold);font-size:15px}
+.cp-card{margin:8px;padding:9px 10px;background:#0e0e1a;border:1px solid rgba(138,43,226,.3);border-radius:10px}
+.cp-card.blk{border-color:#e05555}
+.cp-t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.cp-m{font-size:10.5px;color:var(--dim);line-height:1.4}
+.cp-act{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.cp-act button{background:rgba(124,92,255,.15);border:1px solid rgba(138,43,226,.4);color:var(--text);border-radius:8px;font-size:11px;padding:5px 9px}
+.cp-empty{margin:8px;padding:14px 10px;color:var(--dim);font-size:11.5px;text-align:center;border:1px dashed rgba(138,43,226,.3);border-radius:10px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:8px 0}
+.cal-head b{font-size:16px;color:var(--text)}
+.cal-nav button{background:rgba(124,92,255,.15);border:1px solid rgba(138,43,226,.4);color:var(--text);border-radius:8px;padding:6px 12px;margin-left:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{font-size:10px;color:var(--dim);text-align:center;padding:3px 0;letter-spacing:1px}
+.cal-day{min-height:52px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.2);border-radius:8px;padding:3px 4px;cursor:pointer;position:relative}
+.cal-day.out{opacity:.35}
+.cal-day.today{border-color:var(--gold);box-shadow:0 0 8px rgba(212,175,55,.35)}
+.cal-day.sel{background:rgba(124,92,255,.22);border-color:#8a2be2}
+.cal-n{font-size:11px;color:var(--text)}
+.cal-day.today .cal-n{color:var(--gold);font-weight:800}
+.cal-ev{display:block;font-size:8.5px;line-height:1.25;margin-top:2px;padding:1px 3px;border-radius:3px;background:rgba(74,222,128,.2);color:#bdf5d3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev.cp{background:rgba(212,175,55,.22);color:#f1dfa0}
+.cal-more{font-size:8.5px;color:var(--dim);margin-top:1px}
+.cal-agenda{background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:10px 12px;margin-top:10px}
+.cal-ag{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(138,43,226,.15)}
+.cal-ag:last-child{border-bottom:none}
+.cal-agt{flex:none;width:74px;font-size:11px;color:var(--gold)}
+.cal-agn{font-size:13px;color:var(--text)}
+.cal-agl{font-size:10.5px;color:var(--dim)}
+.kn-card{background:#15151a;border:1px solid rgba(138,43,226,.28);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer}
+.kn-cat{font-size:10px;letter-spacing:2px;color:#d1d1d1;text-transform:uppercase}
+.kn-t{font-size:15px;font-weight:700;color:#fff;margin:3px 0 2px}
+.kn-d{font-size:11px;color:#a0a0a0;line-height:1.45;word-break:break-word}
+.kn-ev{background:#15151a;border-radius:12px;padding:11px 14px;margin-bottom:8px;border-left:3px solid #22c55e}
+.kn-ev.gold{border-left-color:#eab308}
+.kn-ev.red{border-left-color:#e05555}
+.kn-evlab{font-size:9.5px;letter-spacing:2px;color:#d1d1d1}
+.kn-evtxt{font-size:13px;font-weight:600;color:#fff;margin-top:2px}
+.kn-evsub{font-size:10.5px;color:#a0a0a0;margin-top:1px}
+.kn-ro{display:inline-block;background:rgba(138,43,226,.16);border:1px solid rgba(138,43,226,.4);border-radius:999px;padding:5px 14px;font-size:11px;color:#d1d1d1;margin:4px 0 10px}
+.kn-add{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.kn-add input{flex:1;min-width:110px}
+.hl-tile{background:#15151a;border:1px solid rgba(138,43,226,.28);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.hl-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hl-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.st-row{background:#15151a;border:1px solid rgba(138,43,226,.28);border-radius:12px;padding:11px 14px;margin-bottom:9px}
+.st-lab{font-size:10px;letter-spacing:2px;color:#d1d1d1}
+.st-t{font-size:14px;font-weight:600;color:#fff;margin-top:2px}
+.st-btn{background:rgba(124,92,255,.15);border:1px solid rgba(138,43,226,.4);color:#fff;border-radius:8px;font-size:11.5px;padding:7px 12px}
+.st-btn.red{border-color:rgba(224,85,85,.5);background:rgba(224,85,85,.12)}
+.tsearch{display:flex;align-items:center;gap:8px;background:#15151a;border:1px solid rgba(138,43,226,.35);border-radius:10px;padding:8px 12px;margin:6px 0 10px}
+.tsearch input{flex:1;background:none;border:none;color:#fff;font-size:14px;outline:none;min-width:0}
+.tsearch .sq{color:var(--gold);font-size:13px}
+.tsearch .sclr{color:var(--dim);font-size:15px;cursor:pointer;padding:0 3px}
+.hb-donut{width:124px;height:124px;border-radius:50%;flex:none;position:relative;box-shadow:0 0 18px rgba(74,222,128,.18)}
+.hb-donut::after{content:'';position:absolute;inset:16px;border-radius:50%;background:#0a0a12}
+.hb-dpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:26px;font-weight:800;color:var(--text)}
+.hb-rings{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:12px;margin-bottom:12px}
+.hb-ring{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:0}
+.hb-ringc{width:58px;height:58px;border-radius:50%;position:relative;flex:none}
+.hb-ringc::after{content:'';position:absolute;inset:7px;border-radius:50%;background:#0a0a12}
+.hb-ringc span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:13px;font-weight:800;color:var(--text)}
+.hb-ring .rn{font-size:10.5px;color:var(--dim);line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hb-ring .rs{font-size:10px;color:var(--gold)}
+.hb-kv{display:flex;gap:22px;flex:1;min-width:0}
+.hb-kv div{min-width:52px}
+.hb-kv div{font-size:11.5px;color:var(--dim)}
+.hb-kv b{display:block;font-size:16px;color:var(--text)}
+.hb-bars{display:flex;align-items:flex-end;gap:8px;height:104px;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 10px;margin-bottom:12px;overflow-x:auto}
+.hb-month{display:block;height:auto;padding:8px 6px}
+.hb-monthwrap{display:flex;align-items:flex-end;gap:2px;max-height:96px;overflow-x:auto;background:repeating-linear-gradient(to top, rgba(255,255,255,.08) 0 1px, transparent 1px 19px)}
+.hb-monthwrap .hb-col{flex:none;width:12px;gap:2px}
+.hb-monthwrap .hb-bar{width:8px;flex:none;min-width:8px}
+.hb-monthwrap .dl{font-size:9px}
+.hb-bar{flex:1;min-width:0;background:rgba(138,43,226,.5);border-radius:3px 3px 0 0;position:relative}
+.hb-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;min-width:0}
+.hb-col .pc{font-size:10px;color:var(--dim)}
+.hb-col .dl{font-size:10px;color:var(--dim);letter-spacing:.5px}
+.hb-col.today .dl{color:var(--gold);font-weight:800}
+.hb-col .hb-bar{width:70%;flex:none}
+.hb-bar.full{background:var(--green)}
+.hb-gridwrap{overflow-x:auto;background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;margin-bottom:12px}
+table.hb-grid{border-collapse:collapse;font-size:11px;white-space:nowrap}
+table.hb-grid th{color:var(--dim);font-weight:600;padding:5px 4px;text-align:center;border-bottom:1px solid var(--border)}
+table.hb-grid th.hname,table.hb-grid td.hname{text-align:left;position:sticky;left:0;background:#0c0c1c;z-index:2;max-width:118px;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+table.hb-grid td{text-align:center;padding:2px}
+.hb-cell{width:16px;height:16px;border:1px solid rgba(138,43,226,.5);border-radius:4px;display:inline-block;cursor:pointer;background:transparent}
+.hb-cell.done{background:var(--green);border-color:var(--green);position:relative}
+.hb-cell.done::after{content:'\2713';position:absolute;inset:0;color:#06250f;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.hb-cell.future{opacity:.25;cursor:default}
+.hb-cell.today{border-color:var(--gold);box-shadow:0 0 5px rgba(212,175,55,.55)}
+.hb-anrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11.5px}
+.hb-anrow .n{width:34%;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-anrow .nums{color:var(--dim);width:26%;flex:none}
+.hb-pbar{flex:1;height:8px;border-radius:5px;background:rgba(138,43,226,.25);overflow:hidden}
+.hb-pbar i{display:block;height:100%;background:var(--green)}
+.hb-anrow .pc{width:38px;text-align:right;color:var(--green);font-weight:700;flex:none}
+.hb-wellday{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.hb-wbtn{background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:10px;padding:8px 13px;font-size:13px;cursor:pointer}
+.hb-wbtn.on{border-color:var(--gold);color:var(--gold);font-weight:700}
+.hb-sleep{width:70px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-size:13px}
+.hb-wellrow{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dim);padding:3px 0}
+.hb-wellrow .wd{width:34%;color:var(--text);flex:none}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(7,7,20,.95);border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);backdrop-filter:blur(8px)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;box-shadow:0 0 8px var(--green)}
+.dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
+.toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--purple);color:var(--text);border-radius:12px;padding:10px 18px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;max-width:88vw}
+.toast.show{opacity:1}
+/* DRAWER */
+#drawer{position:fixed;inset:0;background:rgba(4,4,12,.7);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);border:1px solid var(--border);border-radius:18px 18px 0 0;width:100%;max-width:640px;max-height:86vh;overflow-y:auto;padding:calc(18px + env(safe-area-inset-bottom)) 18px 26px;position:relative}
+.sheet h3{font-size:17px;font-weight:700;padding-right:40px}
+.close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;width:32px;height:32px;font-size:15px;cursor:pointer}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.desc{font-size:13.5px;color:var(--dim);line-height:1.5;margin:8px 0}
+.sheet input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);outline:none;margin-top:8px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.abtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer}
+.abtn.primary{border-color:var(--purple);color:var(--purple)}
+.abtn.green{border-color:var(--green);color:var(--green)}
+.abtn.gold{border-color:var(--gold);color:var(--gold)}
+.abtn.danger{border-color:var(--red);color:var(--red)}
+.log{margin-top:14px}
+.log h4{font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.le{font-size:12.5px;color:var(--text);line-height:1.5;padding:6px 0;border-bottom:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="logo">V</div>
+  <h1>VANTRA <span>Mission Control</span></h1>
+  <p>Executive Operations</p>
+  <form id="pinForm" style="display:contents" onsubmit="event.preventDefault();">
+  <input id="pin" type="password" placeholder="PIN" autocomplete="off" inputmode="numeric">
+  <button id="loginBtn">UNLOCK</button>
+  </form>
+  <div id="loginErr"></div>
+</div>
+
+<div id="shell" class="hidden">
+<header>
+  <div class="brand">VANTRA <em>MISSION CONTROL</em></div>
+  <div class="hbtns">
+    <button class="hbtn on" id="vHome">Home</button>
+    <button class="hbtn" id="vBoard">Board</button>
+    <button class="hbtn" id="vOffice">Office / HQ</button>
+    <button class="hbtn" id="vStatus">Status</button>
+    <button class="hbtn" id="vAgents">Agents</button>
+    <button class="hbtn" id="vHabits">Habits</button>
+    <button class="hbtn" id="vContent">Content</button>
+    <button class="hbtn" id="vCalendar">Calendar</button>
+    <button class="hbtn" id="vKnowledge">Knowledge</button>
+    <button class="hbtn" id="vHealth">Health</button>
+    <button class="hbtn" id="vSettings">Settings</button>
+    <button class="hbtn warn" id="vLogout">Log out</button>
+  </div>
+</header>
+<nav class="tabs" id="filters">
+  <button class="tab on" data-f="all">All</button><button class="tab" data-f="BACKLOG">Backlog</button><button class="tab" data-f="READY">Ready</button><button class="tab" data-f="ACTIVE">Active</button><button class="tab" data-f="WAITING">Waiting</button><button class="tab" data-f="BLOCKED">Blocked</button><button class="tab" data-f="REVIEW">Review</button><button class="tab" data-f="COMPLETED">Done</button>
+</nav>
+<main>
+  <div id="capture"><input id="capIn" placeholder="New task — type and go"><button id="capBtn">+ ADD</button></div>
+  <div class="capExtra">
+    <select id="capPriority"><option value="">Priority…</option><option>urgent</option><option>high</option><option>normal</option><option>low</option></select>
+    <input id="capProject" placeholder="Project (optional)">
+    <select id="capApproval"><option value="no">No approval needed</option><option value="yes">Requires my approval</option></select>
+  </div>
+  <div id="home">
+    <div class="sec" id="todoSec"><h2 style="letter-spacing:2px;font-size:12px;color:var(--gold)">MY TO-DOS</h2>
+      <div id="todoAdd" style="display:flex;gap:6px;margin:6px 0 10px;flex-wrap:wrap">
+        <input id="todoIn" placeholder="Add a to-do for you" style="flex:1;min-width:150px">
+        <input id="todoDue" type="date" title="Due date (optional)" style="width:138px">
+        <button id="todoBtn" class="hb-wbtn">+ ADD</button>
+      </div>
+      <div id="todoList"></div></div>
+    <div class="stats" id="stats"></div>
+    <div class="sec" id="projSec"><h2 style="letter-spacing:2px;font-size:12px;color:var(--gold)">PROJECT PROGRESS</h2><div id="projWrap"></div></div>
+    <div class="sec" id="approvalsSec"><h2>Pending Approvals</h2><div id="approvals"></div></div>
+    <div class="sec"><h2 id="listTitle">All Tasks</h2><div class="tsearch" id="tsWrap1"><span class="sq">&#128269;</span><input id="taskSearch1" placeholder="Search tasks, agents, projects..." autocomplete="off"><span class="sclr" id="tsclear1" style="display:none">&times;</span></div><div id="tasks"></div></div>
+  </div>
+  <div id="boardView" class="hidden"><div class="tsearch" id="tsWrap2"><span class="sq">&#128269;</span><input id="taskSearch2" placeholder="Search tasks, agents, projects..." autocomplete="off"><span class="sclr" id="tsclear2" style="display:none">&times;</span></div><div class="board" id="board"></div></div>
+
+  <div id="officeView" class="hidden">
+    <div id="officeFloor"><div style="color:var(--dim);font-size:12px;padding:8px">Loading office floor…</div></div>
+  </div>
+
+  <div id="statusView" class="hidden">
+    <div class="stats" id="statusStats" style="margin-top:12px"></div>
+    <div class="sec" style="margin-top:12px"><h2>Team Status — every agent, live</h2><div id="teamStatus"></div></div>
+  </div>
+
+  <div id="agentsView" class="hidden">
+    <div class="sec" style="margin-top:12px"><h2>Agent Directory — Operational Truth</h2><div id="roster"></div></div>
+    <div class="sec"><h2>Live Telemetry (AgentStatus)</h2><div id="liveAgents"></div></div>
+  </div>
+  <div id="contentView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Content Pipeline</h2>
+      <div class="cp-tiles" id="cpTiles"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <input id="cpTitle" placeholder="New content idea" style="flex:1;min-width:150px">
+        <input id="cpPlat" placeholder="Platform" style="width:100px">
+        <input id="cpDate" type="date" title="Publish date (optional)" style="width:138px">
+        <button id="cpAdd" class="hb-wbtn">+ ADD</button>
+      </div>
+      <div class="cp-board" id="cpBoard"></div>
+    </div>
+  </div>
+  <div id="calendarView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Calendar</h2>
+      <div class="cal-head"><b id="calTitle"></b><span class="cal-nav"><button id="calPrev">&#8249;</button><button id="calToday">Today</button><button id="calNext">&#8250;</button></span></div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:6px"><span style="color:#bdf5d3">&#9632;</span> Google Calendar &nbsp; <span style="color:#f1dfa0">&#9632;</span> Content publish dates</div>
+      <div class="cal-agenda" id="calAgenda"></div>
+    </div>
+  </div>
+  <div id="knowledgeView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Knowledge</h2>
+      <div id="knDocs"></div>
+      <div class="kn-add">
+        <input id="knCat" placeholder="Label (LOG, SOP...)" style="width:120px">
+        <input id="knTitle" placeholder="Title" style="flex:1;min-width:120px">
+        <input id="knUrl" placeholder="https://link" style="flex:1;min-width:120px">
+        <button id="knAdd" class="hb-wbtn">+ ADD</button>
+      </div>
+      <h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:14px 0 2px">EVIDENCE</h3>
+      <div style="font-size:16px;font-weight:700;color:#fff;margin:2px 0 2px">Recent Records</div>
+      <div class="kn-ro">read-only</div>
+      <div id="knEvents"></div>
+    </div>
+  </div>
+  <div id="healthView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>System Health <span class="asof" id="hAsOf"></span></h2>
+      <div id="hlStrip"></div>
+      <div id="hlPhase1"></div>
+      <h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:14px 0 2px">AGENTS — LIVE TELEMETRY</h3>
+      <div id="hlAgents"></div>
+      <h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:14px 0 2px">RECENT SYSTEM EVENTS</h3>
+      <div id="hlEvents"></div>
+    </div>
+  </div>
+  <div id="settingsView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Settings</h2>
+      <div class="st-row"><div class="st-lab">CHANGE PIN</div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <form id="setPinForm" style="display:flex;gap:8px" onsubmit="event.preventDefault();">
+          <input id="setPin" type="password" inputmode="numeric" placeholder="New PIN (6+)" style="flex:1;min-width:100px">
+          <input id="setPin2" type="password" inputmode="numeric" placeholder="Repeat" style="flex:1;min-width:100px">
+          <button id="setPinBtn" class="st-btn">Save</button>
+          </form>
+        </div>
+        <div style="font-size:10.5px;color:var(--dim);margin-top:5px">Changes the Mission Control PIN everywhere. You stay logged in on this device.</div></div>
+      <div class="st-row"><div class="st-lab">ACTIVE SESSIONS</div><div id="setSessions" style="margin-top:6px"></div></div>
+      <div class="st-row"><div class="st-lab">ABOUT</div>
+        <div style="font-size:12px;color:#d1d1d1;margin-top:4px;line-height:1.6">VANTRA Mission Control · v9.18<br>Sessions last 24 hours. Log out ends yours early.</div></div>
+    </div>
+  </div>
+  <div id="habitsView" class="hidden">
+    <div class="sec" style="margin-top:12px">
+      <h2>Habit Tracker</h2>
+      <div id="habitsMonthTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"></div>
+      <div class="asof" id="habitsAsOf"></div>
+      <div id="habitsBody"><div style="color:var(--dim);font-size:12px;padding:8px">Loading habits…</div></div>
+    </div>
+  </div>
+</main>
+<footer><span><span class="dot" id="dot"></span><span id="sync">not synced</span></span><span id="whoami"></span></footer>
+</div>
+
+<div id="drawer" class="hidden"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const APIURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/missionControlApi";
+const COMMSURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcComms";
+const CONTENTURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcContent";
+const TODOURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcTodos";
+const HVURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHabitValue";
+const BACKLOGURL = "https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHabitBacklog";
+let token = localStorage.getItem('mc_token') || '';
+let board = null; let view='home'; let filter='all', projFilter=''; let selected=null; let q='';
+let loginBusy=false; let capBusy=false;
+const $ = id => document.getElementById(id);
+
+function deviceId(){
+  let d = localStorage.getItem('mc_device');
+  if(!d){
+    d = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('dev-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    localStorage.setItem('mc_device', d);
+  }
+  return d;
+}
+function devLabel(){const ua=navigator.userAgent;if(/iPhone|Android.*Mobile/i.test(ua))return 'phone';if(/iPad|Tablet/i.test(ua))return 'tablet';if(/Windows/i.test(ua))return 'windows-pc';if(/Macintosh/i.test(ua))return 'mac';return 'browser';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtDate(iso){if(!iso)return '—';const d=new Date(iso);if(isNaN(d.getTime()))return '—';return d.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
+function fmtET(iso){try{return new Date(iso).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return iso;}}
+function fmtAgentName(str){if(!str) return '';var s=String(str);if(s==='CHATGPT (Manager)'||s==='CHATGPT') return 'OG VANTRA (ChatGPT)';s=s.replace(/CHATGPT\s*\(Manager\)/gi,'OG VANTRA (ChatGPT)');s=s.replace(/\bCHATGPT\b/g,'OG VANTRA (ChatGPT)');return s;}
+const PRIO_CLASS={urgent:'p-urgent',high:'p-high',normal:'p-normal',low:'p-low'};
+function prioClass(p){return PRIO_CLASS[p]||'p-normal';}
+function stateColor(s){return s==='COMPLETED'?'var(--green)':s==='BLOCKED'?'var(--red)':s==='REVIEW'?'var(--amber)':s==='ACTIVE'?'#6ee7a0':s==='WAITING'?'var(--gold)':'var(--purple)';}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+function showLogin(){$('login').classList.remove('hidden');$('shell').classList.add('hidden');}
+function showShell(){$('login').classList.add('hidden');$('shell').classList.remove('hidden');}
+function nowTime(){return new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}
+let syncConsecutiveFailures=0;
+function setDot(err,customMsg){const d=$('dot');if(err){d.className='dot err';$('sync').textContent=customMsg||('sync error '+nowTime());}else{syncConsecutiveFailures=0;d.className='dot';$('sync').textContent='synced '+nowTime();}}
+
+async function api(op, extra, retriesLeft){
+  if(typeof retriesLeft!=='number') retriesLeft=2;
+  try{
+    const res = await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({op:op},extra||{}))});
+    let d=null;
+    try{ d=await res.json(); }catch(e){
+      if(retriesLeft>0 && res.status>=500){ await new Promise(r=>setTimeout(r,1000)); return await api(op,extra,retriesLeft-1); }
+      throw new Error('Server error — no JSON response ('+res.status+')');
+    }
+    if(!d.ok && res.status===401){localStorage.removeItem('mc_token');token='';showLogin();throw new Error('auth');}
+    if(!d.ok){
+      if(retriesLeft>0 && res.status>=500){ await new Promise(r=>setTimeout(r,1000)); return await api(op,extra,retriesLeft-1); }
+      throw new Error(d.error||('op failed ('+res.status+')'));
+    }
+    return d;
+  }catch(err){
+    if(err.message==='auth') throw err;
+    if(retriesLeft>0 && (err.name==='TypeError'||String(err.message).indexOf('fetch')>=0)){ await new Promise(r=>setTimeout(r,1200)); return await api(op,extra,retriesLeft-1); }
+    throw err;
+  }
+}
+
+// count-habit value save (Boss, Oct 17: some habits are a NUMBER per day, like sleep)
+async function hvApi(payload){
+  const res=await fetch(HVURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+  let d=null; try{ d=await res.json(); }catch(e){}
+  if(!d||!d.ok){
+    if(res.status===401){ localStorage.removeItem('mc_token'); token=''; showLogin(); throw new Error('auth'); }
+    throw new Error((d&&d.error)||('save failed ('+res.status+')'));
+  }
+  return d;
+}
+async function todoApi(payload){
+  const res=await fetch(TODOURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+  let d=null; try{ d=await res.json(); }catch(e){}
+  if(!d||!d.ok){
+    if(res.status===401){ localStorage.removeItem('mc_token'); token=''; showLogin(); throw new Error('auth'); }
+    throw new Error((d&&d.error)||('save failed ('+res.status+')'));
+  }
+  return d;
+}
+/* ---------- login (P1-2) ---------- */
+async function login(){
+  if(loginBusy) return;
+  const pin=$('pin').value.trim();
+  $('loginErr').textContent='';
+  if(!pin){ $('loginErr').textContent='Enter your PIN'; return; }
+  loginBusy=true; const b=$('loginBtn'); b.disabled=true; b.textContent='CHECKING…';
+  try{
+    const res=await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'login',pin:pin,deviceLabel:devLabel(),deviceId:deviceId()})});
+    let d=null; let jsonOk=true;
+    try{ d=await res.json(); }catch(e){ jsonOk=false; }
+    if(!jsonOk){ $('loginErr').textContent='Server error — try again'; $('pin').value=''; return; }
+    if(!d.ok){
+      if(res.status===401){ $('loginErr').textContent='Wrong PIN'; }
+      else if(res.status===429){ $('loginErr').textContent=(d.error||'Locked') + (d.lockUntil ? (' until ' + fmtET(d.lockUntil) + ' ET') : ''); }
+      else if(res.status>=500){ $('loginErr').textContent='Server error — try again'; }
+      else { $('loginErr').textContent=d.error||'Login failed'; }
+      $('pin').value='';
+      return;
+    }
+    token=d.token; localStorage.setItem('mc_token',token);
+    $('pin').value='';
+    showShell(); refresh();
+  }catch(e){
+    $('loginErr').textContent='Can\u2019t reach Mission Control — check your connection';
+    $('pin').value='';
+  }finally{
+    loginBusy=false; b.disabled=false; b.textContent='UNLOCK';
+  }
+}
+
+async function doLogout(){
+  try{ await api('logout'); }catch(e){ /* end the session locally even if the call fails */ }
+  localStorage.removeItem('mc_token'); token='';
+  $('loginErr').textContent='Logged out';
+  showLogin();
+}
+
+/* ---------- data ---------- */
+async function refresh(){
+  try{
+    board=await api('board');
+    setDot(false);
+    $('whoami').textContent='BOSS · '+devLabel();
+    renderStats(); renderProjects(); renderApprovals(); renderTasks(); renderBoard(); loadTodos();
+    bindSearch(1); bindSearch(2);
+    if(view==='office') renderOfficeView();
+  }catch(e){
+    if(String(e.message)!=='auth'){
+      syncConsecutiveFailures++;
+      if(syncConsecutiveFailures>=2){ setDot(true,'sync error '+nowTime()); toast('Sync failed — retrying on re-connect'); }
+      else{ setDot(true,'reconnecting…'); }
+    }
+  }
+}
+function renderStats(){
+  const s=board.stats||{};
+  // Open total = the open tiles themselves (active+ready+block/wait+review+backlog).
+  // NEVER total-completed: that wrongly counted CANCELLED as open (Boss caught it 2026-10-17).
+  const open=(s.active||0)+(s.ready||0)+((s.blocked||0)+(s.waiting||0))+(s.review||0)+(s.backlog||0);
+  const tile=(n,l,cls)=>'<div class="stat '+(cls||'')+'"><b>'+(n||0)+'</b><span>'+l+'</span></div>';
+  $('stats').innerHTML=
+    tile(s.active,'Active','s-active')+
+    tile(s.ready,'Ready')+
+    tile((s.blocked||0)+(s.waiting||0),'Block/Wait','s-blocked')+
+    tile(s.pendingApprovals,'Approvals','s-approval')+
+    tile(s.review,'Review')+
+    tile(s.backlog,'Backlog')+
+    tile(s.completed,'Done')+
+    tile(open,'Open total');
+}
+// one pill: plain gray when zero, its own strong color only when it has something
+function pillHtml(n,label,activeStyle){
+  const base='font-size:11px;';
+  return '<span class="pill" style="'+base+(n>0?activeStyle:'background:transparent;border-color:rgba(255,255,255,.12);color:var(--dim);opacity:.6')+'">'+n+' '+label+'</span>';
+}
+function renderProjects(){
+  // PROJECT PROGRESS (Boss, Oct 17): per-project done/total + live state pills.
+  // Computed client-side from the board payload — no backend change needed.
+  const ts=(board.tasks||[]).filter(t=>t.state!=='CANCELLED');
+  const byProj={};
+  ts.forEach(t=>{ const p=t.project||'No project'; (byProj[p]=byProj[p]||[]).push(t); });
+  const projs=Object.keys(byProj).sort((a,b)=>a.localeCompare(b));
+  const wrap=$('projWrap');
+  $('projSec').style.display=projs.length?'block':'none';
+  if(!projs.length){ wrap.innerHTML=''; return; }
+  let html='<div style="display:flex;align-items:center;justify-content:space-between;margin:2px 0 8px">'+
+    '<div style="font-size:16px;font-weight:800;color:var(--text)">Operating Areas</div>'+
+    '<div class="pill" style="font-size:11px">'+projs.length+' project'+(projs.length>1?'s':'')+'</div></div>';
+  html+=projs.map(p=>{
+    const list=byProj[p];
+    const done=list.filter(t=>t.state==='COMPLETED').length;
+    const total=list.length;
+    const pct=total?Math.round(done/total*100):0;
+    const active=list.filter(t=>t.state==='ACTIVE').length;
+    const blocked=list.filter(t=>t.state==='BLOCKED'||t.state==='WAITING').length;
+    const pending=list.filter(t=>t.state==='READY'||t.state==='READY_FOR_EXECUTION').length;
+    const apIds=(board.approvals||[]).map(a=>a.relatedTaskId);
+    const aps=list.filter(t=>apIds.indexOf(t.taskId)>=0).length;
+    const on=projFilter===p;
+    return '<div class="card" data-proj="'+esc(p)+'" style="cursor:pointer;'+(on?'border-color:var(--gold);':'')+'">'+
+      '<div class="t" style="display:flex;justify-content:space-between;align-items:center">'+esc(p)+
+      '<span style="color:var(--gold);font-weight:800">'+pct+'%</span></div>'+
+      '<div class="m"><span>'+done+' done / '+total+' total</span></div>'+
+      '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,.07);margin:8px 0;overflow:hidden">'+
+      '<div style="height:100%;width:'+pct+'%;border-radius:4px;background:linear-gradient(90deg,#8a2be2,var(--gold))"></div></div>'+
+      '<div class="m" style="display:flex;gap:6px;flex-wrap:wrap">'+
+      pillHtml(active,'active','background:rgba(74,222,128,.16);border-color:#4ade80;color:#4ade80')+
+      pillHtml(pending,'pending','background:rgba(157,124,255,.18);border-color:#9d7cff;color:#c9b8ff')+
+      pillHtml(aps,aps===1?'approval':'approvals','background:rgba(212,175,55,.18);border-color:#d4af37;color:#f0d88c')+
+      pillHtml(blocked,'blocked','background:#4a2626;border-color:#e05555;color:#fff')+
+      '</div></div>';
+  }).join('');
+  wrap.innerHTML=html;
+  Array.prototype.forEach.call(wrap.querySelectorAll('[data-proj]'),el=>{
+    el.addEventListener('click',()=>{ projFilter=(projFilter===el.getAttribute('data-proj'))?'':el.getAttribute('data-proj'); renderProjects(); renderTasks(); });
+  });
+}
+function renderApprovals(){
+  const ap=board.approvals||[];
+  $('approvalsSec').style.display=ap.length?'block':'none';
+  $('approvals').innerHTML=ap.map(a=>{
+    const isIdea=String(a.type||'').indexOf('idea')>=0;
+    return '<div class="apcard"><div class="t" style="font-size:14px">'+esc(a.description||a.type)+'</div>'+
+    '<div class="m" style="margin-top:6px;font-size:11.5px;color:var(--dim)">requested by '+esc(a.requestedBy)+' · '+fmtDate(a.requestedAt)+(isIdea?' · <span class="pill p-app">IDEA</span>':'')+'</div>'+
+    (()=>{
+      const dead=a.relatedTaskId&&board&&board.tasks?board.tasks.find(t=>t.taskId===a.relatedTaskId&&(t.state==='CANCELLED'||t.state==='COMPLETED')):null;
+      if(dead) return '<div class="acts"><span class="pill p-normal" style="border-color:var(--dim);color:var(--dim)">TASK '+esc(dead.state)+' — nothing to approve</span>'+
+        '<button class="abtn" data-act="expireApproval" data-id="'+esc(a.id)+'">Clear</button></div>';
+      return '<div class="acts">'+
+      '<button class="abtn gold" data-act="decide" data-id="'+esc(a.id)+'" data-decision="approve">Approve</button>'+
+      '<button class="abtn danger" data-act="decide" data-id="'+esc(a.id)+'" data-decision="deny">Deny</button>'+
+      (a.relatedTaskId ? '<button class="abtn" data-act="open" data-id="'+esc(a.relatedTaskId)+'">Task</button>' : '<button class="abtn" data-act="openIdea" data-id="'+esc(a.id)+'">Details</button>')+
+      '</div>';
+    })()+
+    '</div></div>';
+  }).join('');
+}
+function taskCard(t){
+  return '<div class="card" data-act="open" data-id="'+esc(t.taskId)+'">'+
+    '<div class="t">'+esc(t.title)+'</div>'+
+    '<div class="m">'+
+    '<span class="pill '+prioClass(t.priority)+'">'+esc(String(t.priority||'normal').toUpperCase())+'</span>'+
+    '<span class="pill" style="border:1px solid '+stateColor(t.state)+';color:'+stateColor(t.state)+'">'+esc(t.state)+'</span>'+
+    (t.requiresApproval==='yes'?'<span class="pill p-app">APPROVAL</span>':'')+
+    (t.assignedAgent?'<span>· '+esc(fmtAgentName(t.assignedAgent))+'</span>':'')+
+    (t.project?'<span>· '+esc(t.project)+'</span>':'')+
+    '</div></div>';
+}
+function matchTask(t){
+  if(!q) return true;
+  const hay=[t.title,t.taskId,t.project,t.assignedAgent,t.state,t.description,t.notes,t.resultSummary].map(x=>String(x||'')).join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
+}
+function bindSearch(n){
+  const inp=$('taskSearch'+n), clr=$('tsclear'+n);
+  if(!inp) return;
+  bindSearch._b=bindSearch._b||{};
+  if(bindSearch._b[n]) return;
+  bindSearch._b[n]=1;
+  inp.value=q;
+  inp.addEventListener('input',()=>{
+    q=inp.value.trim();
+    const other=$('taskSearch'+(n===1?2:1)); if(other&&other!==document.activeElement) other.value=q;
+    if($('tsclear'+n)) $('tsclear'+n).style.display=q?'inline':'none';
+    if($('tsclear'+(n===1?2:1))) $('tsclear'+(n===1?2:1)).style.display=q?'inline':'none';
+    if(view==='board') renderBoard(); else renderTasks();
+  });
+  if(clr) clr.addEventListener('click',()=>{ q=''; inp.value=''; $('tsclear1').style.display='none'; $('tsclear2').style.display='none'; if(view==='board') renderBoard(); else renderTasks(); });
+}
+function renderTasks(){
+  let ts=board.tasks;
+  if(filter==='all') ts=ts.filter(t=>t.state!=='CANCELLED'); // P1-1: All includes Done now
+  else ts=ts.filter(t=>t.state===filter);
+  if(projFilter) ts=ts.filter(t=>(t.project||'No project')===projFilter); // PROJECT PROGRESS tap filter
+  const preQ=ts.length; ts=ts.filter(matchTask);
+  let lt=(filter==='all'?'All Tasks':filter)+(projFilter?(' — '+projFilter+' (tap card again to clear)'):'')+(q?(' — '+ts.length+' match'+(ts.length===1?'':'es')+' for "'+q+'"'):'');
+  $('listTitle').textContent=lt;
+  if(q&&!ts.length){ $('tasks').innerHTML='<div style="color:var(--dim);font-size:13px;padding:8px 4px">No tasks match "'+esc(q)+'". Try another word.</div>'; return; }
+  $('tasks').innerHTML=ts.length?ts.map(taskCard).join(''):'<div style="color:var(--dim);font-size:13px;padding:8px 4px">No tasks here. Capture one above.</div>';
+}
+const COLS=['BACKLOG','READY','ACTIVE','WAITING','BLOCKED','REVIEW','COMPLETED'];
+function renderBoard(){
+  const cols=filter==='all'?COLS:COLS.filter(c=>c===filter);
+  $('board').innerHTML=cols.map(c=>{
+    const ts=board.tasks.filter(t=>t.state===c&&matchTask(t));
+    if(q&&!ts.length) return '';
+    return '<div class="col"><h3>'+c+'<i>'+ts.length+'</i></h3>'+(ts.map(taskCard).join('')||'<div style="color:var(--dim);font-size:12px">—</div>')+'</div>';
+  }).join('');
+}
+
+/* ---------- roster: readable role title under the name, tap to edit (Boss) ---------- */
+function rosterCard(r){
+  const ok=String(r.operationalTruth||'').indexOf('VERIFIED WORKING')>=0;
+  const gb=/GROK Bot/i.test(r.platform||'');
+  const role=(r.roleTitle||'').trim();
+  const roleHtml=role?esc(role):'Tap to add a role title';
+  return '<div class="rcard" id="rc-'+esc(r.id||'')+'">'
+   +'<div class="top"><div class="rn">'+esc(fmtAgentName(r.name))+'</div><div class="'+(ok?'v-ok':'v-no')+'">'+esc(r.operationalTruth)+'</div></div>'
+   +'<div class="rt'+(role?'':' empty')+'" onclick="editRole(\''+esc(r.id||'')+'\')">'+roleHtml+'<span class="pen">\u270E</span></div>'
+   +(r.platform?'<span class="tag'+(gb?' grokbot':'')+'">'+esc(r.platform)+'</span>':'')
+   +'<div class="why">'+esc(r.truthSource||'')+'</div>'
+   +'</div>';
+}
+function editRole(id){
+  const r=(window._roster||[]).find(x=>x.id===id); if(!r) return;
+  const card=$('rc-'+id); if(!card) return;
+  const rt=card.querySelector('.rt');
+  rt.onclick=null;
+  rt.innerHTML='<div class="editrow"><input id="ri-'+id+'" maxlength="120" value="'+esc(r.roleTitle||'')+'" placeholder="Role title">'
+   +'<button onclick="saveRole(\''+id+'\')">Save</button><button class="cancel" onclick="renderAgents()">Cancel</button></div>';
+  const inp=$('ri-'+id); if(inp){inp.focus();}
+}
+async function saveRole(id){
+  const inp=$('ri-'+id); if(!inp) return;
+  const val=inp.value.trim();
+  try{
+    await api('setRole',{id:id,roleTitle:val});
+    toast('Role saved');
+    await renderAgents();
+  }catch(e){
+    if(e.message!=='auth') toast('Could not save: '+e.message);
+  }
+}
+/* ---------- OFFICE / HQ VIEW ---------- */
+async function moveTaskToWaiting(taskId, reason){
+  if(!taskId){ toast('Select a task first'); return; }
+  try{
+    await api('moveTask',{taskId:taskId,to:'WAITING',reason:reason||'Moved to WAITING from Office HQ'});
+    toast('Task moved to WAITING');
+    refresh();
+    if(view==='office') renderOfficeView();
+  }catch(e){ toast(e.message); }
+}
+/* ---------- OFFICE FLOOR: visual team view ---------- */
+function normAgent(n){ return fmtAgentName(String(n||'')).trim().toUpperCase(); }
+function agentLook(name){
+  const n=normAgent(name);
+  const looks=[
+    ['ELIO',{'i':'\ud83d\udd27','bg':'linear-gradient(135deg,#7c5cff,#4f46e5)'}],
+    ['OG VANTRA',{'i':'\ud83e\udde0','bg':'linear-gradient(135deg,#5b3df5,#d4af37)'}],
+    ['LENOHERMES',{'i':'\ud83d\udedf','bg':'linear-gradient(135deg,#16a34a,#065f46)'}],
+    ['LENOCLAW',{'i':'\ud83d\udd27','bg':'linear-gradient(135deg,#f59e0b,#b45309)'}],
+    ['CLAW',{'i':'\ud83d\udee1','bg':'linear-gradient(135deg,#3b82f6,#6366f1)'}],
+    ['HERMES',{'i':'\ud83d\udce1','bg':'linear-gradient(135deg,#7c5cff,#22c55e)'}],
+    ['LILY',{'i':'\u260e','bg':'linear-gradient(135deg,#10b981,#065f46)'}],
+    ['JEN',{'i':'\ud83d\udccb','bg':'linear-gradient(135deg,#38bdf8,#1e40af)'}],
+    ['LENNY',{'i':'\ud83d\udcf8','bg':'linear-gradient(135deg,#22d3ee,#0e7490)'}],
+    ['LELIC',{'i':'\ud83c\udf9b','bg':'linear-gradient(135deg,#22c55e,#15803d)'}],
+    ['SAM',{'i':'\ud83d\udcc5','bg':'linear-gradient(135deg,#4ade80,#16a34a)'}],
+    ['ZELUS',{'i':'\ud83d\udce3','bg':'linear-gradient(135deg,#a3e635,#65a30d)'}],
+    ['MUSE',{'i':'\ud83c\udfa8','bg':'linear-gradient(135deg,#c084fc,#f0abfc)'}],
+    ['GROK',{'i':'\u26a1','bg':'linear-gradient(135deg,#3b82f6,#d4af37)'}]
+  ];
+  for(let k=0;k<looks.length;k++){ if(n.indexOf(looks[k][0])>=0) return looks[k][1]; }
+  return {'i':'\ud83e\udd16','bg':'linear-gradient(135deg,#7c5cff,#5b3df5)'};
+}
+var STALE_MS=24*3600*1000; // v9: no check-in for 24h = stale
+function agentDeskStatus(r, st, tasks){
+  const truth=String(r.operationalTruth||'');
+  const mine=tasks.filter(t=>normAgent(t.assignedAgent)===normAgent(r.name));
+  let s='idle';
+  // v9 truth rules: only a real ACTIVE board task means Working. No guessing from online/busy.
+  if(mine.some(t=>t.state==='ACTIVE')) s='working';
+  else if(mine.some(t=>t.state==='WAITING')) s='waiting';
+  else if(mine.some(t=>t.state==='BLOCKED')) s='down';
+  else if(/BLOCKED|NOT VERIFIED|OVERLOADED|FAIL/i.test(truth)) s='down';
+  else if(st&&st.status==='error') s='down';
+  else {
+    const hb=st&&st.lastHeartbeat?new Date(st.lastHeartbeat).getTime():0;
+    if(!hb||Date.now()-hb>STALE_MS) s='stale'; // v9: hasn't checked in recently
+  }
+  return s;
+}
+const STATUS_LABEL={working:'Working',waiting:'Waiting',idle:'Idle',down:'Down',stale:'Stale'};
+function deskHtml(r, tasks, agents){
+  const look=agentLook(r.name);
+  const st=(agents||[]).find(a=>normAgent(a.agentName)===normAgent(r.name));
+  const status=agentDeskStatus(r, st, tasks);
+  const mine=tasks.filter(t=>normAgent(t.assignedAgent)===normAgent(r.name));
+  const active=mine.find(t=>t.state==='ACTIVE');
+  const isClaw=normAgent(r.name).indexOf('CLAW')>=0&&normAgent(r.name).indexOf('LENOCLAW')<0;
+  const role=(r.roleTitle||'').trim();
+  return '<div class="desk" data-act="desk" data-agent="'+esc(r.name)+'" data-st="'+status+'">'
+   +'<div class="desk-top">'
+   +'<span class="d-avatar" style="background:'+look.bg+'">'+look.i+'</span>'
+   +'<span class="d-light '+status+'"></span>'
+   +'</div>'
+   +'<div class="d-name">'+esc(fmtAgentName(r.name))+'</div>'
+   +(role?'<div class="d-role">'+esc(role)+'</div>':'')
+   +'<div class="d-bubble">'+(active?('🖥 '+esc(active.title)):'<span style="color:#8a86a8">No active task</span>')+'</div>'
+   +(isClaw&&status==='idle'?'<span class="d-dell">Dell closed</span>':'')
+   +'</div>';
+}
+// Room anchor points on the artwork (percent of image). Center = JG core.
+// ---------- LIVE OFFICE v6: animated walking workers ----------
+// Home desk + room anchors, in percent of the artwork box.
+var LO_HOME={
+  'LILY':{x:25,y:24,room:'RECEPTION'},
+  'JEN':{x:73,y:25,room:'FILE TRANSFER & RECORDS'},
+  'LELIC':{x:84,y:52,room:'COORDINATION ROOM'},
+  'SAM':{x:72,y:67,room:'SCHEDULING'},
+  'ZELUS':{x:50,y:79,room:'STUDIO / VIDEO'},
+  'OG VANTRA':{x:30,y:56,room:'EXECUTIVE SUITE'},
+  'VANTRA GROK':{x:14,y:42,room:'SCOUTING & RESEARCH'},
+  'ELIO':{x:86,y:80,room:'BUILD LAB'},
+  'MUSE':{x:41,y:90,room:'CREATIVE'},
+  'LENOHERMES':{x:62,y:88,room:'RECOVERY BAY'},
+  'LENOCLAW':{x:15,y:68,room:'RESILIENCE LAB'},
+  'HERMES':{x:38,y:46,room:'OPS & COMMS'},
+  'CLAW':{x:31,y:79,room:'SECURITY POST'},
+  'LENNY':{x:80,y:36,room:'EVIDENCE & BOARD'}
+};
+// Explicit room-label positions (override) so wide labels never collide.
+var LO_LABELS={
+  'EVIDENCE & BOARD':{x:80,y:29},
+  'FILE TRANSFER & RECORDS':{x:73,y:16},
+  'APPROVAL GATE':{x:44,y:26},
+  'RECEPTION':{x:25,y:15},
+  'SCOUTING & RESEARCH':{x:14,y:33},
+  'OPS & COMMS':{x:38,y:39},
+  'COORDINATION ROOM':{x:83,y:43},
+  'SCHEDULING':{x:72,y:58},
+  'EXECUTIVE SUITE':{x:30,y:50},
+  'SECURITY POST':{x:31,y:72},
+  'RESILIENCE LAB':{x:15,y:61},
+  'STUDIO / VIDEO':{x:50,y:70},
+  'CREATIVE':{x:41,y:83},
+  'RECOVERY BAY':{x:62,y:79},
+  'BUILD LAB':{x:85,y:71},
+  'WAITING AREA':{x:60,y:41},
+  'LOUNGE':{x:66,y:56}
+};
+var LO_HALLS=[{x:50,y:34},{x:38,y:50},{x:62,y:50},{x:50,y:62},{x:30,y:44},{x:70,y:44},{x:50,y:70},{x:40,y:72},{x:60,y:72}];
+var LO_ALL={}; var LO_TIMER=null; var LO_TICKS=0; // v9: LO_FEED removed - only real audit events are shown
+// Canonical VANTRA looks (from the visual identity doc): black body + per-operator accent.
+var LO_LOOKS={
+  'OG VANTRA':{ac:'#9d7cff',eye:'#8fd0ff',core:'#d4af37',cls:'og'},
+  'LENOHERMES':{ac:'#22ff7a',eye:'#7dff9f',core:'#22ff7a',cls:'wings'},
+  'LENOCLAW':{ac:'#ffa21f',eye:'#ffc766',core:'#ff8a00',cls:''},
+  'HERMES':{ac:'#a77bff',eye:'#8cffb0',core:'#3cff8f',cls:''},
+  'CLAW':{ac:'#6e7bff',eye:'#9fb4ff',core:'#8f7bff',cls:'cloak'},
+  'LILY':{ac:'#34d399',eye:'#8affd0',core:'#34d399',cls:''},
+  'JEN':{ac:'#38bdf8',eye:'#cfefff',core:'#d4af37',cls:''},
+  'LELIC':{ac:'#4ade80',eye:'#a8ffc4',core:'#4ade80',cls:''},
+  'SAM':{ac:'#86efac',eye:'#d4ffe0',core:'#86efac',cls:''},
+  'ZELUS':{ac:'#bef264',eye:'#eaffb5',core:'#bef264',cls:''},
+  'MUSE':{ac:'#e879f9',eye:'#f6b8ff',core:'#e879f9',cls:''},
+  'ELIO':{ac:'#818cf8',eye:'#b4bcff',core:'#d4af37',cls:'partner'},
+  'VANTRA GROK':{ac:'#3b82f6',eye:'#bfd9ff',core:'#d4af37',cls:''},
+  'LENNY':{ac:'#22d3ee',eye:'#bff6ff',core:'#22d3ee',cls:''}
+};
+function loLook(name){
+  var n=normAgent(name); var keys=Object.keys(LO_LOOKS).sort(function(a,b){return b.length-a.length;});
+  for(var k=0;k<keys.length;k++){ if(n.indexOf(keys[k])>=0) return LO_LOOKS[keys[k]]; }
+  return {ac:'#9d7cff',eye:'#7fe9ff',core:'#9d7cff',cls:''};
+}
+
+function loKey(name){
+  var n=normAgent(name);
+  var keys=Object.keys(LO_HOME).sort(function(a,b){return b.length-a.length;});
+  for(var k=0;k<keys.length;k++){ if(n.indexOf(keys[k])>=0) return keys[k]; }
+  return null;
+}
+function loFirst(name){ return fmtAgentName(name).replace(/^VANTRA\s+/i,'').replace(/\s+GROK$/i,'').replace(/\s*\(.*\)/,''); }
+function loPlace(el,pt){ el.style.left=pt.x+'%'; el.style.top=pt.y+'%'; }
+function loTick(){
+  var ids=Object.keys(LO_ALL); if(!ids.length) return;
+  LO_TICKS++;
+  if(LO_TICKS%14===0) loLoadComms();
+  ids.forEach(function(id){
+    var rec=LO_ALL[id]; if(!rec||!rec.el||!rec.el.isConnected) return;
+    if(rec.status==='working'){ rec.el.classList.remove('walk'); rec.el.classList.add('work'); loPlace(rec.el,rec.home); return; }
+    rec.el.classList.remove('work');
+    if(rec.status==='down'){
+      var pt=rec.bay||rec.home; // CLAW/HERMES/LENOCLAW keep their home station as their bay (v9)
+      if(!rec.atDown){ rec.el.classList.add('walk'); loPlace(rec.el,pt); rec.atDown=true; setTimeout(function(){ rec.el.classList.remove('walk'); },2800); }
+      return;
+    }
+    rec.atDown=false;
+    if(rec.status==='waiting'){
+      if(!rec.atWait){ rec.el.classList.add('walk'); loPlace(rec.el,rec.waitSpot); rec.atWait=true; setTimeout(function(){ rec.el.classList.remove('walk'); },2800); }
+      return;
+    }
+    rec.atWait=false;
+    // idle or stale: stands at their station. v9: no wandering, no bubbles, no fake activity.
+    rec.el.classList.remove('walk'); loPlace(rec.el,rec.home);
+  });
+}
+async function loLoadComms(){
+  try{
+    const r=await fetch(COMMSURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({op:'comms'})});
+    const d=await r.json();
+    window._office.comms=(d&&d.ok&&d.events)?d.events:[];
+  }catch(e){ window._office.comms=null; }
+  loRenderFeed();
+}
+function loRenderFeed(){
+  var f=document.getElementById('loFeed'); if(!f) return;
+  var comms=(window._office&&window._office.comms)||[];
+  f.innerHTML=comms.length
+    ? '<div style="font-size:11px;letter-spacing:1.5px;color:#00ffff;margin-bottom:2px">TEAM COMMS \u2014 AUDIT LOG (real events only)</div>'+comms.slice(0,8).map(function(r){ return '<div>\ud83d\udccb '+esc(r.reporterAgent||'SYSTEM')+' \u2014 '+esc(r.messageSummary)+' <span style="color:#8a86a8">\u00b7 '+fmtET(r.observedAt)+' ET</span></div>'; }).join('')
+    : '<div style="color:#8a86a8">No comms yet \u2014 real audit events show here as the team works. Nothing is simulated.</div>';
+}
+async function renderOfficeView(){
+  const container=$('officeFloor');
+  try{
+    if(!board) board=await api('board');
+    const d=await api('agents');
+    const roster=d.roster||[];
+    const agents=d.agents||[];
+    const tasks=board.tasks||[];
+    window._office={roster:roster,agents:agents,tasks:tasks,asOf:new Date().toISOString()};
+    clearInterval(LO_TIMER); LO_ALL={};
+    var rooms={}; Object.keys(LO_HOME).forEach(function(k){ var h=LO_HOME[k]; if(!rooms[h.room]) rooms[h.room]=h; });
+    var roomHtml=Object.keys(rooms).map(function(r){ var lp=LO_LABELS[r]||{x:rooms[r].x,y:rooms[r].y-8}; return '<span class="lo-room" style="left:'+lp.x+'%;top:'+lp.y+'%">'+esc(r)+'</span>'; }).join('');
+    roomHtml+='<span class="lo-room" style="left:44%;top:27%">APPROVAL GATE</span>';
+    roomHtml+='<span class="lo-room" style="left:63%;top:44%">WAITING AREA</span>';
+    roomHtml+='<span class="lo-room" style="left:66%;top:56%">LOUNGE</span>';
+    
+    
+    
+    var pending=(board.approvals)||[];
+    var consoleHtml='<div class="lo-console'+(pending.length?' pend':'')+'" data-act="officeApprovals" style="left:41%;top:39%" title="Approval Gate console'+(pending.length?(' \u2014 '+pending.length+' pending'):'')+'"></div>';
+    var wk=roster.map(function(r,idx){
+      var key=loKey(r.name); var home=key?LO_HOME[key]:{x:20+(idx*7)%60,y:92};
+      var atHome=['CLAW','HERMES','LENOCLAW'].indexOf(key)>=0; // v9: home station, not the Recovery Bay
+      var st=(agents||[]).find(function(a){return normAgent(a.agentName)===normAgent(r.name);});
+      var status=agentDeskStatus(r,st,tasks);
+      var mine=tasks.filter(function(t){return normAgent(t.assignedAgent)===normAgent(r.name);});
+      var active=mine.find(function(t){return t.state==='ACTIVE';});
+      var lk=loLook(r.name); var bd=(-(idx*0.83)%4.6).toFixed(2)+'s';
+      var id='w'+idx;
+      LO_ALL[id]={name:r.name,status:status,home:{x:home.x,y:home.y},waitSpot:{x:57+(idx%3)*3.5,y:53.5+Math.floor(idx/3)*3.5},bay:(atHome?{x:home.x,y:home.y}:{x:13+(idx%2)*4,y:76+(idx%4)*3}),el:null,atDown:false,atWait:false};
+      return '<div class="w'+(status==='working'?' work':'')+(lk.cls?' '+lk.cls:'')+'" id="'+id+'" data-act="desk" data-agent="'+esc(r.name)+'" data-st="'+status+'" style="left:'+home.x+'%;top:'+home.y+'%;--ac:'+lk.ac+';--eye:'+lk.eye+';--core:'+lk.core+';--bd:'+bd+'" title="'+esc(fmtAgentName(r.name))+(active?' \u2014 '+esc(active.title):'')+'">'
+        +'<span class="w-dot"></span>'
+        +'<div class="w-body"><div class="w-head"><div class="w-eyes"><span class="w-eye"></span><span class="w-eye"></span></div></div><div class="w-torso"></div><div class="w-arms"><i></i><i></i></div><div class="w-legs"><i></i><i></i></div></div>'
+        +'<div class="w-name">'+esc(loFirst(r.name))+'</div></div>';
+    }).join('');
+    var alerts='<div class="ov-alerts">'
+      +(pending.length? pending.slice(0,3).map(function(a){ return '<div class="ov-alert" data-act="officeApprovals">\ud83d\udd14 Approval needed \u2014 '+esc(String(a.description||a.type||'Approval').substring(0,80))+'<div class="s">Tap to open the Approval Gate</div></div>'; }).join('')
+        : '<div class="ov-alert" style="border-color:rgba(74,222,128,.4);color:#b9f5cf">\u2713 No approvals waiting</div>')
+      +'</div>';
+    var team='<div class="ov-team">'+roster.map(function(r){
+      var st=(agents||[]).find(function(a){return normAgent(a.agentName)===normAgent(r.name);});
+      var status=agentDeskStatus(r,st,tasks);
+      var mine=tasks.filter(function(t){return normAgent(t.assignedAgent)===normAgent(r.name);});
+      var active=mine.find(function(t){return t.state==='ACTIVE';});
+      var c=ST_COLORS[status]||'#8a86a8';
+      return '<div class="trow" data-act="desk" data-agent="'+esc(r.name)+'">'
+        +'<span style="width:9px;height:9px;border-radius:50%;flex:none;background:'+c+';box-shadow:0 0 6px '+c+'"></span>'
+        +'<span class="tn">'+esc(loFirst(r.name))+'</span>'
+        +'<span class="tt">'+(active?esc(String(active.title).substring(0,50)):'no active task')+'</span>'
+        +'<span class="pill" style="border:1px solid '+c+';color:'+c+';font-size:10px;flex:none">'+esc(STATUS_LABEL[status]||status)+'</span>'
+        +'</div>';
+    }).join('')+'</div>';
+    container.innerHTML=
+      alerts
+      +team
+      +'<div class="floor-head"><span>LIVE OFFICE</span><span class="asof" style="margin:0 0 0 10px">data as of '+fmtET(window._office.asOf)+' ET</span><button class="abtn" style="padding:4px 8px;font-size:11px;border-color:#00ffff;color:#00ffff" data-act="refreshOffice">\u21bb</button></div>'
+      +'<div class="floor-legend"><span><i style="background:#4ade80"></i>Working (ACTIVE task)</span><span><i style="background:#f0d88c"></i>Waiting</span><span><i style="background:#8a86a8"></i>Idle</span><span><i style="background:#fb923c"></i>Stale (24h+)</span><span><i style="background:#f87171"></i>Down</span></div>'
+      +'<div class="lo ov-floor">'+roomHtml+consoleHtml+wk+'</div>'
+      +'<div class="lo-feed ov-feed" id="loFeed"></div>'
+      +'<div class="lo-note">Real signals only. Working = has an ACTIVE board task. Waiting = WAITING task, they stand by Mission Core. Stale = no check-in for 24 h. Down = blocked or errored (CLAW, HERMES and LENOCLAW sit at their own station). The feed is the real audit log \u2014 no simulated chats or walk-overs. Tap a robot for room, last action, blockers and evidence. Tap the gold console for the Approval Gate.</div>';
+    Object.keys(LO_ALL).forEach(function(id){ LO_ALL[id].el=document.getElementById(id); });
+    LO_TICKS=0; loLoadComms();
+    setTimeout(loTick,600); LO_TIMER=setInterval(function(){ if($('officeView')&&!$('officeView').classList.contains('hidden')) loTick(); },3200);
+  }catch(e){ container.innerHTML='<div class="errline">Can\u2019t load the live office: '+esc(e.message)+'</div>'; }
+}
+function openOfficeApprovals(){
+  const aps=(board&&board.approvals)||[];
+  let html='<button class="close" data-act="close">\u2715</button>'
+    +'<h3>Approval Gate</h3>'
+    +'<div class="meta"><span class="pill p-app">APPROVAL GATE</span><span class="pill p-normal">'+aps.length+' PENDING</span></div>';
+  if(!aps.length){
+    html+='<div class="desc">No approvals waiting. The gold console on the floor glows when something needs your decision.</div>';
+  } else {
+    aps.forEach(function(a){
+      const linked=String(a.relatedTaskId||'');
+      html+='<div class="desc" style="border:1px solid rgba(212,175,55,.35);border-radius:10px;padding:10px;margin:8px 0">'
+        +'<b>'+esc(String(a.description||a.type||'Approval').substring(0,120))+'</b>'
+        +(linked?'<div style="margin-top:4px">Task: '+esc(linked)+'</div>':'<div style="margin-top:4px">No linked task \u2014 idea approval.</div>')
+        +'<div class="acts" style="margin-top:8px">'
+        +(linked?'<button class="abtn" data-act="open" data-id="'+esc(linked)+'">Open task</button>':'')
+        +'<button class="abtn gold" data-act="decide" data-id="'+esc(a.id)+'" data-decision="approve">Approve</button>'
+        +'<button class="abtn danger" data-act="decide" data-id="'+esc(a.id)+'" data-decision="deny">Deny</button>'
+        +'</div></div>';
+    });
+  }
+  html+='<div class="acts" style="margin-top:12px"><button class="abtn" data-act="close">Close</button></div>';
+  $('sheet').innerHTML=html; $('drawer').classList.remove('hidden');
+}
+async function openAgentCard(name){
+  const o=window._office||{roster:[],agents:[],tasks:[]};
+  const r=o.roster.find(x=>normAgent(x.name)===normAgent(name));
+  if(!r) return;
+  const st=(o.agents||[]).find(a=>normAgent(a.agentName)===normAgent(name));
+  const status=agentDeskStatus(r, st, o.tasks||[]);
+  const mine=(o.tasks||[]).filter(t=>normAgent(t.assignedAgent)===normAgent(name));
+  const active=mine.find(t=>t.state==='ACTIVE');
+  const blocked=mine.filter(t=>t.state==='BLOCKED');
+  let last='';
+  for(const t of mine){ const la=String(t.lastActivityAt||t.updatedAt||''); if(la>last) last=la; }
+  const key=loKey(r.name); const room=key?LO_HOME[key].room:'';
+  const comms=(window._office&&window._office.comms)||[];
+  const nrm=normAgent(name);
+  const lastEv=comms.find(function(ev){ return normAgent(ev.reporterAgent)===nrm; });
+  let evHtml='<i>none yet</i>';
+  if(active){
+    try{
+      const dt=await api('task',{taskId:active.taskId});
+      let ev=[]; try{ ev=typeof dt.task.evidence==='string'?JSON.parse(dt.task.evidence||'[]'):(dt.task.evidence||[]); }catch(e){ ev=[]; }
+      if(Array.isArray(ev)&&ev.length){ evHtml=ev.slice(-3).map(function(e){ return '<div class="s">'+esc(String((e&&e.reference)||(e&&e.description)||'').substring(0,90))+'</div>'; }).join(''); }
+    }catch(e){ evHtml='<i>unavailable</i>'; }
+  }
+  const statusTxt=(STATUS_LABEL[status]||status);
+  const lightColor={working:'var(--green)',waiting:'var(--gold)',idle:'var(--dim)',down:'var(--red)',stale:'#fb923c'}[status]||'var(--dim)';
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">\u2715</button>'
+    +'<h3>'+esc(fmtAgentName(r.name))+'</h3>'
+    +'<div class="meta">'
+    +'<span class="pill" style="border:1px solid '+lightColor+';color:'+lightColor+'">'+statusTxt+'</span>'
+    +'</div>'
+    +(r.roleTitle?'<div class="desc"><b>Role:</b> '+esc(r.roleTitle)+'</div>':'')
+    +'<div class="desc"><b>Room:</b> '+(room?esc(room):'<i>no home station</i>')+'</div>'
+    +'<div class="desc"><b>Current task:</b> '+(active?esc(active.title)+' <a href="#" data-act="open" data-id="'+esc(active.taskId)+'" style="color:var(--purple)">open</a>':'<i>None</i>')+'</div>'
+    +'<div class="desc"><b>Last real action:</b> '+(lastEv?esc(String(lastEv.messageSummary).substring(0,140))+' <span style="color:var(--dim)">('+fmtET(lastEv.observedAt)+' ET)</span>':'<i>no recent audit activity</i>')+'</div>'
+    +'<div class="desc"><b>Blockers:</b> '+(blocked.length?blocked.map(function(t){ return '<a href="#" data-act="open" data-id="'+esc(t.taskId)+'" style="color:var(--red)">'+esc(t.title)+'</a>'; }).join('<br>'):'<i>none</i>')+'</div>'
+    +'<div class="desc"><b>Evidence (active task):</b> '+evHtml+'</div>'
+    +'<div class="desc"><b>Last board entry:</b> '+(last?fmtET(last)+' ET':'<i>no entries yet</i>')+'</div>'
+    +(st&&st.lastHeartbeat?'<div class="desc"><b>Heartbeat:</b> '+fmtDate(st.lastHeartbeat)+'</div>':'<div class="desc"><b>Heartbeat:</b> <i>none on record</i></div>')
+    +'<div class="acts">'
+    +(active?'<button class="abtn gold" data-act="deskWait" data-task="'+esc(active.taskId)+'">Move to Waiting</button>':'<span style="font-size:12px;color:var(--dim)">No active task to move.</span>')
+    +'<button class="abtn" data-act="deskAssign" data-agent="'+esc(r.name)+'">Assign Task</button>'
+    +'<button class="abtn" data-act="close">Close</button>'
+    +'</div>';
+  $('drawer').classList.remove('hidden');
+}
+/* ---------- assign task from the office floor (v8) ---------- */
+function openAssignForm(name){
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">\u2715</button>'
+    +'<h3>Assign task \u2192 '+esc(fmtAgentName(name))+'</h3>'
+    +'<div class="desc" style="margin-bottom:10px">The task lands on the Mission Control board with '+esc(fmtAgentName(name))+' as the assignee.</div>'
+    +'<input id="asTitle" placeholder="Task title..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:9px">'
+    +'<input id="asProject" placeholder="Project (optional)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:9px">'
+    +'<select id="asPriority" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);font-size:16px;outline:none;margin-bottom:14px"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select>'
+    +'<div class="acts"><button class="abtn gold" data-act="deskAssignGo" data-agent="'+esc(name)+'">Assign Task</button><button class="abtn" data-act="close">Cancel</button></div>';
+  $('drawer').classList.remove('hidden');
+}
+var LO_ASSIGN_BUSY=false; // v9: double-tap guard
+async function submitAssign(name){
+  if(LO_ASSIGN_BUSY) return;
+  const o=window._office||{};
+  const roster=(o.roster&&o.roster.length)?o.roster:(window._roster||[]);
+  if(!roster.some(x=>normAgent(x.name)===normAgent(name))){ toast('That agent is not on the roster'); return; } // v9: assignee must be real
+  const title=$('asTitle').value.trim(); if(!title){ toast('Give the task a title'); return; }
+  LO_ASSIGN_BUSY=true;
+  try{
+    await api('createTask',{title:title,project:$('asProject').value.trim(),priority:$('asPriority').value,requiresApproval:'no',assignedAgent:name,idempotencyKey:('desk-'+Date.now()+'-'+deviceId())});
+    toast('Task assigned to '+fmtAgentName(name));
+    closeDrawer(); refresh();
+    if(view==='office') renderOfficeView();
+  }catch(e){ toast(e.message); }
+  finally{ LO_ASSIGN_BUSY=false; }
+}
+
+/* ---------- idea approval graceful sheet (MC-IDEAS) ---------- */
+function renderIdeaApprovalSheet(appObj){
+  $('sheet').innerHTML=
+    '<button class="close" data-act="close">✕</button>'
+    +'<h3>'+esc(appObj.description||appObj.type||'Idea Approval')+'</h3>'
+    +'<div class="meta"><span class="pill p-app">IDEA APPROVAL</span><span class="pill p-normal">NO LINKED TASK</span></div>'
+    +'<div class="desc" style="color:var(--gold-soft);background:rgba(212,175,55,.1);padding:12px;border-radius:10px;border:1px solid rgba(212,175,55,.2);line-height:1.45">💡 <b>No task yet — idea approval.</b><br>This idea proposal is pending decision before a formal task is generated on the board.</div>'
+    +'<div class="m" style="margin-top:12px;font-size:12px;color:var(--dim)">Requested by: <b>'+esc(fmtAgentName(appObj.requestedBy||'Agent'))+'</b> · '+fmtDate(appObj.requestedAt)+'</div>'
+    +(appObj.id?'<div class="acts" style="margin-top:16px"><button class="abtn gold" data-act="decide" data-id="'+esc(appObj.id)+'" data-decision="approve">Approve Idea</button><button class="abtn danger" data-act="decide" data-id="'+esc(appObj.id)+'" data-decision="deny">Deny Idea</button></div>':'')
+    +'<div class="acts" style="margin-top:12px"><button class="abtn" data-act="close">Close</button></div>';
+  $('drawer').classList.remove('hidden');
+}
+
+async function renderAgents(){
+  try{
+    const d=await api('agents');
+    window._roster=d.roster||[];
+    $('roster').innerHTML=window._roster.map(rosterCard).join('')||'<div class="errline">No roster data.</div>';
+    $('liveAgents').innerHTML=(d.agents||[]).map(a=>'<div class="agent"><div><div class="n">'+esc(fmtAgentName(a.agentName))+'</div><div class="s">heartbeat '+esc(a.lastHeartbeat||'none')+'</div></div><div class="pill">'+esc(a.status)+'</div></div>').join('')||'<div style="color:var(--dim);font-size:12px">No live telemetry reported yet.</div>';
+  }catch(e){
+    $('roster').innerHTML='<div class="errline">Can\u2019t load the agent directory: '+esc(e.message)+' <button class="abtn" style="margin-top:6px;font-size:11px" data-act="retryAgents">Retry</button></div>';
+  }
+}
+
+/* ---------- TEAM STATUS (v9): status card per agent ---------- */
+const ST_COLORS={working:'#22c55e',waiting:'#eab308',down:'#ef4444',idle:'#8a86a8',stale:'#fb923c'};
+async function renderStatus(){
+  const box=$('teamStatus'); if(!box) return;
+  box.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Loading team status…</div>';
+  try{
+    const [b,a]=await Promise.all([api('board'),api('agents')]);
+    const tasks=b.tasks||[]; const agents=a.agents||[]; const roster=a.roster||[];
+    const cards=roster.map(function(r){
+      const st=agents.find(function(x){return normAgent(x.agentName)===normAgent(r.name);});
+      const status=agentDeskStatus(r, st, tasks);
+      const mine=tasks.filter(function(t){return normAgent(t.assignedAgent)===normAgent(r.name);});
+      const active=mine.find(function(t){return t.state==='ACTIVE';})||mine.find(function(t){return t.state==='WAITING'||t.state==='BLOCKED';});
+      const look=agentLook(r.name);
+      const c=ST_COLORS[status]||'#8a86a8';
+      const counts=[['ACTIVE',mine.filter(function(t){return t.state==='ACTIVE';}).length],
+                    ['WAITING',mine.filter(function(t){return t.state==='WAITING';}).length],
+                    ['BLOCKED',mine.filter(function(t){return t.state==='BLOCKED';}).length],
+                    ['DONE',mine.filter(function(t){return t.state==='COMPLETED';}).length]];
+      const isClaw=normAgent(r.name).indexOf('CLAW')>=0&&normAgent(r.name).indexOf('LENOCLAW')<0;
+      const statusTxt=(isClaw&&status==='idle')?'Dell closed':(STATUS_LABEL[status]||status);
+      return '<div class="agent" data-act="desk" data-agent="'+esc(r.name)+'" style="align-items:flex-start;cursor:pointer">'
+        +'<div style="display:flex;gap:11px;align-items:center;flex:1;min-width:0">'
+        +'<div style="width:38px;height:38px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;background:'+look.bg+'">'+look.i+'</div>'
+        +'<div style="min-width:0;flex:1">'
+        +'<div class="n">'+esc(fmtAgentName(r.name))+'</div>'
+        +'<div class="s">'+esc(r.roleTitle||'')+(r.platform?' · '+esc(r.platform):'')+'</div>'
+        +'<div class="s" style="margin-top:4px">'
+        +(active?'<b style="color:#c9c5e8">'+esc(String(active.title).substring(0,60))+'</b> <span class="pill" style="border:1px solid '+stateColor(active.state)+';color:'+stateColor(active.state)+';font-size:9.5px">'+esc(active.state)+'</span>':'<span style="color:var(--dim)">no active task</span>')
+        +'</div>'
+        +'<div class="s" style="margin-top:3px">'+(counts.map(function(x){return x[1]>0?('<b>'+x[1]+'</b> '+x[0].toLowerCase()):null;}).filter(Boolean).join(' · ')||'no tasks')+'</div>'
+        +(st&&st.lastHeartbeat?'<div class="s" style="margin-top:3px">heartbeat '+esc(fmtET(st.lastHeartbeat))+' ET</div>':'')
+        +(st&&st.lastErrorSummary?'<div class="s" style="color:var(--red);margin-top:3px">⚠ '+esc(String(st.lastErrorSummary).substring(0,80))+'</div>':'')
+        +'</div></div>'
+        +'<div class="pill" style="border:1px solid '+c+';color:'+c+';flex:none">'+esc(statusTxt.toUpperCase())+'</div>'
+        +'</div>';
+    }).join('');
+    const tally={working:0,waiting:0,down:0,idle:0,stale:0};
+    roster.forEach(function(r){
+      const st=agents.find(function(x){return normAgent(x.agentName)===normAgent(r.name);});
+      tally[agentDeskStatus(r,st,tasks)]++;
+    });
+    $('statusStats').innerHTML=
+      '<div class="stat"><div style="color:#22c55e">'+tally.working+'</div>Working</div>'
+      +'<div class="stat"><div style="color:#eab308">'+tally.waiting+'</div>Waiting</div>'
+      +'<div class="stat"><div style="color:#ef4444">'+tally.down+'</div>Down</div>'
+      +'<div class="stat"><div style="color:#8a86a8">'+tally.idle+'</div>Idle</div>'
+      +'<div class="stat"><div style="color:#fb923c">'+tally.stale+'</div>Stale</div>';
+    box.innerHTML='<div class="asof">Data as of '+fmtET(new Date().toISOString())+' ET \u00b7 Working only shows with an ACTIVE board task \u00b7 Stale = no check-in for 24 h</div>'+(cards||'<div class="errline">No roster data.</div>');
+  }catch(e){
+    box.innerHTML='<div class="errline">Can\u2019t load team status: '+esc(e.message)+' <button class="abtn" style="margin-top:6px;font-size:11px" data-act="retryStatus">Retry</button></div>';
+  }
+}
+
+/* ---------- task drawer ---------- */
+async function openTask(taskId, ideaApprovalObj){
+  if(!taskId && ideaApprovalObj){ renderIdeaApprovalSheet(ideaApprovalObj); return; }
+  try{
+    const d=await api('task',{taskId:taskId});
+    selected=d.task;
+    const t=selected;
+    const aps=d.approvals||[];
+    let acts='';
+    if(t.state==='BACKLOG') acts+='<button class="abtn primary" data-act="move" data-to="READY" data-reason="ready">→ Ready</button>';
+    if(t.state==='READY') acts+='<button class="abtn primary" data-act="move" data-to="ACTIVE" data-reason="started by Boss">Start</button><button class="abtn gold" data-act="move" data-to="WAITING" data-reason="waiting on input">Wait</button>';
+    if(t.state==='ACTIVE') acts+='<button class="abtn gold" data-act="move" data-to="WAITING" data-reason="waiting on input">Wait</button><button class="abtn" data-act="move" data-to="BLOCKED" data-reason="blocked by Boss">Block</button><button class="abtn" data-act="move" data-to="REVIEW" data-reason="ready for review">→ Review</button>';
+    if(t.state==='BLOCKED'||t.state==='WAITING') acts+='<button class="abtn green" data-act="move" data-to="ACTIVE" data-reason="unblocked by Boss">Unblock</button>';
+    if(t.state==='REVIEW') acts+='<button class="abtn gold" data-act="complete">Complete ✓</button>';
+    if(t.state!=='COMPLETED'&&t.state!=='CANCELLED') acts+='<button class="abtn danger" data-act="move" data-to="CANCELLED" data-reason="cancelled by Boss">Cancel</button>';
+    const log=(t.activityLog||[]).map(e=>'<div class="le"><b>'+esc(e.actor)+'</b> · '+esc(e.kind)+' · '+esc(String(e.text||'').substring(0,160))+'<div style="color:var(--dim);font-size:10.5px">'+fmtDate(e.at)+'</div></div>').join('');
+    const hist=(t.stateHistory||[]).map(h=>'<div class="le" style="font-size:11.5px">'+esc(h.from||'(new)')+' → <b>'+esc(h.to)+'</b> by '+esc(h.actor)+' · '+fmtDate(h.at)+'</div>').join('');
+    $('sheet').innerHTML=
+      '<button class="close" data-act="close">✕</button>'+
+      '<h3>'+esc(t.title)+'</h3>'+
+      '<div class="meta">'+
+      '<span class="pill" style="border:1px solid '+stateColor(t.state)+';color:'+stateColor(t.state)+'">'+esc(t.state)+'</span>'+
+      '<span class="pill '+prioClass(t.priority)+'">'+esc(String(t.priority||'normal').toUpperCase())+'</span>'+
+      (t.requiresApproval==='yes'?'<span class="pill p-app">APPROVAL REQUIRED</span>':'')+
+      '<span class="pill p-normal">'+esc(t.createdBy)+'</span>'+
+      (t.assignedAgent?'<span class="pill p-normal">→ '+esc(t.assignedAgent)+'</span>':'')+
+      '</div>'+
+      (t.description?'<div class="desc">'+esc(t.description)+'</div>':'')+
+      (t.errorSummary?'<div class="desc" style="color:var(--red)">⚠ '+esc(t.errorSummary)+'</div>':'')+
+      (aps.length?'<div class="sec"><h2>Approvals</h2>'+aps.map(a=>'<div class="le">Approval: <b>'+esc(a.status)+'</b> · '+fmtDate(a.decidedAt||a.requestedAt)+'</div>').join('')+'</div>':'')+
+      '<input id="noteIn" placeholder="Add note…"><button class="abtn" style="margin-top:8px" data-act="note">Post Note</button>'+
+      (t.state==='READY'?'<input id="assignIn" placeholder="Assign to agent (optional — filled in on Start)">':'')+
+      '<div class="acts">'+acts+'</div>'+
+      '<div class="log"><h4>Activity</h4>'+(log||'<div class="le">No activity yet.</div>')+'</div>'+
+      '<div class="log"><h4>State History</h4>'+(hist||'<div class="le">No history yet.</div>')+'</div>';
+    $('drawer').classList.remove('hidden');
+  }catch(e){toast(e.message);}
+}
+function closeDrawer(){$('drawer').classList.add('hidden');}
+async function move(to,reason){
+  try{
+    if(to==='ACTIVE'){
+      const a=$('assignIn');
+      if(a && a.value.trim()){ try{ await api('updateTask',{taskId:selected.taskId,assignedAgent:a.value.trim()}); }catch(e){ } }
+    }
+    await api('moveTask',{taskId:selected.taskId,to:to,reason:reason});
+    toast('→ '+to);
+    refresh();
+    openTask(selected.taskId); // P2-1: drawer stays open so the new status is visible
+  }catch(e){toast(e.message);}
+}
+async function complete(){
+  try{
+    await api('complete',{taskId:selected.taskId,verified:true,note:'Boss verified from client'});
+    toast('Completed ✓');
+    refresh();
+    openTask(selected.taskId);
+  }catch(e){toast(e.message);}
+}
+async function addNote(){
+  const v=$('noteIn').value.trim();
+  if(!v) return;
+  try{ await api('note',{taskId:selected.taskId,text:v}); toast('Note added'); openTask(selected.taskId); }catch(e){toast(e.message);}
+}
+async function decide(id,decision){
+  try{ await api('decideApproval',{approvalId:id,decision:decision,note:'decided from client'}); toast(decision==='approve'?'Approved ✓':'Denied'); refresh(); }catch(e){toast(e.message);}
+}
+async function createTask(){
+  if(capBusy) return; // P2-3: double-tap guard
+  const title=$('capIn').value.trim(); if(!title) return;
+  capBusy=true; $('capBtn').disabled=true;
+  try{
+    await api('createTask',{title:title,priority:($('capPriority').value||'normal'),project:$('capProject').value.trim(),requiresApproval:$('capApproval').value,idempotencyKey:('cap-'+Date.now()+'-'+deviceId())});
+    $('capIn').value=''; $('capProject').value=''; $('capPriority').value=''; $('capApproval').value='no'; // P2-3: reset selects
+    toast('Task captured');
+    refresh();
+  }catch(e){toast(e.message);}
+  finally{ capBusy=false; $('capBtn').disabled=false; }
+}
+
+/* ---------- delegated wiring (P0-2: no inline onclick anywhere) ---------- */
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');
+  if(!el) return;
+  const act=el.getAttribute('data-act');
+  if(act==='open') openTask(el.getAttribute('data-id'));
+  else if(act==='decide') decide(el.getAttribute('data-id'),el.getAttribute('data-decision'));
+  else if(act==='move') move(el.getAttribute('data-to'),el.getAttribute('data-reason'));
+  else if(act==='complete') complete();
+  else if(act==='note') addNote();
+  else if(act==='close') closeDrawer();
+  else if(act==='logout') doLogout();
+  else if(act==='retry') boot(true);
+  else if(act==='retryAgents') renderAgents();
+  else if(act==='retryStatus') renderStatus();
+  else if(act==='refreshOffice') renderOfficeView();
+  else if(act==='officeApprovals'||act==='openApprovalAlert'){ openOfficeApprovals(); }
+  else if(act==='openIdea'){
+    const app=(board&&board.approvals)?board.approvals.find(a=>a.id===el.getAttribute('data-id')):null;
+    renderIdeaApprovalSheet(app||{id:el.getAttribute('data-id'),description:'Idea approval (unlinked)'});
+  }
+  else if(act==='desk'){ openAgentCard(el.getAttribute('data-agent')); }
+  else if(act==='deskAssign'){ openAssignForm(el.getAttribute('data-agent')); }
+  else if(act==='deskAssignGo'){ submitAssign(el.getAttribute('data-agent')); }
+  else if(act==='expireApproval'){ try{ await api('expireApproval',{approvalId:el.getAttribute('data-id')}); toast('Cleared'); refresh(); }catch(e){ toast(e.message); } }
+  else if(act==='deskWait'){ moveTaskToWaiting(el.getAttribute('data-task'),'Moved to WAITING from agent desk card'); }
+});
+$('loginBtn').addEventListener('click',login);
+$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+$('capBtn').addEventListener('click',createTask);
+$('capIn').addEventListener('keydown',e=>{if(e.key==='Enter')createTask();});
+$('vLogout').addEventListener('click',doLogout);
+// ================= MY TO-DOS (Boss, Oct 17) =================
+// Things Boss has to do himself. Grouped by urgency; dated items show how soon,
+// undated items are plain check-offs. Done items fade out after ~1.5 days.
+let todosData=[], todoBusy=false;
+function todoBucket(t){
+  if(t.done) return 'done';
+  const today=etToday();
+  if(t.dueDate){
+    if(t.dueDate<today) return 'overdue';
+    if(t.dueDate===today) return 'today';
+    const diff=Math.round((Date.parse(t.dueDate+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000);
+    return diff<=7?'week':'later';
+  }
+  return t.priority==='today'?'today':(t.priority==='soon'||t.priority==='week')?'week':'later';
+}
+function todoDueLabel(t){
+  if(!t.dueDate) return '';
+  const today=etToday();
+  const diff=Math.round((Date.parse(t.dueDate+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000);
+  if(diff<0) return Math.abs(diff)+' day'+(Math.abs(diff)===1?'':'s')+' overdue';
+  if(diff===0) return 'due today';
+  if(diff===1) return 'due tomorrow';
+  return 'due '+new Date(t.dueDate+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+}
+// AUTO items (Boss, Oct 17): anything in Mission Control that only Boss can do shows up here by itself.
+// Source A: open tasks assigned to BOSS. Source B: pending approvals (needs a decision).
+// They are mirrors: acting on the task/approval itself clears them, so nothing gets out of sync.
+function autoTodos(){
+  const out=[]; const seen={};
+  const tasks=(board&&board.tasks)||[];
+  const aps=(board&&board.approvals)||[];
+  const apByTask={}; aps.forEach(a=>{ if(a.relatedTaskId) apByTask[a.relatedTaskId]=a; });
+  const closed=st=>st==='COMPLETED'||st==='CANCELLED'||st==='DONE';
+  tasks.forEach(t=>{
+    if(closed(t.state)) return;
+    const mineBoss=normAgent(t.assignedAgent)==='BOSS';
+    const ap=apByTask[t.taskId];
+    if(!mineBoss && !ap) return;
+    seen[t.taskId]=1;
+    const why=ap?'needs your decision':'assigned to you';
+    out.push({id:'auto_'+t.taskId,auto:true,why:why,title:t.title||t.taskId,dueDate:t.dueDate||'',done:false,
+      priority:(t.priority==='urgent'||t.priority==='high')?'today':(t.priority==='low'?'later':'week'),taskId:t.taskId});
+  });
+  aps.forEach(a=>{ if(a.relatedTaskId&&seen[a.relatedTaskId]) return; if(a.status&&a.status!=='pending') return;
+    out.push({id:'auto_ap_'+a.id,auto:true,why:'needs your decision',title:a.description||a.type||'Approval needed',dueDate:'',done:false,priority:'today'}); });
+  return out;
+}
+function renderTodos(){
+  const wrap=$('todoList'); if(!wrap) return;
+  const manual=todosData; // keep manual list separate from auto mirrors
+  const all=manual.concat(autoTodos());
+  const prevData=todosData; todosData=all;
+  const groups=[['overdue','OVERDUE','#e05555'],['today','TODAY','var(--gold)'],['week','THIS WEEK','#c9b8ff'],['later','LATER / NO RUSH','var(--dim)'],['done','DONE','var(--green)']];
+  const by={}; groups.forEach(g=>by[g[0]]=[]);
+  todosData.forEach(t=>by[todoBucket(t)].push(t));
+  const byDue=(a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999');
+  groups.forEach(g=>by[g[0]].sort(byDue));
+  const openCount=todosData.filter(t=>!t.done).length;
+  if(!todosData.length){ wrap.innerHTML='<div style="color:var(--dim);font-size:12px;padding:2px 2px 8px">Nothing on your plate. Add the things only you can do. Anything in Mission Control that needs you shows up here by itself.</div>'; todosData=prevData; return; }
+  let html='';
+  groups.forEach(g=>{
+    const list=by[g[0]]; if(!list.length) return;
+    html+='<div style="font-size:10.5px;letter-spacing:1.5px;color:'+g[2]+';margin:8px 0 4px;font-weight:700">'+g[1]+' <span style="color:var(--dim);font-weight:400">'+list.length+'</span></div>';
+    list.forEach(t=>{
+      const due=todoDueLabel(t);
+      const dueCol=g[0]==='overdue'?'#e05555':g[0]==='today'?'var(--gold)':'var(--dim)';
+      if(t.auto){
+        html+='<div class="hb-trow" style="align-items:center;cursor:pointer" data-autotask="'+esc(t.taskId||'')+'">'
+          +'<span class="pill p-app" style="font-size:9.5px;flex:none">'+(t.why==='needs your decision'?'DECIDE':'YOURS')+'</span>'
+          +'<div style="flex:1;min-width:0;margin-left:8px"><div class="hb-tn">'+esc(t.title)+'</div>'
+          +'<div class="hb-why" style="color:'+(due?dueCol:'var(--dim)')+'">'+esc(t.why)+(due?' \u00b7 '+due:'')+' \u00b7 from Mission Control</div></div>'
+          +'<span style="color:var(--dim);font-size:16px;padding:4px 8px">\u203A</span></div>';
+        return;
+      }
+      html+='<div class="hb-trow" style="align-items:center'+(t.done?';opacity:.55':'')+'">'
+        +'<button class="hb-chk'+(t.done?' done':'')+'" data-todo="'+esc(t.id)+'" data-tdone="'+(t.done?'0':'1')+'">'+(t.done?'\u2713':'')+'</button>'
+        +'<div style="flex:1;min-width:0"><div class="hb-tn"'+(t.done?' style="text-decoration:line-through"':'')+'>'+esc(t.title)+'</div>'
+        +(due?'<div class="hb-why" style="color:'+dueCol+'">'+due+'</div>':'')+'</div>'
+        +'<button data-tdel="'+esc(t.id)+'" style="background:none;border:none;color:var(--dim);font-size:16px;padding:4px 8px;cursor:pointer" title="Delete">\u00D7</button></div>';
+    });
+  });
+  wrap.innerHTML=html;
+  todosData=prevData;
+}
+async function loadTodos(){
+  try{ const d=await todoApi({op:'list'}); todosData=d.todos||[]; renderTodos(); }
+  catch(e){ if(e.message!=='auth'){ const w=$('todoList'); if(w) w.innerHTML='<div style="color:var(--dim);font-size:12px">Couldn\'t load to-dos ('+esc(e.message)+')</div>'; } }
+}
+document.addEventListener('click',ev=>{
+  const r=ev.target.closest?ev.target.closest('[data-autotask]'):null;
+  if(!r) return;
+  const id=r.getAttribute('data-autotask');
+  const tk=((board&&board.tasks)||[]).find(x=>x.taskId===id);
+  if(tk && typeof openTask==='function'){ openTask(tk.taskId); }
+  else if(tk){ setView('board'); }
+  else { const a=$('approvalsSec'); if(a) a.scrollIntoView({behavior:'smooth'}); }
+});
+document.addEventListener('click',async ev=>{
+  const t=ev.target.closest?ev.target.closest('[data-todo],[data-tdel],#todoBtn'):null;
+  if(!t) return;
+  if(todoBusy) return;
+  if(t.id==='todoBtn'){
+    const title=($('todoIn').value||'').trim();
+    if(!title){ toast('Type the to-do first'); return; }
+    todoBusy=true;
+    try{ await todoApi({op:'add',title:title,dueDate:$('todoDue').value||''}); $('todoIn').value=''; $('todoDue').value=''; todoBusy=false; toast('Added'); await loadTodos(); }
+    catch(e){ todoBusy=false; if(e.message!=='auth') toast(e.message); }
+    return;
+  }
+  if(t.hasAttribute('data-tdel')){
+    if(!window.confirm('Delete this to-do?')) return;
+    todoBusy=true;
+    try{ await todoApi({op:'delete',id:t.getAttribute('data-tdel')}); todoBusy=false; await loadTodos(); }
+    catch(e){ todoBusy=false; if(e.message!=='auth') toast(e.message); }
+    return;
+  }
+  const id=t.getAttribute('data-todo');
+  todoBusy=true;
+  try{ await todoApi({op:'toggle',id:id,done:t.getAttribute('data-tdone')==='1'}); todoBusy=false; await loadTodos(); }
+  catch(e){ todoBusy=false; if(e.message!=='auth') toast(e.message); }
+});
+
+// ================= CONTENT PIPELINE + CALENDAR (Boss, Oct 17) =================
+async function contentApi(payload){
+  const res=await fetch(CONTENTURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+  let d=null; try{ d=await res.json(); }catch(e){}
+  if(!d||!d.ok){
+    if(res.status===401){ localStorage.removeItem('mc_token'); token=''; showLogin(); throw new Error('auth'); }
+    throw new Error((d&&d.error)||('failed ('+res.status+')'));
+  }
+  return d;
+}
+const CP_STAGES=[['idea','IDEAS'],['scripting','SCRIPTING'],['filming','FILMING'],['editing','EDITING'],['scheduled','SCHEDULED'],['published','PUBLISHED']];
+let cpItems=[], cpBusy=false;
+function cpShortDate(d){ return d?new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}):''; }
+function renderContent(){
+  const act=cpItems.filter(i=>i.stage!=='published'&&!i.blocked).length;
+  const blk=cpItems.filter(i=>i.blocked&&i.stage!=='published').length;
+  const pub=cpItems.filter(i=>i.stage==='published').length;
+  $('cpTiles').innerHTML='<div class="cp-tile"><b>'+act+'</b><span>ACTIVE</span></div><div class="cp-tile"><b style="color:'+(blk?'#e05555':'var(--text)')+'">'+blk+'</b><span>BLOCKED</span></div><div class="cp-tile"><b style="color:'+(pub?'var(--green)':'var(--text)')+'">'+pub+'</b><span>PUBLISHED</span></div>';
+  let h='';
+  CP_STAGES.forEach((st,si)=>{
+    const list=cpItems.filter(i=>i.stage===st[0]).sort((a,b)=>(a.publishDate||'9999').localeCompare(b.publishDate||'9999'));
+    h+='<div class="cp-col"><div class="cp-colh"><span>'+st[1]+'</span><b>'+list.length+'</b></div>';
+    if(!list.length) h+='<div class="cp-empty">Nothing here yet</div>';
+    list.forEach(i=>{
+      const prev=si>0?CP_STAGES[si-1][0]:'', next=si<CP_STAGES.length-1?CP_STAGES[si+1][0]:'';
+      h+='<div class="cp-card'+(i.blocked?' blk':'')+'"><div class="cp-t">'+esc(i.title)+'</div><div class="cp-m">'
+        +(i.platform?esc(i.platform)+' \u00b7 ':'')+(i.publishDate?cpShortDate(i.publishDate):'no date')
+        +(i.blocked?'<br><b style="color:#e05555">BLOCKED</b>'+(i.blockedReason?': '+esc(i.blockedReason):''):'')+'</div><div class="cp-act">'
+        +(prev?'<button data-cpmove="'+esc(i.id)+'" data-to="'+prev+'">\u2039 Back</button>':'')
+        +(next?'<button data-cpmove="'+esc(i.id)+'" data-to="'+next+'">'+(next==='published'?'Published \u2713':'Next \u203A')+'</button>':'')
+        +(i.stage!=='published'?'<button data-cpblock="'+esc(i.id)+'" data-b="'+(i.blocked?'0':'1')+'">'+(i.blocked?'Unblock':'Block')+'</button>':'')
+        +'<button data-cpdel="'+esc(i.id)+'">\u00D7</button></div></div>';
+    });
+    h+='</div>';
+  });
+  $('cpBoard').innerHTML=h;
+}
+async function loadContent(){
+  try{ const d=await contentApi({op:'contentList'}); cpItems=d.items||[]; renderContent(); }
+  catch(e){ if(e.message!=='auth') $('cpBoard').innerHTML='<div class="cp-empty">Could not load ('+esc(e.message)+')</div>'; }
+}
+// ---- calendar ----
+let calY=0, calM=0, calSel='', calEvents=[], calLoaded='';
+function pad2(n){ return String(n).padStart(2,'0'); }
+function calInit(){ if(calY) return; const t=etToday(); calY=+t.substring(0,4); calM=+t.substring(5,7)-1; calSel=t; }
+async function loadCalendar(){
+  calInit(); renderCalendar();
+  const first=new Date(Date.UTC(calY,calM,1)), startOffset=first.getUTCDay();
+  const gridStart=new Date(Date.UTC(calY,calM,1-startOffset)), gridEnd=new Date(Date.UTC(calY,calM,1-startOffset+41));
+  const iso=d=>d.getUTCFullYear()+'-'+pad2(d.getUTCMonth()+1)+'-'+pad2(d.getUTCDate());
+  const key=iso(gridStart)+'|'+iso(gridEnd);
+  try{
+    const [ev,ct]=await Promise.all([contentApi({op:'calendarEvents',from:iso(gridStart),to:iso(gridEnd)}).catch(e=>{ if(e.message==='auth') throw e; return {events:[],err:e.message}; }), contentApi({op:'contentList'}).catch(e=>{ if(e.message==='auth') throw e; return {items:cpItems}; })]);
+    calEvents=ev.events||[]; cpItems=ct.items||cpItems; calLoaded=key; calErr=ev.err||'';
+    renderCalendar();
+  }catch(e){ if(e.message!=='auth'){ calErr=e.message; renderCalendar(); } }
+}
+let calErr='';
+function evDate(e){ return (e.start||'').substring(0,10); }
+function evTime(e){ if(e.allDay) return 'All day'; const d=new Date(e.start); return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'}); }
+function renderCalendar(){
+  calInit();
+  $('calTitle').textContent=new Date(Date.UTC(calY,calM,1)).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
+  const today=etToday();
+  const first=new Date(Date.UTC(calY,calM,1)), startOffset=first.getUTCDay();
+  const byDay={}; calEvents.forEach(e=>{ const k=evDate(e); (byDay[k]=byDay[k]||[]).push({t:e.title,kind:'g'}); });
+  cpItems.forEach(i=>{ if(i.publishDate) (byDay[i.publishDate]=byDay[i.publishDate]||[]).push({t:'\u25B6 '+i.title,kind:'cp'}); });
+  let h=['S','M','T','W','T','F','S'].map(d=>'<div class="cal-dow">'+d+'</div>').join('');
+  for(let c=0;c<42;c++){
+    const d=new Date(Date.UTC(calY,calM,1-startOffset+c));
+    const k=d.getUTCFullYear()+'-'+pad2(d.getUTCMonth()+1)+'-'+pad2(d.getUTCDate());
+    const out=d.getUTCMonth()!==calM, list=byDay[k]||[];
+    h+='<div class="cal-day'+(out?' out':'')+(k===today?' today':'')+(k===calSel?' sel':'')+'" data-calday="'+k+'"><div class="cal-n">'+d.getUTCDate()+'</div>'
+      +list.slice(0,2).map(x=>'<span class="cal-ev'+(x.kind==='cp'?' cp':'')+'">'+esc(x.t)+'</span>').join('')
+      +(list.length>2?'<div class="cal-more">+'+(list.length-2)+' more</div>':'')+'</div>';
+  }
+  $('calGrid').innerHTML=h;
+  // agenda for selected day
+  const dayEv=calEvents.filter(e=>evDate(e)===calSel).sort((a,b)=>(a.allDay?0:1)-(b.allDay?0:1)||a.start.localeCompare(b.start));
+  const dayCp=cpItems.filter(i=>i.publishDate===calSel);
+  let a='<div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:4px">'+new Date(calSel+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'UTC'}).toUpperCase()+'</div>';
+  if(calErr) a+='<div style="color:#e05555;font-size:11px;margin-bottom:6px">Google Calendar did not load ('+esc(calErr)+'). Content dates still show.</div>';
+  if(!dayEv.length&&!dayCp.length) a+='<div style="color:var(--dim);font-size:12px;padding:6px 0">Nothing scheduled. Free day.</div>';
+  dayEv.forEach(e=>{ a+='<div class="cal-ag"><div class="cal-agt">'+esc(evTime(e))+'</div><div style="min-width:0"><div class="cal-agn">'+esc(e.title)+'</div>'+(e.location?'<div class="cal-agl">'+esc(e.location)+'</div>':'')+'</div></div>'; });
+  dayCp.forEach(i=>{ a+='<div class="cal-ag"><div class="cal-agt">Publish</div><div style="min-width:0"><div class="cal-agn">'+esc(i.title)+'</div><div class="cal-agl">'+esc(i.platform||'content')+' \u00b7 '+esc(i.stage)+'</div></div></div>'; });
+  $('calAgenda').innerHTML=a;
+}
+document.addEventListener('click',async ev=>{
+  const g=ev.target.closest?ev.target.closest('[data-calday],#calPrev,#calNext,#calToday,#cpAdd,[data-cpmove],[data-cpblock],[data-cpdel]'):null;
+  if(!g) return;
+  if(g.hasAttribute('data-calday')){ calSel=g.getAttribute('data-calday'); const m=+calSel.substring(5,7)-1; if(m!==calM){ calY=+calSel.substring(0,4); calM=m; loadCalendar(); } else renderCalendar(); return; }
+  if(g.id==='calPrev'||g.id==='calNext'){ calM+=(g.id==='calNext'?1:-1); if(calM<0){calM=11;calY--;} if(calM>11){calM=0;calY++;} calSel=calY+'-'+pad2(calM+1)+'-01'; loadCalendar(); return; }
+  if(g.id==='calToday'){ calY=0; calInit(); loadCalendar(); return; }
+  if(cpBusy) return;
+  if(g.id==='cpAdd'){
+    const title=($('cpTitle').value||'').trim(); if(!title){ toast('Type the content idea first'); return; }
+    cpBusy=true;
+    try{ await contentApi({op:'contentAdd',title:title,platform:$('cpPlat').value||'',publishDate:$('cpDate').value||''}); $('cpTitle').value=''; $('cpPlat').value=''; $('cpDate').value=''; cpBusy=false; toast('Added to Ideas'); await loadContent(); }
+    catch(e){ cpBusy=false; if(e.message!=='auth') toast(e.message); }
+    return;
+  }
+  cpBusy=true;
+  try{
+    if(g.hasAttribute('data-cpmove')) await contentApi({op:'contentMove',id:g.getAttribute('data-cpmove'),stage:g.getAttribute('data-to')});
+    else if(g.hasAttribute('data-cpblock')){
+      const on=g.getAttribute('data-b')==='1'; let reason='';
+      if(on){ reason=window.prompt('Why is it blocked? (optional)')||''; }
+      await contentApi({op:'contentUpdate',id:g.getAttribute('data-cpblock'),blocked:on,blockedReason:reason});
+    }
+    else if(g.hasAttribute('data-cpdel')){ if(!window.confirm('Delete this content item?')){ cpBusy=false; return; } await contentApi({op:'contentDelete',id:g.getAttribute('data-cpdel')}); }
+    cpBusy=false; await loadContent();
+  }catch(e){ cpBusy=false; if(e.message!=='auth') toast(e.message); }
+});
+
+// ================= KNOWLEDGE / HEALTH / SETTINGS (Boss, Oct 17) =================
+let knDocs=[], knEvents=[], knBusy=false;
+function ago(iso){ if(!iso) return ''; const m=Math.round((Date.now()-new Date(iso).getTime())/60000); if(isNaN(m)||m<0) return ''; if(m<60) return m+'m ago'; if(m<1440) return Math.round(m/60)+'h ago'; return Math.round(m/1440)+'d ago'; }
+function sevClass(e){ return e.severity==='error'?'red':(e.severity==='warn'?'gold':''); }
+function renderKnowledge(){
+  let h='';
+  if(!knDocs.length) h+='<div class="cp-empty">No docs yet — add one below</div>';
+  knDocs.forEach(d=>{ h+='<div class="kn-card" data-kndoc="'+esc(d.url||'')+'"><div style="display:flex;justify-content:space-between;gap:8px"><div style="min-width:0"><div class="kn-cat">'+esc(d.category)+'</div><div class="kn-t">'+esc(d.title)+'</div></div><button data-kndel="'+esc(d.id)+'" style="background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer">\u00D7</button></div><div class="kn-d">'+esc(d.description)+'</div></div>'; });
+  $('knDocs').innerHTML=h;
+  let e='';
+  if(!knEvents.length) e='<div class="cp-empty">No records yet</div>';
+  knEvents.slice(0,10).forEach(ev=>{ e+='<div class="kn-ev '+sevClass(ev)+'"><div class="kn-evlab">'+esc(ev.eventType||'RECORD').toUpperCase()+' \u00b7 '+ago(ev.observedAt)+'</div><div class="kn-evtxt">'+esc(ev.messageSummary||'(no summary)')+'</div><div class="kn-evsub">'+esc(ev.reporterAgent||'')+'</div></div>'; });
+  $('knEvents').innerHTML=e;
+}
+async function loadKnowledge(){
+  try{ const [d,ev]=await Promise.all([contentApi({op:'docList'}),contentApi({op:'recentEvents'}).catch(()=>({events:[]}))]);
+    knDocs=d.items||[]; knEvents=(ev.events||[]); renderKnowledge(); }
+  catch(e){ if(e.message!=='auth') $('knDocs').innerHTML='<div class="cp-empty">Could not load ('+esc(e.message)+')</div>'; }
+}
+// ---- health ----
+const HURL="https://base44.app/api/apps/6a9224f8c29c628aa348d1ac/functions/mcHealthApi";
+async function healthSnap(){
+  const r=await fetch(HURL,{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok){ if(r.status===401) throw new Error('auth'); throw new Error('HTTP '+r.status); }
+  return (await r.json()).snapshot;
+}
+function hAgeH(iso){ if(!iso) return 1e9; const t=Date.parse(iso); if(isNaN(t)) return 1e9; return (Date.now()-t)/3600000; }
+function hCol(h,gy,gr){ return h<gy?'#22c55e':(h<gr?'#eab308':'#e05555'); }
+function hRow(label,val,col,detail){
+  return '<div class="h-row"><div class="l"><span class="hd-dot" style="background:'+(col||'#22c55e')+'"></span> '+label+(detail?'<div style="font-size:11px;color:var(--dim);margin:2px 0 0 15px">'+detail+'</div>':'')+'</div><div class="v">'+val+'</div></div>';
+}
+function hChip(name,col){ return '<span class="h-chip" style="border-color:'+col+'30"><span class="hd-dot" style="background:'+col+';margin-top:0"></span>'+name+'</span>'; }
+const APP_VERSION="v9.18";
+function renderHealthPhase1(sn){
+  const G='#22c55e',Y='#eab308',R='#e05555';
+  if(!sn){ $('hlStrip').innerHTML=''; $('hlPhase1').innerHTML='<div class="cp-empty">No health snapshot yet — the first refresh is running.</div>'; return; }
+  $('hAsOf').textContent='as of '+fmtET(sn.at)+' ET · refreshes every 30 min';
+  const c=sn.crm||{}, b=sn.backups||{}, bd=sn.board||{}, rs=sn.runs||{}, ap=sn.apps||{}, live=sn.live||{}, gates=sn.gates||{}, own=sn.ownership||{}, keys=sn.keys||{}, docs=sn.docs||{}, rh=sn.reviewHold||{};
+  const worst=arr=>arr.includes(R)?R:(arr.includes(Y)?Y:G);
+  // section colors
+  const colCRM=worst([hCol(hAgeH(c.exportAt),24,72), (c.syncErrors>0?R:hCol(hAgeH(c.syncAt||sn.at),0.75,2))]);
+  const wbAge=b.workbooks&&b.workbooks.length?Math.max.apply(null,b.workbooks.map(w=>hAgeH(w.at))):1e9;
+  const colBK=worst([hCol(hAgeH(b.jglAt),26,50), hCol(wbAge,26,50)]);
+  const runAge=rs&&rs.ts?hAgeH(new Date(new Date(rs.ts.replace(' ET','').replace(' ','T')+'Z').getTime()-0).toISOString()):1e9;
+  const runErr=rs&&String(rs.result||'').toUpperCase().indexOf('ERROR')>=0;
+  const mism=rs?parseInt(rs.mismatches||'0'):0;
+  const colBS=worst([hCol(hAgeH(bd.p3At),24,72), runErr?R:hCol(runAge,0.75,2), mism===0?G:(mism<=5?Y:R), (rs&&rs.held&&rs.held!=='-')?Y:G]);
+  const verBoard=(ap.boardShipped?'v'+ap.boardShipped:'?');
+  const verRepo=(/v\d+(\.\d+)?/i.test(ap.commitMsg||'')?'v'+(ap.commitMsg.match(/v(\d+(?:\.\d+)?)/i)||[])[1]:'?');
+  const verOk=verBoard===APP_VERSION&&verRepo===APP_VERSION;
+  const colAPP=verOk?G:Y;
+  const colRisk=worst([live.blocked===0?G:(live.blocked<=10&&!live.staleBlocked?Y:R), live.pendingApprovals===0?G:(live.pendingApprovals<=3&&hAgeH(live.oldestPendingAt)<48?Y:R), gates.g1&&gates.g1.open?Y:G, gates.g2&&gates.g2.open?Y:G, gates.g3&&gates.g3.open?Y:G, sn.applyRedFlag?R:G, (own['MC-OWNERSHIP-001']==='OPEN'||own['BASE44-EXIT-001']==='OPEN')?Y:G]);
+  const team=(sn.team&&sn.team.agents)||[];
+  const colTeam=team.length?worst(team.map(a=>String(a.state||'').toUpperCase().includes('DOWN')?R:hCol(hAgeH(a.ts),1,24))):Y;
+  const p0=docs.p0UpdateNeeded||0, upd=(docs.statusCounts&&docs.statusCounts['UPDATE NEEDED'])||0, nr=(docs.statusCounts&&docs.statusCounts['NOT REVIEWED'])||0;
+  const colDocs=p0>0?R:((upd+nr)>0?Y:G);
+  $('hlStrip').innerHTML=hChip('CRM',colCRM)+hChip('Backups',colBK)+hChip('Board & Sync',colBS)+hChip('Apps',colAPP)+hChip('Risk Control',colRisk)+hChip('AI Team',colTeam)+hChip('Docs',colDocs);
+  let h='';
+  // CRM
+  h+='<div class="h-sec">CRM</div>';
+  h+=hRow('Last full export', (c.exportAt?fmtET(c.exportAt)+' ET · '+(c.exportName||'').replace('vantra-crm-full-','').replace('.json',''):'none'), hCol(hAgeH(c.exportAt),24,72));
+  h+=hRow('Sync mode · last run', (c.syncMode||'?')+' · '+(c.syncAt?fmtET(c.syncAt)+' ET':'—'), c.syncErrors>0?R:hCol(hAgeH(c.syncAt||sn.at),0.75,2), (c.syncErrors>0?c.syncErrors+' error(s)':''));
+  h+=hRow('Review queue (dry run)', String(c.reviewCount!=null?c.reviewCount:'—')+' rows for review', Y, 'information only — matching is reviewed before APPLY');
+  h+=hRow('Likely duplicates beyond review', String(c.likelyDuplicates!=null?c.likelyDuplicates:'—'), c.likelyDuplicates==null?Y:(c.likelyDuplicates===0?G:Y), c.likelyDuplicates==null?'field appears once the updated sync script is installed (gate G3 signal)':'');
+  // Backups
+  h+='<div class="h-sec">Backups</div>';
+  h+=hRow('3 AM CRM snapshot', (b.jglAt?fmtET(b.jglAt)+' ET · '+ago(b.jglAt):'none'), hCol(hAgeH(b.jglAt),26,50));
+  (b.workbooks||[]).forEach(w=>{ h+=hRow(w.name.replace(/ snapshot.*/,'')+' snapshot', fmtET(w.at)+' ET', hCol(hAgeH(w.at),26,50)); });
+  if(!(b.workbooks||[]).length) h+=hRow('Workbook snapshots','none yet',R);
+  // Board & sync
+  h+='<div class="h-sec">Board & Sync</div>';
+  h+=hRow('Last board change (Part 3)', bd.p3At?ago(bd.p3At):'—', hCol(hAgeH(bd.p3At),24,72));
+  h+=hRow('Last hash run · result', rs&&rs.ts?(rs.ts+' · '+rs.result):'no Runs rows yet', (rs&&rs.ts)?(runErr?R:hCol(runAge,0.75,2)):R, rs&&rs.hash?('hash '+String(rs.hash).slice(0,10)):'');
+  h+=hRow('Board vs app mismatches', rs?String(mism):'—', mism===0?G:(mism<=5?Y:R));
+  h+=hRow('Held cards (DONE_HOLD)', rs?String(rs.held||'-'):'—', (rs&&rs.held&&rs.held!=='-')?Y:G, 'JEN passed the CRM-SHOWCASE-001 privacy check 10-19 09:06 ET — hold released');
+  // Apps
+  h+='<div class="h-sec">Apps</div>';
+  h+=hRow('Version app / board / repo', APP_VERSION+' / '+verBoard+' / '+verRepo, verOk?G:Y, verOk?'':'app, board and repo now aligned at '+APP_VERSION+' (v9.18 correction round)');
+  h+=hRow('Last front-end deploy', ap.commitAt?ago(ap.commitAt)+' ('+(ap.commitSha||'')+')':'—', hCol(hAgeH(ap.commitAt),48,168));
+  // Risk control
+  h+='<div class="h-sec">Risk Control</div>';
+  h+=hRow('Blocked / Waiting', (live.blocked||0)+' blocked / '+(live.waiting||0)+' waiting', live.blocked===0?G:(live.blocked<=10&&!live.staleBlocked?Y:R), live.staleBlocked?live.staleBlocked+' blocked longer than 7 days':'');
+  h+=hRow('Pending approvals', String(live.pendingApprovals||0), live.pendingApprovals===0?G:(live.pendingApprovals<=3&&hAgeH(live.oldestPendingAt)<48?Y:R), live.oldestPendingAt?('oldest '+ago(live.oldestPendingAt)):'');
+  const gate=(g,o)=>'<span class="h-gate" style="color:'+(o?Y:G)+';border-color:'+(o?Y:G)+'55">'+g+' '+(o?'OPEN':'CLOSED')+'</span>';
+  h+='<div class="h-row"><div class="l"><span class="hd-dot" style="background:'+((gates.g1&&gates.g1.open)||(gates.g2&&gates.g2.open)||(gates.g3&&gates.g3.open)?Y:G)+'"></span> CRM APPLY gates '+(sn.applyRedFlag?'— RED: APPLY IS ON WITH A GATE OPEN':'')+'<div style="margin:4px 0 0 15px">'+gate('G1 import',gates.g1&&gates.g1.open)+gate('G2 fresh export',gates.g2&&gates.g2.open)+gate('G3 duplicates',gates.g3&&gates.g3.open)+'</div><div style="font-size:11px;color:var(--dim);margin:4px 0 0 15px">'+(gates.g1&&gates.g1.note||'')+'</div></div><div class="v">'+String((live.crmCount||0))+' CRM records</div></div>';
+  h+=hRow('APPLY prerequisite — Boss answers', String(rh.bossOpen!=null?rh.bossOpen:'—')+' open', (rh.bossOpen||0)>0?Y:G);
+  h+=hRow('Ownership-transfer cards', 'MC-OWNERSHIP-001: '+(own['MC-OWNERSHIP-001']||'?')+' · BASE44-EXIT-001: '+(own['BASE44-EXIT-001']||'?'), (own['MC-OWNERSHIP-001']==='OPEN'||own['BASE44-EXIT-001']==='OPEN')?Y:G);
+  h+=hRow('Agent keys (status only)', (keys.rows||0)+' registered · '+(keys.active||0)+' active', (keys.expiredUsed>0)?R:((keys.expiringSoon>0)?Y:G));
+  // AI team
+  h+='<div class="h-sec">AI Team (heartbeats)</div>';
+  if(team.length) team.forEach(a=>{ h+=hRow(esc(fmtAgentName(a.name)), (a.state||'?')+' · '+(a.ts?ago(a.ts):'—')+(a.task?' · '+esc(String(a.task).slice(0,40)):''), String(a.state||'').toUpperCase().includes('DOWN')?R:hCol(hAgeH(a.ts),1,24)); });
+  else h+=hRow('Heartbeats','no agents have written heartbeats yet',Y,'only LILY and JEN write heartbeats (PHASE 2 covers the rest)');
+  // Docs
+  h+='<div class="h-sec">Docs (audit register)</div>';
+  const dc=docs.statusCounts||{};
+  h+=hRow('Register status', Object.keys(dc).map(k=>k+': '+dc[k]).join(' · ')||'—', p0>0?R:((upd+nr)>0?Y:G), docs.oldestVerified?('oldest verified '+docs.oldestVerified):'');
+  $('hlPhase1').innerHTML=h;
+}
+async function loadHealth(){
+  try{
+    healthSnap().then(renderHealthPhase1).catch(e=>{ if(e.message!=='auth') $('hlPhase1').innerHTML='<div class="cp-empty">Could not load health snapshot ('+esc(e.message)+')</div>'; });
+    const [ev,err]=await Promise.all([contentApi({op:'recentEvents'}).catch(e=>{ if(e.message==='auth') throw e; return {events:[]}; }), contentApi({op:'recentEvents',severity:'error'}).catch(e=>{ if(e.message==='auth') throw e; return {events:[]}; })]);
+    const agents=(board&&board.agents)||[];
+    let h='';
+    if(!agents.length) h+='<div class="cp-empty">No agent telemetry yet</div>';
+    agents.forEach(a=>{
+      const st=String(a.status||'').toLowerCase();
+      const col=st.includes('down')||st.includes('error')?'#e05555':(st.includes('working')||st.includes('active')||st.includes('online')?'#22c55e':'#eab308');
+      h+='<div class="hl-tile"><div class="hl-row"><div style="min-width:0"><div class="st-t">'+esc(fmtAgentName(a.agentName||a.name||'agent'))+'</div><div class="kn-evsub">'+esc(a.status||'unknown')+' \u00b7 heartbeat '+ago(a.lastHeartbeat||'')+'</div></div><div class="hl-dot" style="background:'+col+'"></div></div>'+(a.lastErrorSummary?'<div class="kn-evsub" style="color:#e05555;margin-top:4px">'+esc(a.lastErrorSummary)+'</div>':'')+'</div>';
+    });
+    $('hlAgents').innerHTML=h;
+    let eh='';
+    const errs=err.events||[];
+    if(!ev.events||!ev.events.length) eh='<div class="cp-empty">No system events yet</div>';
+    else eh=ev.events.slice(0,8).map(x=>'<div class="kn-ev '+sevClass(x)+'"><div class="kn-evlab">'+esc(x.eventType)+' \u00b7 '+ago(x.observedAt)+'</div><div class="kn-evtxt">'+esc(x.messageSummary)+'</div></div>').join('')
+      +(errs.length?'<div style="font-size:11px;color:#e05555;margin-top:2px">'+errs.length+' error event(s) recorded \u2014 full list in Knowledge</div>':'');
+    $('hlEvents').innerHTML=eh;
+  }catch(e){ if(e.message!=='auth') $('hlAgents').innerHTML='<div class="cp-empty">Could not load ('+esc(e.message)+')</div>'; }
+}
+// ---- settings ----
+let mySessionId='';
+async function loadSettings(){
+  try{
+    const d=await api('sessions');
+    const ss=(d.sessions||[]).sort((a,b)=>String(b.lastSeenAt||b.createdAt||'').localeCompare(String(a.lastSeenAt||a.createdAt||'')));
+    let h='';
+    ss.forEach((x,xi)=>{ h+='<div class="hl-tile"><div class="hl-row"><div style="min-width:0"><div class="st-t">'+esc(x.deviceLabel||'device')+'</div><div class="kn-evsub">'+ago(x.lastSeenAt||x.createdAt)+' \u00b7 expires '+new Date(x.expiresAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})+'</div></div>'+(xi===0?'<span style="font-size:10px;color:var(--gold)">NEWEST \u2014 LIKELY THIS DEVICE</span>':'<button class="st-btn red" data-sessrevoke="'+esc(x.id)+'">Revoke</button>')+'</div></div>'; });
+    if(!ss.length) h='<div class="cp-empty">No sessions found</div>';
+    $('setSessions').innerHTML=h;
+  }catch(e){ if(e.message!=='auth') $('setSessions').innerHTML='<div class="cp-empty">Could not load sessions</div>'; }
+}
+document.addEventListener('click',async ev=>{
+  const g=ev.target.closest?ev.target.closest('[data-kndoc],[data-sessrevoke],#knAdd,#setPinBtn,[data-kndel]'):null;
+  if(!g) return;
+  if(g.hasAttribute('data-kndel')){ if(!window.confirm('Remove this doc from the list?')) return; if(knBusy) return; knBusy=true;
+    try{ await contentApi({op:'docDelete',id:g.getAttribute('data-kndel')}); await loadKnowledge(); }catch(e){ toast(e.message); } knBusy=false; return; }
+  if(g.hasAttribute('data-kndoc')){ const u=g.getAttribute('data-kndoc'); if(u) window.open(u,'_blank'); return; }
+  if(g.id==='knAdd'){
+    if(knBusy) return; knBusy=true;
+    const title=($('knTitle').value||'').trim(), url=($('knUrl').value||'').trim(), category=($('knCat').value||'DOC').trim();
+    if(!title||!url){ knBusy=false; toast('Need a title and a link'); return; }
+    try{ await contentApi({op:'docAdd',title:title,url:url,category:category}); $('knTitle').value=''; $('knUrl').value=''; $('knCat').value=''; toast('Doc added'); await loadKnowledge(); }catch(e){ toast(e.message); }
+    knBusy=false; return;
+  }
+  if(g.id==='setPinBtn'){
+    if(knBusy) return; const p1=($('setPin').value||''), p2=($('setPin2').value||'');
+    if(p1.length<6){ toast('PIN must be 6+ characters'); return; }
+    if(p1!==p2){ toast('PINs do not match'); return; }
+    if(!window.confirm('Change the Mission Control PIN everywhere?')) return;
+    knBusy=true;
+    try{ await api('rotatePin',{newPin:p1}); $('setPin').value=''; $('setPin2').value=''; toast('PIN changed'); }catch(e){ toast(e.message); }
+    knBusy=false; return;
+  }
+  if(g.hasAttribute('data-sessrevoke')){
+    if(!window.confirm('Revoke this session? That device has to log in again.')) return;
+    if(knBusy) return; knBusy=true;
+    try{ await api('revokeSession',{id:g.getAttribute('data-sessrevoke')}); toast('Session revoked'); await loadSettings(); }catch(e){ toast(e.message); }
+    knBusy=false; return;
+  }
+});
+function setView(v){
+  view=v;
+  $('home').classList.toggle('hidden',v!=='home');
+  $('boardView').classList.toggle('hidden',v!=='board');
+  $('officeView').classList.toggle('hidden',v!=='office');
+  $('agentsView').classList.toggle('hidden',v!=='agents');
+  $('habitsView').classList.toggle('hidden',v!=='habits');
+  $('contentView').classList.toggle('hidden',v!=='content');
+  $('calendarView').classList.toggle('hidden',v!=='calendar');
+  $('vContent').classList.toggle('on',v==='content');
+  $('vCalendar').classList.toggle('on',v==='calendar');
+  $('vKnowledge').classList.toggle('on',v==='knowledge');
+  $('vHealth').classList.toggle('on',v==='health');
+  $('vSettings').classList.toggle('on',v==='settings');
+  $('knowledgeView').classList.toggle('hidden',v!=='knowledge');
+  $('healthView').classList.toggle('hidden',v!=='health');
+  $('settingsView').classList.toggle('hidden',v!=='settings');
+  $('statusView').classList.toggle('hidden',v!=='status');
+  $('vStatus').classList.toggle('on',v==='status');
+  $('vHome').classList.toggle('on',v==='home');
+  $('vBoard').classList.toggle('on',v==='board');
+  $('vOffice').classList.toggle('on',v==='office');
+  $('vAgents').classList.toggle('on',v==='agents');
+  $('vHabits').classList.toggle('on',v==='habits');
+  if(v==='agents') renderAgents(); // P2-5: agents fetched only when the view is open
+  if(v==='office') renderOfficeView();
+  if(v==='status') renderStatus();
+  if(v==='habits') renderHabits();
+  if(v==='content') loadContent();
+  if(v==='calendar') loadCalendar();
+  if(v==='knowledge') loadKnowledge();
+  if(v==='health') loadHealth();
+  if(v==='settings') loadSettings();
+}
+$('vHome').addEventListener('click',()=>setView('home'));
+$('vBoard').addEventListener('click',()=>setView('board'));
+$('vOffice').addEventListener('click',()=>setView('office'));
+$('vStatus').addEventListener('click',()=>setView('status'));
+$('vAgents').addEventListener('click',()=>setView('agents'));
+$('vHabits').addEventListener('click',()=>setView('habits'));
+$('vContent').addEventListener('click',()=>setView('content'));
+$('vCalendar').addEventListener('click',()=>setView('calendar'));
+$('vKnowledge').addEventListener('click',()=>setView('knowledge'));
+$('vHealth').addEventListener('click',()=>setView('health'));
+$('vSettings').addEventListener('click',()=>setView('settings'));
+// ================= HABIT TRACKER (v9.4) =================
+// Remade from Boss's reference screenshots (Drive: Habit Tracking Tool):
+// daily-progress bars, overall stats donut, month grid with checkboxes,
+// analysis table, mood + sleep wellness. Real data only — check-ins live in
+// the HabitCheckIn entity; the grid fills as Boss actually checks in.
+let habitsData=null, habitsMonth=null, habitsBusy=false;
+let backlogOpen=false, backlogText='', backlogBusy=false;
+function etToday(){ // yyyy-mm-dd in Boss's timezone (ET)
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const g=t=>p.find(x=>x.type===t).value; return g('year')+'-'+g('month')+'-'+g('day');
+}
+function monthOf(iso){return iso.substring(0,7);}
+function daysInMonth(ym){const [y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
+const DAY_LETTERS=['Su','Mo','Tu','We','Th','Fr','Sa'];
+function etDow(ymd){const [y,m,d]=ymd.split('-').map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay();}
+
+async function renderHabits(month){
+  // Boss directive Oct 17: the Mission Control tab shows CURRENT month / week only.
+  // History lives in the VANTRA Habit Tracker Google Sheet (synced nightly).
+  month=monthOf(etToday());
+  habitsMonth=month;
+  const body=$('habitsBody');
+  body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Loading habits…</div>';
+  let d;
+  try{ d=await api('habits',{month}); }
+  catch(e){ body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">Couldn\'t load habits ('+esc(e.message)+') — pull down or tap another tab and back.</div>'; return; }
+  habitsData=d;
+  $('habitsAsOf').textContent='Data as of '+fmtET(d.asOf||new Date().toISOString());
+  const cur=month;
+  // month label instead of tabs (history is in the Sheet, not here)
+  $('habitsMonthTabs').innerHTML='<span style="align-self:center;font-size:13.5px;font-weight:800;letter-spacing:2px;color:var(--gold);padding:2px 4px">'+new Date(month+'-02').toLocaleString('en-US',{month:'long',year:'numeric'}).toUpperCase()+'</span>';
+  const habits=d.habits||[];
+  if(!habits.length){
+    body.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px">No habits set up yet. Tell me which habits to track and I\'ll add them.</div>';
+    return;
+  }
+  const today=etToday();
+  const dim=daysInMonth(month);
+  // current week = the ET week (Sunday..Saturday) containing today
+  const tDow=etDow(today);
+  const tMs=Date.UTC(Number(today.substring(0,4)),Number(today.substring(5,7))-1,Number(today.substring(8,10)));
+  const weekDates=[];
+  for(let i=0;i<7;i++){
+    const dt=new Date(tMs-(tDow-i)*86400000);
+    const iso=dt.toISOString().substring(0,10);
+    if(monthOf(iso)===month) weekDates.push(iso);
+  }
+  const cis={}; const civ={}; (d.checkins||[]).forEach(c=>{ const k=c.habitKey+'|'+c.date; if(c.done) cis[k]=1; const v=Number(c.value||''); if(v>0) civ[k]=v; });
+  const isCount=h=> !!h.unit; // unit set => Boss logs a NUMBER per day; no unit => plain check
+  const well={}; (d.wellness||[]).forEach(w=>{ well[w.date]=w; });
+  const dayOf=day=>month+'-'+String(day).padStart(2,'0');
+
+  // ---- credit model (Boss, Oct 17) ----
+  // check habits: done = 1. Number habits: ANY whole number 1+ = 100% for that day (extra is bonus);
+  // only a part of one (0.5) counts as that fraction. Days before you started a habit never count against it.
+  const dayCredit=v=>{ const n=Number(v)||0; return n>=1?1:(n>0?n:0); };
+  const dayCreditFor=(h,dt)=> isCount(h) ? dayCredit(civ[h.habitKey+'|'+dt]) : (cis[h.habitKey+'|'+dt]?1:0);
+  const firstLogged=h=>{ let st=''; Object.keys(cis).concat(Object.keys(civ)).forEach(k=>{ if(k.indexOf(h.habitKey+'|')===0){ const dt=k.split('|')[1]; if(!st||dt<st) st=dt; } }); return st||today; };
+  const dayPct=dt=>{ if(dt>today||!habits.length) return 0; let c=0; habits.forEach(h=>{ c+=dayCreditFor(h,dt); }); return Math.round(c/habits.length*100); };
+
+  // ---- BIG ring = TODAY; smaller ring = THIS WEEK so far ----
+  const todayPct=dayPct(today);
+  const wkDays=weekDates.filter(dt=>dt<=today);
+  let wkSum=0; wkDays.forEach(dt=>{ wkSum+=dayPct(dt); });
+  const weekPct=wkDays.length?Math.round(wkSum/wkDays.length):0;
+  let todayDone=0; habits.forEach(h=>{ if(dayCreditFor(h,today)>=1) todayDone++; });
+  const ringCol=p=>p>=100?'var(--gold)':'var(--green)';
+  let html='<div class="hb-stats" style="flex-wrap:nowrap">'
+   +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:none"><div class="hb-donut" style="background:conic-gradient('+ringCol(todayPct)+' '+todayPct*3.6+'deg, rgba(138,43,226,.35) 0)"><div class="hb-dpct">'+todayPct+'%</div></div><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);font-weight:700">TODAY</div></div>'
+   +'<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;align-items:flex-start">'
+   +'<div class="hb-kv" style="gap:16px"><div>Done today<b>'+todayDone+'</b></div><div>Left today<b>'+(habits.length-todayDone)+'</b></div></div>'
+   +'<div style="display:flex;align-items:center;gap:10px"><div class="hb-ringc" style="width:54px;height:54px;background:conic-gradient('+ringCol(weekPct)+' '+weekPct*3.6+'deg, rgba(138,43,226,.28) 0)"><span>'+weekPct+'%</span></div><div style="font-size:11px;color:var(--dim);line-height:1.3"><b style="color:var(--text);font-size:12px">THIS WEEK</b><br>average of your days so far</div></div>'
+   +'</div></div>';
+
+  // ---- TRENDS: always drawn (Boss, Oct 17). Verdict waits for 3 logged days; graphs never hide. ----
+  {
+    const W=340,H=110,PX=14,PY=10;
+    // x axis = every day of the month so the line grows left to right across the month
+    const pts=[]; for(let day=1;day<=dim;day++){ const dt=dayOf(day); const w=well[dt]||{};
+      pts.push({day:day,dt:dt,fut:dt>today,pct:dt>today?null:dayPct(dt),mood:w.mood||null,sleep:w.hoursOfSleep||null}); }
+    const xAt=i=>PX+i*(W-2*PX)/Math.max(1,dim-1);
+    const yAt=(v,max)=>(H-PY-(Math.min(v,max)/max)*(H-2*PY)).toFixed(1);
+    // smooth path through the known points (simple catmull-style curve)
+    const smooth=(arr,max)=>{ const P=[]; arr.forEach((v,i)=>{ if(v!=null) P.push([xAt(i),+yAt(v,max)]); });
+      if(P.length<2) return '';
+      return 'M'+P.map(p=>p[0].toFixed(1)+' '+p[1]).join(' L'); }; // Boss, Oct 17: straight lines, day to day
+    const pathEl=(d,color,sw)=>d?'<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>':'';
+    const areaEl=(arr,max,color)=>{ const d=smooth(arr,max); if(!d) return '';
+  return '<path d="'+d+' L'+xAt(arr.length-1).toFixed(1)+' '+(H-PY)+' L'+xAt(0).toFixed(1)+' '+(H-PY)+' Z" fill="url(#g'+color.replace(/[^a-z0-9]/gi,'')+color.length+')" stroke="none"/>'; };
+const defs='<defs><linearGradient id="g4ade807" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4ade80" stop-opacity=".22"/><stop offset="1" stop-color="#4ade80" stop-opacity="0"/></linearGradient></defs>';
+    const todayX=xAt(Math.min(dim-1,Math.max(0,Number(today.substring(8,10))-1)));
+    const grid=[0,.5,1].map(f=>'<line x1="'+PX+'" y1="'+(PY+f*(H-2*PY)).toFixed(1)+'" x2="'+(W-PX)+'" y2="'+(PY+f*(H-2*PY)).toFixed(1)+'" stroke="rgba(255,255,255,'+(f===1?'.16':'.07')+')"/>').join('')
+      +'<line x1="'+todayX.toFixed(1)+'" y1="'+PY+'" x2="'+todayX.toFixed(1)+'" y2="'+(H-PY)+'" stroke="rgba(212,175,55,.45)" stroke-dasharray="3 3"/>'
+      +[1,8,15,22,29].filter(d=>d<=dim).map(d=>'<text x="'+xAt(d-1).toFixed(1)+'" y="'+(H-1)+'" text-anchor="middle" font-size="8" fill="#8a8aa8">'+d+'</text>').join('');
+    const card=(title,sub,svg,legend)=>'<div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:10px 10px 6px;margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><div style="font-size:12px;font-weight:700;color:var(--text)">'+title+'</div><div style="font-size:11px">'+sub+'</div></div>'
+      +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;margin-top:4px">'+grid+svg+'</svg>'
+      +(legend?'<div style="font-size:10px;color:var(--dim);display:flex;gap:12px;padding:2px 4px 4px;flex-wrap:wrap">'+legend+'</div>':'')+'</div>';
+
+    html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">TRENDS — THIS MONTH</h3>';
+
+    // 1) habit completion
+    const raw=pts.map(p=>p.pct);
+    const known=raw.filter(v=>v!=null);
+    const loggedDays=pts.filter(p=>!p.fut&&(p.pct>0||p.mood||p.sleep)).length;
+    const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+    let sub;
+    if(loggedDays<3){
+      sub='<span style="color:var(--gold)">&#9670; TOO EARLY TO CALL</span> <span style="color:var(--dim)">('+loggedDays+' of 3 days logged)</span>';
+    } else {
+      const el=known; let recent,prior;
+      if(el.length>=14){ recent=avg(el.slice(-7)); prior=avg(el.slice(-14,-7)); }
+      else { const mid=Math.floor(el.length/2); prior=avg(el.slice(0,mid)); recent=avg(el.slice(mid)); }
+      const diff=Math.round(recent-prior);
+      let verdict,vcol,arrow;
+      if(diff>=5){ verdict='UPWARD SPIRAL'; vcol='var(--green)'; arrow='\u25B2'; }
+      else if(diff<=-5){ verdict='DOWNWARD'; vcol='#e05555'; arrow='\u25BC'; }
+      else { verdict='HOLDING STEADY'; vcol='var(--gold)'; arrow='\u25AC'; }
+      sub='<b style="color:'+vcol+'">'+arrow+' '+verdict+'</b> <span style="color:var(--dim)">('+(diff>0?'+':'')+diff+' pts vs earlier)</span>';
+    }
+    html+=card('Habit completion %',sub, defs+areaEl(raw,100,'#4ade80')+pathEl(smooth(raw,100),'#4ade80',2.6),
+      '<span><b style="color:#4ade80">\u2014</b> completion trend</span><span>day 1\u2192'+dim+' \u00b7 gold dashes = today</span>');
+
+    // 2) mood + sleep, like the reference chart
+    const moods=pts.map(p=>p.mood), sleeps=pts.map(p=>p.sleep);
+    const hasW=moods.some(v=>v!=null)||sleeps.some(v=>v!=null);
+    html+=card('Mood &amp; sleep',hasW?'<span style="color:var(--dim)">mood 1-5 \u00b7 sleep hours (0-12)</span>':'<span style="color:var(--dim)">log mood and sleep and these fill in</span>',
+      pathEl(smooth(sleeps,12),'#c9b8ff',2.2)+pathEl(smooth(moods,5),'#d4af37',2.6),
+      '<span><b style="color:#d4af37">\u2014</b> Mood</span><span><b style="color:#c9b8ff">\u2014</b> Hours of sleep</span>');
+  }
+  // ---- per-habit rings: today's state, week progress underneath ----
+  {
+    const colorFor=p=>p>=100?'var(--gold)':p>=60?'var(--green)':p>0?'#8a2be2':'rgba(255,255,255,.18)';
+    let rh='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 2px">HABIT RINGS — TODAY</h3><div style="font-size:10.5px;color:var(--dim);margin:0 0 6px">Ring = today. Small line = this week (days since you started that habit). Number habits: 1 or more = 100%.</div><div class="hb-rings">';
+    habits.forEach(h=>{
+      const tp=Math.round(dayCreditFor(h,today)*100);
+      const st=firstLogged(h);
+      const wd=weekDates.filter(dt=>dt>=st&&dt<=today);
+      let wc=0; wd.forEach(dt=>{ wc+=dayCreditFor(h,dt); });
+      const wp=wd.length?Math.round(wc/wd.length*100):0;
+      let todayTxt;
+      if(isCount(h)){ const v=civ[h.habitKey+'|'+today]; todayTxt=v?(v+' '+h.unit+' today'):('0 '+h.unit+' today'); }
+      else todayTxt=cis[h.habitKey+'|'+today]?'done today':'not yet';
+      rh+='<div class="hb-ring"><div class="hb-ringc" style="background:conic-gradient('+colorFor(tp)+' '+tp*3.6+'deg, rgba(138,43,226,.28) 0)"><span>'+tp+'%</span></div>'
+        +'<div class="rn">'+esc(h.name)+'</div><div class="rs">'+esc(todayTxt)+'</div><div style="font-size:9.5px;color:var(--dim)">week '+wp+'%</div></div>';
+    });
+    rh+='</div>';
+    html+=rh;
+  }
+
+  // DAILY PROGRESS over the whole month (Boss, Oct 17: like the reference chart —
+  // one thin bar per day, % guide lines behind, day number under each bar)
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">DAILY PROGRESS — THIS MONTH <span style="font-weight:400;text-transform:none;letter-spacing:0">(1 bar per day, green = perfect day)</span></h3><div class="hb-bars hb-month"><div class="hb-monthwrap">';
+  for(let day=1;day<=dim;day++){
+    const dt=dayOf(day); const fut=dt>today;
+    const p=fut?0:dayPct(dt)/100;
+    const hgt=Math.max(2,Math.round(p*56));
+    html+='<div class="hb-col'+(dt===today?' today':'')+'">'
+      +'<div class="hb-bar'+(p>=1?' full':'')+'" style="height:'+hgt+'px;'+(fut?'opacity:.12;':'')+'" title="'+dt+'"></div>'
+      +'<span class="dl">'+day+'</span></div>';
+  }
+  html+='</div></div>';
+
+  // ---- TODAY check-in strip ----
+  {
+    html+='<div class="hb-today"><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:2px">TODAY — '+today+'</div>';
+    habits.forEach(h=>{
+      const on=!!cis[h.habitKey+'|'+today];
+      if(isCount(h)){
+        const v=civ[h.habitKey+'|'+today];
+        html+='<div class="hb-trow" style="align-items:center">'
+          +'<div style="flex:1;min-width:0"><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.unit)+' per day</div></div>'
+          +'<input class="hb-sleep" id="hbin_'+h.habitKey+'" type="number" min="0" max="9999" step="1" inputmode="numeric" placeholder="0" value="'+(v||'')+'">'
+          +'<button class="hb-wbtn" data-hbval="'+h.habitKey+'">Set</button></div>';
+      } else {
+        html+='<div class="hb-trow"><button class="hb-chk'+(on?' done':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+today+'">'+(on?'\u2713':'')+'</button>'
+          +'<div><div class="hb-tn">'+esc(h.name)+'</div><div class="hb-why">'+esc(h.executionLink||'')+'</div></div></div>';
+      }
+    });
+    // wellness inputs for today — MOOD and SLEEP are separate trackers on purpose:
+    // bad sleep + good mood (or the reverse) are different signals (Boss, Oct 17)
+    const w=well[today]||{};
+    html+='<div style="margin-top:10px"><div style="font-size:11px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px">MOOD — how do you feel today?</div>'
+      +'<div class="hb-wellday">'
+      +[1,2,3,4,5].map(mv=>'<button class="hb-wbtn'+(w.mood===mv?' on':'')+'" data-hbmood="'+mv+'">'+mv+'</button>').join('')
+      +'</div>'
+      +'<div style="font-size:11px;letter-spacing:1.5px;color:var(--dim);margin:8px 0 4px">SLEEP — hours last night</div>'
+      +'<div class="hb-wellday">'
+      +'<input class="hb-sleep" id="hbSleepIn" type="number" min="0" max="24" step="0.5" placeholder="hours" value="'+(w.hoursOfSleep||'')+'">'
+      +'<button class="hb-wbtn" id="hbSleepGo">Set sleep</button>'
+      +'</div></div></div>';
+  }
+
+  // ---- BACKLOG: paste-in catch-up for missed days (Boss, Oct 22) ----
+  html+='<div class="hb-today" style="border-color:rgba(212,175,55,.35)"><div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);margin-bottom:4px">MISSED DAYS? PASTE THEM IN</div>'
+   +'<div style="font-size:11px;color:var(--dim);line-height:1.45;margin-bottom:6px">Forgot to log a few days? Paste your notes — one day per line, say the day then what you did. E.g. <i>yesterday: gym, 2 audios, mood 4, slept 6.5</i> or <i>Mon: workout, 3 chapters, posted</i>. Habit names, mood 1-5 and sleep hours are all understood. You preview before anything saves.</div>'
+   +(backlogOpen
+     ? '<textarea id="hbBacklogIn" rows="6" autocapitalize="sentences" style="width:100%;background:rgba(8,8,20,.95);border:1px solid rgba(138,43,226,.45);border-radius:8px;color:var(--text);font-size:13px;padding:8px;box-sizing:border-box" placeholder="Mon: gym, 2 audios, mood 4, slept 6.5&#10;Tue: workout, 3 chapters, posted content"></textarea>'
+       +'<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="hb-wbtn" id="hbBacklogPrevBtn">PREVIEW</button><button class="hb-wbtn" id="hbBacklogCancel" style="opacity:.65">Close</button></div>'
+       +'<div id="hbBacklogOut" style="margin-top:8px"></div>'
+     : '<button class="hb-wbtn" id="hbBacklogBtn">+ Paste missed days</button>')
+   +'</div>';
+
+  // ---- month grid ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">THIS WEEK</h3><div class="hb-gridwrap"><table class="hb-grid"><thead>';
+  let hNum='<tr><th class="hname">Habit</th>';
+  weekDates.forEach(dt=>{
+    const dd=Number(dt.substring(8,10));
+    hNum+='<th'+(dt===today?' style="color:var(--gold);font-weight:800"':'')+'>'+DAY_LETTERS[etDow(dt)]+' '+dd+'</th>';
+  });
+  html+=hNum+'</tr></thead><tbody>';
+  habits.forEach(h=>{
+    html+='<tr><td class="hname">'+esc(h.name)+'</td>';
+    weekDates.forEach(dt=>{
+      if(dt>today){ html+='<td><span class="hb-cell future"></span></td>'; return; }
+      if(isCount(h)){
+        const v=civ[h.habitKey+'|'+dt];
+        html+='<td style="text-align:center;font-weight:'+(v?'800':'400')+';color:'+(v?'var(--gold)':'var(--dim)')+'">'+(v?esc(String(v)):'\u2013')+'</td>';
+        return;
+      }
+      const on=!!cis[h.habitKey+'|'+dt];
+      html+='<td><span class="hb-cell'+(on?' done':'')+(dt===today?' today':'')+'" data-hbchk="'+h.habitKey+'" data-hbday="'+dt+'"></span></td>';
+    });
+    html+='</tr>';
+  });
+  // wellness rows in grid (separate: mood and sleep are different signals)
+  html+='<tr><td class="hname">Mood</td>';
+  weekDates.forEach(dt=>{
+    const w=well[dt];
+    html+='<td style="font-weight:'+(w&&w.mood?'800':'400')+';color:'+(w&&w.mood?'var(--gold)':'var(--dim)')+'">'+(dt<=today&&w&&w.mood?w.mood:(dt<=today?'–':''))+'</td>';
+  });
+  html+='</tr><tr><td class="hname">Sleep (hours)</td>';
+  weekDates.forEach(dt=>{
+    const w=well[dt];
+    html+='<td style="font-weight:'+(w&&w.hoursOfSleep?'800':'400')+';color:'+(w&&w.hoursOfSleep?'var(--text)':'var(--dim)')+'">'+(dt<=today&&w&&w.hoursOfSleep?w.hoursOfSleep:(dt<=today?'–':''))+'</td>';
+  });
+  html+='</tr></tbody></table></div>';
+
+  // ---- analysis table (same credit model as the rings) ----
+  html+='<h3 style="font-size:12px;letter-spacing:1.5px;color:var(--dim);margin:6px 0 4px">ANALYSIS — THIS WEEK</h3><div style="background:rgba(8,8,20,.85);border:1px solid rgba(138,43,226,.35);border-radius:12px;padding:8px 12px">';
+  habits.forEach(h=>{
+    const st=firstLogged(h);
+    const wd=weekDates.filter(dt=>dt>=st&&dt<=today);
+    let wc=0, tot=0, daysDone=0;
+    wd.forEach(dt=>{ const c=dayCreditFor(h,dt); wc+=c; if(c>=1) daysDone++; if(isCount(h)) tot+=(civ[h.habitKey+'|'+dt]||0); });
+    const n=wd.length||1;
+    const hp=Math.min(100,Math.round(wc/n*100));
+    const nums=isCount(h)
+      ? ('Days done '+daysDone+'/'+n+' \u00b7 total '+tot+' '+esc(h.unit))
+      : ('Goal '+n+' \u00b7 Actual '+daysDone+' \u00b7 Left '+(n-daysDone));
+    html+='<div class="hb-anrow"><span class="n">'+esc(h.name)+'</span><span class="nums">'+nums+'</span>'
+      +'<span class="hb-pbar"><i style="width:'+hp+'%"></i></span><span class="pc">'+hp+'%</span></div>';
+  });
+  html+='</div>';
+
+  body.innerHTML=html;
+}
+
+// backlog preview/apply (Boss, Oct 22): parse first, Boss confirms, then it writes
+async function backlogApi(extra){
+  const res=await fetch(BACKLOGURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({op:'backlog'},extra||{}))});
+  let d=null; try{ d=await res.json(); }catch(e){}
+  if(!d||!d.ok){
+    if(res.status===401){ localStorage.removeItem('mc_token'); token=''; showLogin(); throw new Error('auth'); }
+    throw new Error((d&&d.error)||('backlog failed ('+res.status+')'));
+  }
+  return d;
+}
+function fmtDayLabel(iso){ const d=new Date(iso+'T12:00:00'); return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+async function backlogPreview(){
+  const ta=$('hbBacklogIn');
+  const txt=ta?ta.value:'';
+  if(!txt.trim()){ toast('Paste your missed days first'); return; }
+  const out=$('hbBacklogOut');
+  if(!out) return;
+  out.innerHTML='<div style="color:var(--dim);font-size:12px;padding:4px 0">Parsing…</div>';
+  if(habitsBusy||backlogBusy) return; backlogBusy=true;
+  try{
+    const d=await backlogApi({text:txt});
+    backlogBusy=false; backlogText=txt;
+    const days=d.days||[];
+    let h='';
+    (d.badDates||[]).forEach(b=>{ h+='<div style="color:#ff9d9d;font-size:12px;padding:2px 0">✗ '+esc(b)+'</div>'; });
+    days.forEach(day=>{
+      h+='<div style="border-top:1px solid rgba(255,255,255,.08);padding:6px 0 2px">'
+       +'<div style="font-size:12px;font-weight:800;color:var(--gold)">'+fmtDayLabel(day.date)+'<span style="color:var(--dim);font-weight:400;font-size:10.5px"> ('+day.date+')</span>'
+       +(day.assumed?' <span style="color:#ffb84d;font-weight:700;font-size:10.5px">NO DATE GIVEN — assumed yesterday, check it</span>':'')
+       +(day.old?' <span style="color:#ffb84d;font-weight:700;font-size:10.5px">more than 90 days ago</span>':'')
+       +'</div>';
+      (day.entries||[]).forEach(e=>{ h+='<div style="font-size:12px;padding:1px 0 1px 10px">✓ '+esc(e.name)+(e.value?' — '+esc(String(e.value)):'')+'</div>'; });
+      if(day.wellness&&(day.wellness.mood||day.wellness.hoursOfSleep)) h+='<div style="font-size:12px;padding:1px 0 1px 10px;color:var(--text)">♥ '+(day.wellness.mood?'mood '+day.wellness.mood:'')+(day.wellness.mood&&day.wellness.hoursOfSleep?' · ':'')+(day.wellness.hoursOfSleep?day.wellness.hoursOfSleep+' hrs sleep':'')+'</div>';
+      (d.skipped||[]).filter(x=>x.date===day.date).forEach(x=>{ h+='<div style="font-size:11.5px;color:#ffb84d;padding:1px 0 1px 10px">⚠ skipped: "'+esc(x.text)+'" ('+esc(x.reason)+')</div>'; });
+      (d.unrecognized||[]).filter(x=>x.date===day.date).forEach(x=>{ h+='<div style="font-size:11.5px;color:var(--dim);padding:1px 0 1px 10px">? not recognized: "'+esc(x.text)+'"</div>'; });
+      h+='</div>';
+    });
+    const n=days.reduce((a,x)=>a+(x.entries||[]).length,0), nw=days.filter(x=>x.wellness&&(x.wellness.mood||x.wellness.hoursOfSleep)).length;
+    if(!n&&!nw&&!h.length) h='<div style="color:var(--dim);font-size:12px;padding:4px 0">Nothing recognized — try naming the day and the habits.</div>';
+    h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+     +((n||nw)?'<button class="hb-wbtn" id="hbBacklogGo">CONFIRM — SAVE '+n+' HABIT'+(n===1?'':'S')+(nw?' + WELLNESS':'')+'</button>':'')
+     +'<button class="hb-wbtn" id="hbBacklogPrevBtn2" style="opacity:.65">Re-preview</button></div>';
+    out.innerHTML=h;
+  }catch(e){ backlogBusy=false; out.innerHTML='<div style="color:#ff8a8a;font-size:12px;padding:2px 0">'+esc(e.message==='auth'?'Logged out — unlock again':e.message)+'</div>'; }
+}
+async function backlogApply(){
+  if(habitsBusy||backlogBusy) return; backlogBusy=true;
+  try{
+    const d=await backlogApi({text:backlogText,apply:true});
+    backlogBusy=false;
+    toast('Saved '+d.applied+' habit'+(d.applied===1?'':'s')+(d.wellness?' + wellness':'')+' across '+d.days+' day'+(d.days===1?'':'s'));
+    backlogOpen=false; renderHabits();
+  }catch(e){ backlogBusy=false; toast(e.message==='auth'?'Logged out — unlock again':e.message); }
+}
+// tap handling: checkbox toggles (double-tap safe), mood, sleep, month tabs
+document.addEventListener('click', async el => {
+  const t=el.target;
+  if(!t||!t.getAttribute) return;
+  if(t.id==='hbBacklogBtn'){ backlogOpen=true; renderHabits(); const ta=$('hbBacklogIn'); if(ta) ta.focus(); return; }
+  if(t.id==='hbBacklogCancel'){ backlogOpen=false; renderHabits(); return; }
+  if(t.id==='hbBacklogPrevBtn'||t.id==='hbBacklogPrevBtn2'){ backlogPreview(); return; }
+  if(t.id==='hbBacklogGo'){ backlogApply(); return; }
+  const mb=t.getAttribute('data-hbm');
+  if(mb!==null&&mb!==''&&t.classList.contains('hb-month')){ renderHabits(mb); return; }
+  if(t.id==='hbSleepGo'){
+    const v=Number(($('hbSleepIn')||{}).value);
+    if(!v&&v!==0){ toast('Enter hours first'); return; }
+    if(habitsBusy) return; habitsBusy=true;
+    try{ await api('habitWellness',{date:etToday(),hoursOfSleep:v}); habitsBusy=false; toast('Sleep saved'); renderHabits(); }
+    catch(e){ toast(e.message); habitsBusy=false; }
+    return;
+  }
+  const mv=t.getAttribute('data-hbmood');
+  if(mv){ if(habitsBusy) return; habitsBusy=true;
+    try{ await api('habitWellness',{date:etToday(),mood:Number(mv)}); habitsBusy=false; toast('Mood '+mv+' saved'); renderHabits(); }
+    catch(e){ toast(e.message); habitsBusy=false; }
+    return; }
+  const hv=t.getAttribute('data-hbval');
+  if(hv){
+    const inp=$('hbin_'+hv);
+    const v=Number((inp||{}).value);
+    if(!v&&v!==0){ toast('Enter a number first'); return; }
+    if(habitsBusy) return; habitsBusy=true;
+    try{ await hvApi({op:'set',habitKey:hv,date:etToday(),value:v}); habitsBusy=false; toast('Saved'); renderHabits(); }
+    catch(e){ if(e.message!=='auth'){ toast(e.message); habitsBusy=false; } }
+    return;
+  }
+  const hk=t.getAttribute('data-hbchk');
+  if(hk){
+    if(habitsBusy) return; // no duplicate check-ins on double-tap
+    const day=t.getAttribute('data-hbday');
+    const isDone=t.classList.contains('done');
+    habitsBusy=true;
+    t.classList.toggle('done'); t.textContent=isDone?'':'\u2713';
+    try{
+      await api('habitCheck',{habitKey:hk,date:day,done:!isDone,idempotencyKey:'hb-'+hk+'-'+day+'-'+Date.now()});
+      habitsBusy=false; renderHabits();
+    }catch(e){ toast(e.message); habitsBusy=false; renderHabits(); }
+    return;
+  }
+});
+
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  filter=b.dataset.f;
+  if(view==='board') renderBoard(); else renderTasks(); // P1-1: tabs filter the Board too
+}));
+setInterval(()=>{if(token) refresh();},45000);
+window.addEventListener('online',()=>{ if(token) refresh(); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && token) refresh(); });
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && token) refresh();});
+
+/* ---------- boot (P1-4: real errors, retry) ---------- */
+async function boot(isRetry){
+  $('loginErr').textContent='';
+  if(!token) return;
+  $('loginErr').textContent='Connecting…';
+  try{
+    const res=await fetch(APIURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({op:'board'})});
+    if(res.status===401){localStorage.removeItem('mc_token');token='';$('loginErr').textContent='';return;}
+    if(!res.ok) throw new Error('server');
+    let d=null;
+    try{ d=await res.json(); }catch(e){ throw new Error('json'); }
+    if(!d || !d.ok) throw new Error('server');
+    $('loginErr').textContent='';
+    showShell();
+    refresh();
+  }catch(e){
+    $('loginErr').innerHTML='Can\u2019t reach Mission Control. <button class="abtn" data-act="retry">Retry</button>';
+  }
+}
+boot(false);
+</script>
+
+<script>
+window.addEventListener('load',function(){
+  const SEED=[
+   {"habitKey":"AUD-01","name":"Audios listened to","category":"L","cadence":"daily","unit":"audios","executionLink":""},
+   {"habitKey":"FIT-01","name":"Workout done","category":"W","cadence":"daily","unit":"","executionLink":"Personal-DNA: consistent fitness routine"},
+   {"habitKey":"MIND-01","name":"Affirmations spoken/listened to","category":"M","cadence":"daily","unit":"","executionLink":""},
+   {"habitKey":"BOOK-01","name":"Book chapters/pages read","category":"L","cadence":"daily","unit":"chapters","executionLink":""},
+   {"habitKey":"PIPE-01","name":"Prospect messages sent","category":"B","cadence":"daily","unit":"messages","executionLink":""}];
+  api=function(op,extra){
+    if(op==='habits') return Promise.resolve({ok:true,month:'2026-10',habits:SEED,checkins:[
+      {habitKey:'AUD-01',date:'2026-10-17',done:true,value:'1'},
+      {habitKey:'FIT-01',date:'2026-10-17',done:true,value:''},
+      {habitKey:'PIPE-01',date:'2026-10-19',done:true,value:'4'}
+    ],wellness:[{date:'2026-10-19',mood:4,hoursOfSleep:6.5}],asOf:new Date().toISOString()});
+    return Promise.resolve({ok:true,stats:{},tasks:[],approvals:[],agents:[],roster:[],cards:[],lists:[]});
+  };
+  const mk=o=>Promise.resolve(new Response(JSON.stringify(o),{status:200,headers:{'Content-Type':'application/json'}}));
+  window.fetch=function(url,opts){
+    if(String(url).indexOf('mcHabitBacklog')>=0){
+      const body=JSON.parse((opts&&opts.body)||'{}');
+      if(body.apply) return mk({ok:true,applied:7,wellness:2,days:2});
+      return mk({ok:true,preview:true,today:'2026-10-22',days:[
+        {date:'2026-10-21',assumed:false,old:false,entries:[
+          {date:'2026-10-21',habitKey:'FIT-01',name:'Workout done',done:true,value:0,note:'gym'},
+          {date:'2026-10-21',habitKey:'AUD-01',name:'Audios listened to',done:true,value:2,note:'2 audios'}],
+         wellness:{date:'2026-10-21',mood:4,hoursOfSleep:6.5}},
+        {date:'2026-10-20',assumed:false,old:false,entries:[
+          {date:'2026-10-20',habitKey:'PIPE-01',name:'Prospect messages sent',done:true,value:5,note:'5 prospect messages'},
+          {date:'2026-10-20',habitKey:'BOOK-01',name:'Book chapters/pages read',done:true,value:2,note:'read 2 chapters'}],
+         wellness:{date:'2026-10-20',hoursOfSleep:7}}],
+        skipped:[{date:'2026-10-20',text:'no workout',reason:"looked like a ‘no’ — skipped"}],
+        unrecognized:[{date:'2026-10-20',text:'family time'}],
+        badDates:[]});
+    }
+    return mk({ok:true});
+  };
+  token='preview';
+  document.getElementById('login').classList.add('hidden');document.getElementById('shell').classList.remove('hidden');
+  setView('habits');
+});
+</script></body>
+</html>
