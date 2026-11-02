@@ -902,7 +902,8 @@ function loKey(name){
   for(var k=0;k<keys.length;k++){ if(n.indexOf(keys[k])>=0) return keys[k]; }
   return null;
 }
-function loFirst(name){ return fmtAgentName(name).replace(/^VANTRA\s+/i,'').replace(/\s+GROK$/i,'').replace(/\s*\(.*\)/,''); }
+function loFirst(name){ /* Boss 2026-11-01: keep the VANTRA team prefix on display, do not strip it or the GROK suffix */
+  return fmtAgentName(name).replace(/\s*\(.*\)/,'').trim(); }
 function loPlace(el,pt){ el.style.left=pt.x+'%'; el.style.top=pt.y+'%'; }
 function loTick(){
   var ids=Object.keys(LO_ALL); if(!ids.length) return;
