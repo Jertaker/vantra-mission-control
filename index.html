@@ -151,6 +151,7 @@ main{padding:10px 16px 90px;max-width:1100px;margin:0 auto}
 .w.talk .w-say{display:block;animation:pop .35s ease-out}
 @keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
 .lo-note{font-size:9px;color:#8a86a8;margin:6px 2px 0;line-height:1.35}
+.lo-wd{font-size:10px;color:#f0d88c;background:rgba(240,216,140,.07);border:1px solid rgba(240,216,140,.35);border-radius:8px;padding:6px 8px;margin:10px 0 0;line-height:1.4}
 .lo-feed{margin-top:8px;display:flex;flex-direction:column;gap:4px}
 .lo-feed div{font-size:11px;color:#cfc8e8;background:rgba(8,8,20,.8);border:1px solid rgba(138,43,226,.35);border-radius:8px;padding:5px 8px}
 .d-dell{display:inline-block;font-size:9.5px;border:1px solid #8a86a8;color:#b9b3d0;border-radius:999px;padding:2px 7px;margin-top:5px}
@@ -794,12 +795,8 @@ function agentLook(name){
     ['LENOCLAW',{'i':'\ud83d\udd27','bg':'linear-gradient(135deg,#f59e0b,#b45309)'}],
     ['CLAW',{'i':'\ud83d\udee1','bg':'linear-gradient(135deg,#3b82f6,#6366f1)'}],
     ['HERMES',{'i':'\ud83d\udce1','bg':'linear-gradient(135deg,#7c5cff,#22c55e)'}],
-    ['LILY',{'i':'\u260e','bg':'linear-gradient(135deg,#10b981,#065f46)'}],
     ['JEN',{'i':'\ud83d\udccb','bg':'linear-gradient(135deg,#38bdf8,#1e40af)'}],
-    ['LENNY',{'i':'\ud83d\udcf8','bg':'linear-gradient(135deg,#22d3ee,#0e7490)'}],
-    ['LELIC',{'i':'\ud83c\udf9b','bg':'linear-gradient(135deg,#22c55e,#15803d)'}],
-    ['SAM',{'i':'\ud83d\udcc5','bg':'linear-gradient(135deg,#4ade80,#16a34a)'}],
-    ['ZELUS',{'i':'\ud83d\udce3','bg':'linear-gradient(135deg,#a3e635,#65a30d)'}],
+    ['GEMINI',{'i':'\u2728','bg':'linear-gradient(135deg,#60a5fa,#c084fc)'}],
     ['MUSE',{'i':'\ud83c\udfa8','bg':'linear-gradient(135deg,#c084fc,#f0abfc)'}],
     ['GROK',{'i':'\u26a1','bg':'linear-gradient(135deg,#3b82f6,#d4af37)'}]
   ];
@@ -847,11 +844,8 @@ function deskHtml(r, tasks, agents){
 // ---------- LIVE OFFICE v6: animated walking workers ----------
 // Home desk + room anchors, in percent of the artwork box.
 var LO_HOME={
-  'LILY':{x:25,y:24,room:'RECEPTION'},
   'JEN':{x:73,y:25,room:'FILE TRANSFER & RECORDS'},
-  'LELIC':{x:84,y:52,room:'COORDINATION ROOM'},
-  'SAM':{x:72,y:67,room:'SCHEDULING'},
-  'ZELUS':{x:50,y:79,room:'STUDIO / VIDEO'},
+  'GEMINI':{x:84,y:52,room:'COORDINATION ROOM'},
   'OG VANTRA':{x:30,y:56,room:'EXECUTIVE SUITE'},
   'VANTRA GROK':{x:14,y:42,room:'SCOUTING & RESEARCH'},
   'ELIO':{x:86,y:80,room:'BUILD LAB'},
@@ -859,8 +853,7 @@ var LO_HOME={
   'LENOHERMES':{x:62,y:88,room:'RECOVERY BAY'},
   'LENOCLAW':{x:15,y:68,room:'RESILIENCE LAB'},
   'HERMES':{x:38,y:46,room:'OPS & COMMS'},
-  'CLAW':{x:31,y:79,room:'SECURITY POST'},
-  'LENNY':{x:80,y:36,room:'EVIDENCE & BOARD'}
+  'CLAW':{x:31,y:79,room:'SECURITY POST'}
 };
 // Explicit room-label positions (override) so wide labels never collide.
 var LO_LABELS={
@@ -891,15 +884,11 @@ var LO_LOOKS={
   'LENOCLAW':{ac:'#ffa21f',eye:'#ffc766',core:'#ff8a00',cls:''},
   'HERMES':{ac:'#a77bff',eye:'#8cffb0',core:'#3cff8f',cls:''},
   'CLAW':{ac:'#6e7bff',eye:'#9fb4ff',core:'#8f7bff',cls:'cloak'},
-  'LILY':{ac:'#34d399',eye:'#8affd0',core:'#34d399',cls:''},
   'JEN':{ac:'#38bdf8',eye:'#cfefff',core:'#d4af37',cls:''},
-  'LELIC':{ac:'#4ade80',eye:'#a8ffc4',core:'#4ade80',cls:''},
-  'SAM':{ac:'#86efac',eye:'#d4ffe0',core:'#86efac',cls:''},
-  'ZELUS':{ac:'#bef264',eye:'#eaffb5',core:'#bef264',cls:''},
+  'GEMINI':{ac:'#60a5fa',eye:'#dbeafe',core:'#f0abfc',cls:''},
   'MUSE':{ac:'#e879f9',eye:'#f6b8ff',core:'#e879f9',cls:''},
   'ELIO':{ac:'#818cf8',eye:'#b4bcff',core:'#d4af37',cls:'partner'},
-  'VANTRA GROK':{ac:'#3b82f6',eye:'#bfd9ff',core:'#d4af37',cls:''},
-  'LENNY':{ac:'#22d3ee',eye:'#bff6ff',core:'#22d3ee',cls:''}
+  'VANTRA GROK':{ac:'#3b82f6',eye:'#bfd9ff',core:'#d4af37',cls:''}
 };
 function loLook(name){
   var n=normAgent(name); var keys=Object.keys(LO_LOOKS).sort(function(a,b){return b.length-a.length;});
@@ -1008,6 +997,7 @@ async function renderOfficeView(){
     container.innerHTML=
       alerts
       +team
+      +'<div class="lo-wd">TEAM WIND-DOWN \u00b7 last day Fri Nov 20, 2026 for the six remaining agents \u00b7 five sub-agents removed Nov 1 (Lily, Lelic, Sam, Zelus, Lenny) \u00b7 CLAW, HERMES, LENOHERMES and LENOCLAW are down</div>'
       +'<div class="floor-head"><span>LIVE OFFICE</span><span class="asof" style="margin:0 0 0 10px">data as of '+fmtET(window._office.asOf)+' ET</span><button class="abtn" style="padding:4px 8px;font-size:11px;border-color:#00ffff;color:#00ffff" data-act="refreshOffice">\u21bb</button></div>'
       +'<div class="floor-legend"><span><i style="background:#4ade80"></i>Working (ACTIVE task)</span><span><i style="background:#f0d88c"></i>Waiting</span><span><i style="background:#8a86a8"></i>Idle</span><span><i style="background:#fb923c"></i>Stale (24h+)</span><span><i style="background:#f87171"></i>Down</span></div>'
       +'<div class="lo ov-floor">'+roomHtml+consoleHtml+wk+'</div>'
@@ -1633,7 +1623,7 @@ function renderHealthPhase1(sn){
   // AI team
   h+='<div class="h-sec">AI Team (heartbeats)</div>';
   if(team.length) team.forEach(a=>{ h+=hRow(esc(fmtAgentName(a.name)), (a.state||'?')+' · '+(a.ts?ago(a.ts):'—')+(a.task?' · '+esc(String(a.task).slice(0,40)):''), String(a.state||'').toUpperCase().includes('DOWN')?R:hCol(hAgeH(a.ts),1,24)); });
-  else h+=hRow('Heartbeats','no agents have written heartbeats yet',Y,'only LILY and JEN write heartbeats (PHASE 2 covers the rest)');
+  else h+=hRow('Heartbeats','no agents have written heartbeats yet',Y,'only JEN writes heartbeats now (PHASE 2 covers the rest)');
   // Docs
   h+='<div class="h-sec">Docs (audit register)</div>';
   const dc=docs.statusCounts||{};
