@@ -798,6 +798,7 @@ function agentLook(name){
     ['HERMES',{'i':'\ud83d\udce1','bg':'linear-gradient(135deg,#7c5cff,#22c55e)'}],
     ['JEN',{'i':'\ud83d\udccb','bg':'linear-gradient(135deg,#38bdf8,#1e40af)'}],
     ['GEMINI',{'i':'\u2728','bg':'linear-gradient(135deg,#60a5fa,#c084fc)'}],
+    ['ZELLY',{'i':'\ud83c\udfa7','bg':'linear-gradient(135deg,#a845ff,#1a1a1a)'}],
     ['MUSE',{'i':'\ud83c\udfa8','bg':'linear-gradient(135deg,#c084fc,#f0abfc)'}],
     ['GROK',{'i':'\u26a1','bg':'linear-gradient(135deg,#3b82f6,#d4af37)'}]
   ];
@@ -851,6 +852,7 @@ var LO_HOME={
   'VANTRA GROK':{x:14,y:42,room:'SCOUTING & RESEARCH'},
   'ELIO':{x:86,y:80,room:'BUILD LAB'},
   'MUSE':{x:41,y:90,room:'CREATIVE'},
+  'ZELLY':{x:50,y:79,room:'STUDIO / VIDEO'},
   'LENOHERMES':{x:62,y:88,room:'RECOVERY BAY'},
   'LENOCLAW':{x:15,y:68,room:'RESILIENCE LAB'},
   'HERMES':{x:38,y:46,room:'OPS & COMMS'},
@@ -888,6 +890,7 @@ var LO_LOOKS={
   'JEN':{ac:'#38bdf8',eye:'#cfefff',core:'#d4af37',cls:''},
   'GEMINI':{ac:'#60a5fa',eye:'#dbeafe',core:'#f0abfc',cls:''},
   'MUSE':{ac:'#e879f9',eye:'#f6b8ff',core:'#e879f9',cls:''},
+  'ZELLY':{ac:'#a845ff',eye:'#e5c4ff',core:'#a845ff',cls:''},
   'ELIO':{ac:'#818cf8',eye:'#b4bcff',core:'#d4af37',cls:'partner'},
   'VANTRA GROK':{ac:'#3b82f6',eye:'#bfd9ff',core:'#d4af37',cls:''}
 };
@@ -999,7 +1002,7 @@ async function renderOfficeView(){
     container.innerHTML=
       alerts
       +team
-      +'<div class="lo-wd">TEAM WIND-DOWN \u00b7 last day Fri Nov 20, 2026 for the six remaining agents \u00b7 five sub-agents removed Nov 1 (Lily, Lelic, Sam, Zelus, Lenny) \u00b7 CLAW, HERMES, LENOHERMES and LENOCLAW are down</div>'
+      +'<div class="lo-wd">TEAM WIND-DOWN \u00b7 last day Fri Nov 20, 2026 for the six wind-down agents \u00b7 five sub-agents removed Nov 1 (Lily, Lelic, Sam, Zelus, Lenny) \u00b7 CLAW, HERMES, LENOHERMES and LENOCLAW are down \u00b7 VANTRA ZELLY joined Nov 2 (Studio)</div>'
       +'<div class="floor-head"><span>LIVE OFFICE</span><span class="asof" style="margin:0 0 0 10px">data as of '+fmtET(window._office.asOf)+' ET</span><button class="abtn" style="padding:4px 8px;font-size:11px;border-color:#00ffff;color:#00ffff" data-act="refreshOffice">\u21bb</button></div>'
       +'<div class="floor-legend"><span><i style="background:#4ade80"></i>Working (ACTIVE task)</span><span><i style="background:#f0d88c"></i>Waiting</span><span><i style="background:#8a86a8"></i>Idle</span><span><i style="background:#fb923c"></i>Stale (24h+)</span><span><i style="background:#f87171"></i>Down</span></div>'
       +'<div class="lo ov-floor">'+roomHtml+consoleHtml+wk+'</div>'
