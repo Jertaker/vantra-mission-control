@@ -1816,7 +1816,9 @@ async function loadHabitHistory(habits){
       if(pct!=null){ sum+=pct; n++; }
       cells.push(pct);
     });
-    return { mo:mo, pct:n?Math.round(sum/n):null, cells:cells, has:Object.keys(p.cis).length>0 };
+    const anyLogged=Object.keys(p.cis).length>0||Object.keys(p.civ).length>0;
+    if(!anyLogged){ return { mo:mo, pct:null, cells:habits.map(()=>null), has:false }; }
+    return { mo:mo, pct:n?Math.round(sum/n):null, cells:cells, has:true };
   });
   const logged=rows.filter(r=>r.pct!=null);
   if(!logged.length){
@@ -1862,14 +1864,15 @@ async function loadHabitHistory(habits){
       +'<span style="display:flex;gap:3px;flex:1">';
     rows.forEach(r=>{
       const v=r.cells[hi];
-      const op=v==null?0.07:(0.2+Math.min(100,v)/100*0.8);
-      const col=v==null?'rgba(138,43,226,.5)':(v>=100?'#f5d88c':'#4ade80');
-      html+='<span title="'+hhMonthName(r.mo)+': '+(v==null?'no data':v+'%')+'" style="flex:1;height:13px;border-radius:3px;background:'+col+';opacity:'+op.toFixed(2)+'"></span>';
+      if(!r.has||v==null){ html+='<span title="'+hhMonthName(r.mo)+': nothing logged" style="flex:1;height:13px;border-radius:3px;background:transparent;border:1px dashed rgba(138,43,226,.28)"></span>'; return; }
+      const op=v===0?0.28:(0.3+Math.min(100,v)/100*0.7);
+      const col=v>=100?'#f5d88c':(v===0?'#6b6b86':'#4ade80');
+      html+='<span title="'+hhMonthName(r.mo)+': '+v+'%" style="flex:1;height:13px;border-radius:3px;background:'+col+';opacity:'+op.toFixed(2)+'"></span>';
     });
-    const last=rows[rows.length-1]; const lv=last.cells[hi];
+    const last=rows[rows.length-1]; const lv=last.has?last.cells[hi]:null;
     html+='</span><span style="flex:0 0 34px;text-align:right;font-size:10px;color:var(--gold);font-weight:700">'+(lv==null?'':lv+'%')+'</span></div>';
   });
-  html+='<div style="font-size:9.5px;color:var(--dim);margin-top:4px">Oldest \u2192 newest left to right. Gold = a 100% month. Faint = nothing logged.</div></div>';
+  html+='<div style="font-size:9.5px;color:var(--dim);margin-top:4px">Oldest \u2192 newest. Green = logged, gold = 100%, grey = logged but missed, dashed outline = nothing tracked that month.</div></div>';
   box.innerHTML=html;
 }
 
